@@ -18,11 +18,13 @@ import {
   ShieldCheck, 
   X,
   Edit2,
-  Download
+  Download,
+  Languages,
+  Loader2
 } from 'lucide-react';
 import { downloadCsv, formatIqd } from '@/lib/utils';
 import { ImageUploadDropzone } from '@/components/common/ImageUploadDropzone';
-import { getLocalizedField } from '@/lib/translator';
+import { getLocalizedField, autoTranslateSeller } from '@/lib/translator';
 
 interface SellersModuleProps {
   onOpenNewSeller: () => void;
@@ -41,6 +43,7 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
   const [verifyingSeller, setVerifyingSeller] = useState<Seller | null>(null);
   const [selectedDrawerSeller, setSelectedDrawerSeller] = useState<Seller | null>(null);
   const [editingSeller, setEditingSeller] = useState<Seller | null>(null);
+  const [isTranslatingEdit, setIsTranslatingEdit] = useState(false);
   const [adminNotes, setAdminNotes] = useState('');
 
   // Filtered sellers
@@ -576,17 +579,65 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
             </div>
 
             <form
-              onSubmit={(e) => {
+              onSubmit={async (e) => {
                 e.preventDefault();
-                updateSeller(editingSeller);
+                if (!editingSeller) return;
+                setIsTranslatingEdit(true);
+
+                let updated = { ...editingSeller };
+                const baseName = updated.name_ku || updated.name_en || updated.name_ar || '';
+                const needEn = !updated.name_en || updated.name_en.trim() === '' || updated.name_en === baseName;
+                const needAr = !updated.name_ar || updated.name_ar.trim() === '' || updated.name_ar === baseName;
+
+                if ((needEn || needAr) && baseName) {
+                  try {
+                    const transRes = await autoTranslateSeller(baseName, updated.bazaar_name);
+                    if (needEn) updated.name_en = transRes.nameEn || baseName;
+                    if (needAr) updated.name_ar = transRes.nameAr || baseName;
+                  } catch (err) {
+                    console.warn('Auto translate during seller edit submit warning:', err);
+                  }
+                }
+
+                try {
+                  await updateSeller(updated);
+                } finally {
+                  setIsTranslatingEdit(false);
+                }
                 setEditingSeller(null);
               }}
               className="mt-4 space-y-3.5 text-xs"
             >
               <div>
-                <label className="font-bold text-[#171717]">ناوی دووکان / فرۆشگا بە کوردی</label>
+                <div className="flex items-center justify-between">
+                  <label className="font-bold text-[#171717]">ناوی دووکان / فرۆشگا بە کوردی *</label>
+                  {editingSeller.name_ku && (
+                    <button
+                      type="button"
+                      disabled={isTranslatingEdit}
+                      onClick={async () => {
+                        setIsTranslatingEdit(true);
+                        try {
+                          const res = await autoTranslateSeller(editingSeller.name_ku, editingSeller.bazaar_name);
+                          setEditingSeller({
+                            ...editingSeller,
+                            name_en: res.nameEn,
+                            name_ar: res.nameAr,
+                          });
+                        } catch {} finally {
+                          setIsTranslatingEdit(false);
+                        }
+                      }}
+                      className="flex items-center gap-1 rounded-lg border border-[#657A52]/30 bg-[#657A52]/10 px-2 py-0.5 text-[11px] font-bold text-[#657A52] hover:bg-[#657A52]/20 transition-colors disabled:opacity-50"
+                    >
+                      {isTranslatingEdit ? <Loader2 className="h-3 w-3 animate-spin" /> : <Languages className="h-3 w-3" />}
+                      <span>وەرگێڕان بۆ ئینگلیزی و عەرەبی</span>
+                    </button>
+                  )}
+                </div>
                 <input
                   type="text"
+                  dir="rtl"
                   value={editingSeller.name_ku}
                   onChange={(e) => setEditingSeller({ ...editingSeller, name_ku: e.target.value })}
                   className="mt-1 w-full rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] p-2.5 text-xs text-[#171717] focus:border-[#657A52] focus:bg-white focus:outline-none"
@@ -594,15 +645,28 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
                 />
               </div>
 
-              <div>
-                <label className="font-bold text-[#171717]">ناوی دووکان بە ئینگلیزی (Store Name)</label>
-                <input
-                  type="text"
-                  value={editingSeller.name_en}
-                  onChange={(e) => setEditingSeller({ ...editingSeller, name_en: e.target.value })}
-                  className="mt-1 w-full rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] p-2.5 text-xs text-[#171717] focus:border-[#657A52] focus:bg-white focus:outline-none"
-                  required
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-bold text-[#171717]">ناوی دووکان بە ئینگلیزی (Store Name) *</label>
+                  <input
+                    type="text"
+                    value={editingSeller.name_en}
+                    onChange={(e) => setEditingSeller({ ...editingSeller, name_en: e.target.value })}
+                    className="mt-1 w-full rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] p-2.5 text-xs text-[#171717] focus:border-[#657A52] focus:bg-white focus:outline-none"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="font-bold text-[#171717]">ناوی دووکان بە عەرەبی (اسم المتجر) *</label>
+                  <input
+                    type="text"
+                    dir="rtl"
+                    value={editingSeller.name_ar}
+                    onChange={(e) => setEditingSeller({ ...editingSeller, name_ar: e.target.value })}
+                    className="mt-1 w-full rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] p-2.5 text-xs text-[#171717] focus:border-[#657A52] focus:bg-white focus:outline-none"
+                    required
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -690,9 +754,17 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl bg-[#657A52] px-5 py-2 font-bold text-white hover:bg-[#536543] shadow-sm"
+                  disabled={isTranslatingEdit}
+                  className="flex items-center gap-1.5 rounded-xl bg-[#657A52] px-5 py-2 font-bold text-white hover:bg-[#536543] shadow-sm disabled:opacity-75 transition-all"
                 >
-                  {t.saveChanges}
+                  {isTranslatingEdit ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>وەرگێڕانی خۆکار...</span>
+                    </>
+                  ) : (
+                    <span>{t.saveChanges}</span>
+                  )}
                 </button>
               </div>
             </form>

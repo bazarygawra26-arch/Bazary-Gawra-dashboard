@@ -1,6 +1,6 @@
 /**
- * Multilingual Auto-Translation Engine & Localized Field Fallbacks
- * Specifically optimized for Kurdistan marketplace terminology (Kurdish Sorani, Arabic, English)
+ * Dynamic Multilingual Translation Engine & Localized Field Fallbacks
+ * Handles automated translation for Kurdish Sorani, Arabic, and English.
  */
 
 export interface TranslationResult {
@@ -16,45 +16,6 @@ export interface SellerTranslationResult {
   bazaarEn: string;
   bazaarAr: string;
 }
-
-// Curated Bazaar Terminology Dictionary for Kurdistan markets
-const BAZAAR_TERMS_MAP: Record<string, { en: string; ar: string }> = {
-  // Common products
-  'چاییکەر': { en: 'Tea Maker / Samovar', ar: 'صانعة شاي كهربائية' },
-  'چایەدەنی': { en: 'Electric Kettle / Samovar', ar: 'سماور وصانعة شاي' },
-  'قاوەساز': { en: 'Coffee Maker / Espresso Machine', ar: 'ماكينة صنع القهوة' },
-  'ئێرفرایەر': { en: 'Air Fryer', ar: 'قلاية هوائية بدون زيت' },
-  'جارووبەرقی': { en: 'Vacuum Cleaner', ar: 'مكنسة كهربائية' },
-  'مۆبایل': { en: 'Smartphone / Mobile', ar: 'هاتف ذكي' },
-  'ئایفۆن': { en: 'iPhone', ar: 'آيفون' },
-  'سامسۆنگ': { en: 'Samsung Galaxy', ar: 'سامسونج جالكسي' },
-  'هەنگوین': { en: 'Pure Mountain Honey', ar: 'عسل جبلي طبيعي' },
-  'ڕۆنی کوردی': { en: 'Traditional Kurdish Ghee / Butter', ar: 'دهن حر كردي أصلي' },
-  'قەزوان': { en: 'Natural Qazwan Wild Pistachio', ar: 'بطم كردي طبيعي' },
-  'شاخی هەورامان': { en: 'Hawraman Mountains Organic', ar: 'جبال هورامان الطبيعية' },
-  'کتێب': { en: 'Book / Literature', ar: 'كتاب ومؤلفات' },
-  'دەستکرد': { en: 'Handmade Craft', ar: 'حرفة يدوية تراثية' },
-  'کەلەپوور': { en: 'Heritage Artifact', ar: 'تراث وفلكلور' },
-
-  // Bazaars and locations
-  'شەقامی مەولەوی': { en: 'Mawlawi Street', ar: 'شارع مولوي' },
-  'بازاڕی دارتاشەکان': { en: 'Carpenters Bazaar', ar: 'سوق النجارين' },
-  'بازاڕی گەورە': { en: 'Grand Bazaar', ar: 'السوق الكبير' },
-  'قەیسەری هەولێر': { en: 'Erbil Qaysari Bazaar', ar: 'سوق القيصرية بأربيل' },
-  'بازاڕی نیشتیمان': { en: 'Nishtiman Bazaar', ar: 'سوق نشتيمان' },
-  'شەقامی ئیسکان': { en: 'Iskan Street', ar: 'شارع إسكان' },
-  'بازاڕی ناوەندی دهۆک': { en: 'Central Duhok Bazaar', ar: 'سوق دهوك المركزي' },
-  'شەقامی نەورۆز': { en: 'Newroz Street', ar: 'شارع نوروز' },
-  'بازاڕی کۆنی هەڵەبجە': { en: 'Old Halabja Bazaar', ar: 'سوق حلبجة القديم' },
-  'قەیسەریەی کەرکووک': { en: 'Kirkuk Qaisariya Bazaar', ar: 'قيصرية كركوك القديمة' },
-  'سلێمانی': { en: 'Sulaymaniyah', ar: 'السليمانية' },
-  'هەولێر': { en: 'Erbil', ar: 'أربيل' },
-  'دهۆک': { en: 'Duhok', ar: 'دهوك' },
-  'هەڵەبجە': { en: 'Halabja', ar: 'حلبجة' },
-  'کەرکووک': { en: 'Kirkuk', ar: 'كركوك' },
-  'فرۆشگا': { en: 'Store', ar: 'متجر' },
-  'دووکان': { en: 'Shop', ar: 'محل' },
-};
 
 /**
  * Universal Fallback: Get localized field cleanly without ever showing undefined/blank
@@ -90,7 +51,7 @@ export function getLocalizedField(
     return String(item[arKey]);
   }
 
-  // 5. Try plain property name if exist (e.g. "bazaar_name", "title")
+  // 5. Try plain property name if exists (e.g. "bazaar_name", "title")
   if (item[fieldPrefix] && String(item[fieldPrefix]).trim() !== '') {
     return String(item[fieldPrefix]);
   }
@@ -99,70 +60,90 @@ export function getLocalizedField(
 }
 
 /**
- * Translate a string using online translation API with local terminology fallback
+ * Dynamically translate any string via the Next.js translation engine
  */
-export async function translateText(text: string, toLang: 'en' | 'ar'): Promise<string> {
-  if (!text || text.trim() === '') return '';
+export async function translateText(text: string, toLang: 'en' | 'ar' | 'ku' = 'en'): Promise<string> {
+  if (!text || !text.trim()) return '';
 
-  const cleanText = text.trim();
+  const clean = text.trim();
 
-  // 1. Direct dictionary match
-  if (BAZAAR_TERMS_MAP[cleanText]) {
-    return BAZAAR_TERMS_MAP[cleanText][toLang];
-  }
-
-  // 2. Match known phrases or parts
-  for (const [kurdishTerm, translations] of Object.entries(BAZAAR_TERMS_MAP)) {
-    if (cleanText === kurdishTerm) {
-      return translations[toLang];
-    }
-  }
-
-  // 3. Online Google Translate API (fast, reliable, free proxy)
   try {
-    const targetLangCode = toLang === 'ar' ? 'ar' : 'en';
-    const sourceLangCode = 'ku'; // Kurdish Sorani or ckb
-
-    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLangCode}&tl=${targetLangCode}&dt=t&q=${encodeURIComponent(cleanText)}`;
-    
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: { 'Accept': 'application/json' },
+    const res = await fetch('/api/translate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: clean, to: toLang }),
     });
 
-    if (response.ok) {
-      const data = await response.json();
-      if (Array.isArray(data) && data[0] && Array.isArray(data[0])) {
-        const translatedSegments = data[0].map((segment: any) => segment[0]).join('');
-        if (translatedSegments && translatedSegments.trim()) {
-          return translatedSegments.trim();
-        }
+    if (res.ok) {
+      const data = await res.json();
+      if (data?.translatedText && String(data.translatedText).trim()) {
+        return String(data.translatedText).trim();
       }
     }
-  } catch (error) {
-    console.warn('Online translation fallback triggered:', error);
+  } catch (err) {
+    console.warn('API translation call failed, using fallback:', err);
   }
 
-  // 4. Fallback: intelligent phonetic / keyword synthesis
-  if (toLang === 'ar') {
-    // Return Arabic synthesized description
-    return cleanText.replace(/چ/g, 'ج').replace(/پ/g, 'ب').replace(/ژ/g, 'ز').replace(/گ/g, 'ك');
+  // Fallback: Direct client MyMemory query if API endpoint is unreachable
+  try {
+    const targetLang = toLang === 'ar' ? 'ar' : toLang === 'ku' ? 'ckb' : 'en';
+    const myMemoryUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(
+      clean
+    )}&langpair=ckb|${targetLang}`;
+    const directRes = await fetch(myMemoryUrl);
+    if (directRes.ok) {
+      const d = await directRes.json();
+      if (d?.responseData?.translatedText) {
+        return String(d.responseData.translatedText).trim();
+      }
+    }
+  } catch (directErr) {
+    console.warn('Direct translation fallback error:', directErr);
   }
 
-  // English fallback
-  return cleanText;
+  return clean;
 }
 
 /**
- * Auto-Translate Product Title & Description from Kurdish into English & Arabic
+ * Translate multiple strings in one batch request
+ */
+export async function translateBatch(texts: string[], toLang: 'en' | 'ar' | 'ku' = 'en'): Promise<string[]> {
+  if (!texts || texts.length === 0) return [];
+
+  try {
+    const res = await fetch('/api/translate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ texts, to: toLang }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data?.translatedTexts)) {
+        return data.translatedTexts;
+      }
+    }
+  } catch (err) {
+    console.warn('Batch translation error, falling back to sequential:', err);
+  }
+
+  // Fallback sequentially
+  return Promise.all(texts.map(t => translateText(t, toLang)));
+}
+
+/**
+ * Dynamically auto-translate Product Name & Description into English & Arabic
  */
 export async function autoTranslateProduct(
   nameKu: string,
   descKu: string
 ): Promise<TranslationResult> {
-  const [nameEn, nameAr, descEn, descAr] = await Promise.all([
-    translateText(nameKu, 'en'),
-    translateText(nameKu, 'ar'),
+  const [nameEn, nameAr] = await Promise.all([
+    nameKu ? translateText(nameKu, 'en') : Promise.resolve(''),
+    nameKu ? translateText(nameKu, 'ar') : Promise.resolve(''),
+  ]);
+
+  const [descEn, descAr] = await Promise.all([
     descKu ? translateText(descKu, 'en') : Promise.resolve(''),
     descKu ? translateText(descKu, 'ar') : Promise.resolve(''),
   ]);
@@ -170,23 +151,26 @@ export async function autoTranslateProduct(
   return {
     nameEn: nameEn || nameKu,
     nameAr: nameAr || nameKu,
-    descEn: descEn || 'High-quality authentic local bazaar product with warranty in Kurdistan.',
-    descAr: descAr || 'منتج محلي أصلي عالي الجودة مع ضمان المتجر في أسواق كوردستان.',
+    descEn: descEn || descKu,
+    descAr: descAr || descKu,
   };
 }
 
 /**
- * Auto-Translate Seller Store Name & Bazaar Info from Kurdish
+ * Dynamically auto-translate Seller Store Name & Bazaar
  */
 export async function autoTranslateSeller(
   nameKu: string,
   bazaarName: string
 ): Promise<SellerTranslationResult> {
-  const [nameEn, nameAr, bazaarEn, bazaarAr] = await Promise.all([
-    translateText(nameKu, 'en'),
-    translateText(nameKu, 'ar'),
-    translateText(bazaarName, 'en'),
-    translateText(bazaarName, 'ar'),
+  const [nameEn, nameAr] = await Promise.all([
+    nameKu ? translateText(nameKu, 'en') : Promise.resolve(''),
+    nameKu ? translateText(nameKu, 'ar') : Promise.resolve(''),
+  ]);
+
+  const [bazaarEn, bazaarAr] = await Promise.all([
+    bazaarName ? translateText(bazaarName, 'en') : Promise.resolve(''),
+    bazaarName ? translateText(bazaarName, 'ar') : Promise.resolve(''),
   ]);
 
   return {
@@ -195,4 +179,79 @@ export async function autoTranslateSeller(
     bazaarEn: bazaarEn || bazaarName,
     bazaarAr: bazaarAr || bazaarName,
   };
+}
+
+/**
+ * Helper to check if a field is effectively missing or just an untranslated copy of Kurdish
+ */
+function isUntranslated(value: any, kurdishOriginal: any): boolean {
+  if (!value || typeof value !== 'string') return true;
+  const trimmed = value.trim();
+  if (trimmed === '') return true;
+  // If it's identical to the Kurdish original, it wasn't actually translated yet
+  if (kurdishOriginal && trimmed === String(kurdishOriginal).trim()) return true;
+  return false;
+}
+
+/**
+ * Automatically inspects any product payload before saving.
+ * If any language (EN or AR) is missing or untranslated, it dynamically translates it on the fly!
+ */
+export async function ensureMultilingualProduct<T extends Record<string, any>>(productData: T): Promise<T> {
+  const result: Record<string, any> = { ...productData };
+  const baseName = result.name_ku || result.name_en || result.name_ar || '';
+  const baseDesc = result.description_ku || result.description_en || result.description_ar || '';
+
+  if (baseName) {
+    // Check if English name is missing or untranslated
+    if (isUntranslated(result.name_en, result.name_ku)) {
+      result.name_en = (await translateText(baseName, 'en')) || baseName;
+    }
+    // Check if Arabic name is missing or untranslated
+    if (isUntranslated(result.name_ar, result.name_ku)) {
+      result.name_ar = (await translateText(baseName, 'ar')) || baseName;
+    }
+    if (!result.name_ku || result.name_ku.trim() === '') {
+      result.name_ku = baseName;
+    }
+  }
+
+  if (baseDesc) {
+    // Check if English description is missing or untranslated
+    if (isUntranslated(result.description_en, result.description_ku)) {
+      result.description_en = (await translateText(baseDesc, 'en')) || baseDesc;
+    }
+    // Check if Arabic description is missing or untranslated
+    if (isUntranslated(result.description_ar, result.description_ku)) {
+      result.description_ar = (await translateText(baseDesc, 'ar')) || baseDesc;
+    }
+    if (!result.description_ku || result.description_ku.trim() === '') {
+      result.description_ku = baseDesc;
+    }
+  }
+
+  return result as T;
+}
+
+/**
+ * Automatically inspects any seller payload before saving.
+ * If EN or AR store names are missing or untranslated, it dynamically translates them on the fly!
+ */
+export async function ensureMultilingualSeller<T extends Record<string, any>>(sellerData: T): Promise<T> {
+  const result: Record<string, any> = { ...sellerData };
+  const baseName = result.name_ku || result.name_en || result.name_ar || '';
+
+  if (baseName) {
+    if (isUntranslated(result.name_en, result.name_ku)) {
+      result.name_en = (await translateText(baseName, 'en')) || baseName;
+    }
+    if (isUntranslated(result.name_ar, result.name_ku)) {
+      result.name_ar = (await translateText(baseName, 'ar')) || baseName;
+    }
+    if (!result.name_ku || result.name_ku.trim() === '') {
+      result.name_ku = baseName;
+    }
+  }
+
+  return result as T;
 }

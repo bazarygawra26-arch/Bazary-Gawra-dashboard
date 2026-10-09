@@ -30,6 +30,22 @@ export function AddSellerModal({ isOpen, onClose }: AddSellerModalProps) {
 
   if (!isOpen) return null;
 
+  const handleNameKuBlur = async () => {
+    if (!nameKu || nameKu.trim() === '') return;
+    if (!nameEn || nameEn === nameKu || !nameAr || nameAr === nameKu) {
+      setIsTranslating(true);
+      try {
+        const res = await autoTranslateSeller(nameKu, bazaarName);
+        if (!nameEn || nameEn === nameKu) setNameEn(res.nameEn);
+        if (!nameAr || nameAr === nameKu) setNameAr(res.nameAr);
+      } catch (err) {
+        console.warn('Auto translate seller on blur warning:', err);
+      } finally {
+        setIsTranslating(false);
+      }
+    }
+  };
+
   const handleAutoTranslate = async () => {
     if (!nameKu) return;
     setIsTranslating(true);
@@ -42,29 +58,49 @@ export function AddSellerModal({ isOpen, onClose }: AddSellerModalProps) {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsTranslating(true);
 
-    const validNameKu = nameKu || nameEn || nameAr;
-    const validNameEn = nameEn || nameKu || nameAr;
-    const validNameAr = nameAr || nameKu || nameEn;
+    let finalNameEn = nameEn;
+    let finalNameAr = nameAr;
+    const baseName = nameKu || nameEn || nameAr;
 
-    addSeller({
-      name_ku: validNameKu,
-      name_en: validNameEn,
-      name_ar: validNameAr,
-      owner_name: ownerName,
-      phone,
-      whatsapp,
-      city,
-      bazaar_name: bazaarName,
-      address_details: addressDetails,
-      facade_image_url: facadeImageUrl,
-      logo_url: facadeImageUrl,
-      verification_status: 'pending',
-      transparency_score: 60,
-      notes: 'New merchant self-registered through onboarding.',
-    });
+    // AUTOMATIC TRANSLATION: If EN or AR are empty or identical to Kurdish, auto-translate now!
+    const needEn = !finalNameEn || finalNameEn.trim() === '' || finalNameEn === baseName;
+    const needAr = !finalNameAr || finalNameAr.trim() === '' || finalNameAr === baseName;
+
+    if (needEn || needAr) {
+      try {
+        const res = await autoTranslateSeller(baseName, bazaarName);
+        if (needEn) finalNameEn = res.nameEn || baseName;
+        if (needAr) finalNameAr = res.nameAr || baseName;
+      } catch (err) {
+        console.warn('Auto-translate seller on submit fallback:', err);
+      }
+    }
+
+    try {
+      await addSeller({
+        name_ku: baseName,
+        name_en: finalNameEn || baseName,
+        name_ar: finalNameAr || baseName,
+        owner_name: ownerName,
+        phone,
+        whatsapp,
+        city,
+        bazaar_name: bazaarName,
+        address_details: addressDetails,
+        facade_image_url: facadeImageUrl,
+        logo_url: facadeImageUrl,
+        verification_status: 'pending',
+        transparency_score: 60,
+        notes: 'New merchant self-registered through onboarding.',
+      });
+    } finally {
+      setIsTranslating(false);
+    }
+
     onClose();
   };
 
@@ -115,6 +151,7 @@ export function AddSellerModal({ isOpen, onClose }: AddSellerModalProps) {
               dir="rtl"
               value={nameKu}
               onChange={(e) => setNameKu(e.target.value)}
+              onBlur={handleNameKuBlur}
               placeholder="نموونە: فرۆشگای مۆبایلی مەولەوی"
               className="mt-1 w-full rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] p-2.5 text-xs text-[#171717] focus:border-[#657A52] focus:bg-white focus:outline-none"
               required
@@ -233,10 +270,20 @@ export function AddSellerModal({ isOpen, onClose }: AddSellerModalProps) {
             </button>
             <button
               type="submit"
-              className="flex items-center gap-1.5 rounded-xl bg-[#657A52] px-5 py-2 font-bold text-white hover:bg-[#536543] shadow-sm"
+              disabled={isTranslating}
+              className="flex items-center gap-1.5 rounded-xl bg-[#657A52] px-5 py-2 font-bold text-white hover:bg-[#536543] shadow-sm disabled:opacity-75 transition-all"
             >
-              <CheckCircle2 className="h-4 w-4" />
-              <span>{t.addMerchant}</span>
+              {isTranslating ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>وەرگێڕانی خۆکار...</span>
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="h-4 w-4" />
+                  <span>{t.addMerchant}</span>
+                </>
+              )}
             </button>
           </div>
         </form>

@@ -6,6 +6,7 @@ import { initialSellers, initialProducts, initialAiQueries, initialAiScans, init
 import { SupportedLanguage, translations, TranslationDictionary } from '@/lib/i18n';
 import { supabase, isSupabaseConfigured, checkSupabaseHealth } from '@/lib/supabase';
 import { calculateTransparencyScore } from '@/lib/utils';
+import { ensureMultilingualProduct, ensureMultilingualSeller } from '@/lib/translator';
 
 export type AdminView = 'overview' | 'sellers' | 'products' | 'ai-insights' | 'taxonomy' | 'settings';
 
@@ -277,6 +278,56 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  // Background Automatic Translation Engine:
+  // Detects any products or sellers without full translations and dynamically enriches them in the background!
+  useEffect(() => {
+    let isMounted = true;
+    const timer = setTimeout(async () => {
+      // 1. Scan products
+      const untranslatedProducts = products.filter(
+        p => !p.name_en || p.name_en === p.name_ku || !p.name_ar || p.name_ar === p.name_ku
+      );
+
+      if (untranslatedProducts.length > 0) {
+        const enrichedList = await Promise.all(
+          products.map(async p => {
+            if (!p.name_en || p.name_en === p.name_ku || !p.name_ar || p.name_ar === p.name_ku) {
+              return await ensureMultilingualProduct(p);
+            }
+            return p;
+          })
+        );
+        if (isMounted) {
+          saveProducts(enrichedList);
+        }
+      }
+
+      // 2. Scan sellers
+      const untranslatedSellers = sellers.filter(
+        s => !s.name_en || s.name_en === s.name_ku || !s.name_ar || s.name_ar === s.name_ku
+      );
+
+      if (untranslatedSellers.length > 0) {
+        const enrichedSellersList = await Promise.all(
+          sellers.map(async s => {
+            if (!s.name_en || s.name_en === s.name_ku || !s.name_ar || s.name_ar === s.name_ku) {
+              return await ensureMultilingualSeller(s);
+            }
+            return s;
+          })
+        );
+        if (isMounted) {
+          saveSellers(enrichedSellersList);
+        }
+      }
+    }, 2000);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+    };
+  }, [products.length, sellers.length]);
+
   const setLanguage = (lang: SupportedLanguage) => {
     setLanguageState(lang);
     try {
@@ -340,8 +391,11 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   };
 
   const addSeller = async (data: Omit<Seller, 'id' | 'created_at' | 'updated_at'>) => {
+    // AUTOMATIC TRANSLATION: Dynamically translate seller name and details into EN & AR
+    const enrichedData = await ensureMultilingualSeller(data);
+
     const newSeller: Seller = {
-      ...data,
+      ...enrichedData,
       id: `sel_${Date.now()}`,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -351,14 +405,14 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     if (isSupabaseConfigured && supabase) {
       try {
         await supabase.from('sellers').insert({
-          name_ku: data.name_ku,
-          name_en: data.name_en,
-          name_ar: data.name_ar,
-          phone: data.phone,
-          whatsapp: data.whatsapp,
-          address: data.bazaar_name,
-          logo_url: data.facade_image_url,
-          verification_status: data.verification_status,
+          name_ku: enrichedData.name_ku,
+          name_en: enrichedData.name_en,
+          name_ar: enrichedData.name_ar,
+          phone: enrichedData.phone,
+          whatsapp: enrichedData.whatsapp,
+          address: enrichedData.bazaar_name,
+          logo_url: enrichedData.facade_image_url,
+          verification_status: enrichedData.verification_status,
           is_active: true,
         });
       } catch (err) {
@@ -368,18 +422,22 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateSeller = async (seller: Seller) => {
-    const updated = sellers.map(s => (s.id === seller.id ? { ...seller, updated_at: new Date().toISOString() } : s));
+    // AUTOMATIC TRANSLATION: Ensure all seller languages are translated automatically
+    const enrichedSeller = await ensureMultilingualSeller(seller);
+
+    const updated = sellers.map(s => (s.id === seller.id ? { ...enrichedSeller, updated_at: new Date().toISOString() } : s));
     saveSellers(updated);
 
     if (isSupabaseConfigured && supabase) {
       try {
         await supabase.from('sellers').update({
-          name_ku: seller.name_ku,
-          name_en: seller.name_en,
-          phone: seller.phone,
-          whatsapp: seller.whatsapp,
-          address: seller.bazaar_name,
-          verification_status: seller.verification_status,
+          name_ku: enrichedSeller.name_ku,
+          name_en: enrichedSeller.name_en,
+          name_ar: enrichedSeller.name_ar,
+          phone: enrichedSeller.phone,
+          whatsapp: enrichedSeller.whatsapp,
+          address: enrichedSeller.bazaar_name,
+          verification_status: enrichedSeller.verification_status,
           updated_at: new Date().toISOString(),
         }).eq('id', seller.id);
       } catch (err) {
@@ -389,17 +447,20 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   };
 
   const addProduct = async (data: Omit<Product, 'id' | 'created_at' | 'updated_at' | 'transparency_score'>) => {
+    // AUTOMATIC TRANSLATION: Dynamically translate product title and description into EN & AR
+    const enrichedData = await ensureMultilingualProduct(data);
+
     const score = calculateTransparencyScore({
-      warranty_type: data.warranty_type,
-      warranty_period: data.warranty_period,
-      delivery_type: data.delivery_type,
-      delivery_cost_iqd: data.delivery_cost_iqd,
-      return_window_days: data.return_window_days,
-      return_policy_type: data.return_policy_type,
+      warranty_type: enrichedData.warranty_type,
+      warranty_period: enrichedData.warranty_period,
+      delivery_type: enrichedData.delivery_type,
+      delivery_cost_iqd: enrichedData.delivery_cost_iqd,
+      return_window_days: enrichedData.return_window_days,
+      return_policy_type: enrichedData.return_policy_type,
     });
 
     const newProd: Product = {
-      ...data,
+      ...enrichedData,
       id: `prod_${Date.now()}`,
       transparency_score: score,
       created_at: new Date().toISOString(),
@@ -411,24 +472,24 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     if (isSupabaseConfigured && supabase) {
       try {
         const { data: insertedProd } = await supabase.from('products').insert({
-          seller_id: data.seller_id,
-          category_id: data.category_id,
-          price: data.price_iqd,
+          seller_id: enrichedData.seller_id,
+          category_id: enrichedData.category_id,
+          price: enrichedData.price_iqd,
           currency: 'IQD',
-          warranty_applicable: data.warranty_type !== 'none',
-          warranty_details: data.warranty_period,
-          delivery_available: data.delivery_type !== 'pickup_only',
-          return_days: data.return_window_days,
-          return_policy: data.return_conditions,
-          image_url: data.primary_image,
-          status: data.status,
+          warranty_applicable: enrichedData.warranty_type !== 'none',
+          warranty_details: enrichedData.warranty_period,
+          delivery_available: enrichedData.delivery_type !== 'pickup_only',
+          return_days: enrichedData.return_window_days,
+          return_policy: enrichedData.return_conditions,
+          image_url: enrichedData.primary_image,
+          status: enrichedData.status,
         }).select('id').single();
 
         if (insertedProd?.id) {
           await supabase.from('product_translations').insert([
-            { product_id: insertedProd.id, lang: 'ku', name: data.name_ku, description: data.description_ku },
-            { product_id: insertedProd.id, lang: 'en', name: data.name_en, description: data.description_en },
-            { product_id: insertedProd.id, lang: 'ar', name: data.name_ar, description: data.description_ar },
+            { product_id: insertedProd.id, lang: 'ku', name: enrichedData.name_ku, description: enrichedData.description_ku },
+            { product_id: insertedProd.id, lang: 'en', name: enrichedData.name_en, description: enrichedData.description_en },
+            { product_id: insertedProd.id, lang: 'ar', name: enrichedData.name_ar, description: enrichedData.description_ar },
           ]);
         }
       } catch (err) {
@@ -438,29 +499,39 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateProduct = async (product: Product) => {
+    // AUTOMATIC TRANSLATION: Ensure multilingual title and description are translated
+    const enrichedProduct = await ensureMultilingualProduct(product);
+
     const score = calculateTransparencyScore({
-      warranty_type: product.warranty_type,
-      warranty_period: product.warranty_period,
-      delivery_type: product.delivery_type,
-      delivery_cost_iqd: product.delivery_cost_iqd,
-      return_window_days: product.return_window_days,
-      return_policy_type: product.return_policy_type,
+      warranty_type: enrichedProduct.warranty_type,
+      warranty_period: enrichedProduct.warranty_period,
+      delivery_type: enrichedProduct.delivery_type,
+      delivery_cost_iqd: enrichedProduct.delivery_cost_iqd,
+      return_window_days: enrichedProduct.return_window_days,
+      return_policy_type: enrichedProduct.return_policy_type,
     });
 
     const updated = products.map(p =>
-      p.id === product.id ? { ...product, transparency_score: score, updated_at: new Date().toISOString() } : p
+      p.id === product.id ? { ...enrichedProduct, transparency_score: score, updated_at: new Date().toISOString() } : p
     );
     saveProducts(updated);
 
     if (isSupabaseConfigured && supabase) {
       try {
         await supabase.from('products').update({
-          price: product.price_iqd,
-          warranty_details: product.warranty_period,
-          return_days: product.return_window_days,
-          status: product.status,
+          price: enrichedProduct.price_iqd,
+          warranty_details: enrichedProduct.warranty_period,
+          return_days: enrichedProduct.return_window_days,
+          status: enrichedProduct.status,
           updated_at: new Date().toISOString(),
         }).eq('id', product.id);
+
+        // Also update product_translations in Supabase
+        await supabase.from('product_translations').upsert([
+          { product_id: product.id, lang: 'ku', name: enrichedProduct.name_ku, description: enrichedProduct.description_ku },
+          { product_id: product.id, lang: 'en', name: enrichedProduct.name_en, description: enrichedProduct.description_en },
+          { product_id: product.id, lang: 'ar', name: enrichedProduct.name_ar, description: enrichedProduct.description_ar },
+        ], { onConflict: 'product_id,lang' });
       } catch (err) {
         console.warn('Supabase product update warning:', err);
       }

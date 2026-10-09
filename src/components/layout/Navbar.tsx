@@ -2,10 +2,10 @@
 
 import React, { useState } from 'react';
 import { useAdmin } from '@/lib/store';
-import { 
-  Search, 
-  Bell, 
-  Plus, 
+import {
+  Search,
+  Bell,
+  Plus,
   AlertTriangle,
   Store,
   Package
@@ -17,16 +17,16 @@ interface NavbarProps {
 }
 
 export function Navbar({ onOpenNewProduct, onOpenNewSeller }: NavbarProps) {
-  const { 
-    language, 
-    setLanguage, 
-    t, 
-    searchQuery, 
-    setSearchQuery, 
-    isSupabaseLive, 
-    sellers, 
-    products, 
-    setCurrentView 
+  const {
+    language,
+    setLanguage,
+    t,
+    searchQuery,
+    setSearchQuery,
+    isSupabaseLive,
+    sellers,
+    products,
+    setCurrentView
   } = useAdmin();
 
   const [showNotifications, setShowNotifications] = useState(false);
@@ -59,7 +59,7 @@ export function Navbar({ onOpenNewProduct, onOpenNewSeller }: NavbarProps) {
       {/* Right Controls */}
       <div className="flex items-center gap-2 sm:gap-3 rtl:mr-4 ltr:ml-4">
         {/* Supabase Connection Status Pill */}
-        <div 
+        <div
           className="hidden md:flex items-center gap-1.5 rounded-full border border-[#EAE7DF] bg-[#FAF9F6] px-3 py-1.5 text-xs font-medium text-[#171717]"
         >
           <div className="relative flex h-2 w-2">
@@ -117,25 +117,22 @@ export function Navbar({ onOpenNewProduct, onOpenNewSeller }: NavbarProps) {
         <div className="flex items-center rounded-lg border border-[#EAE7DF] bg-[#FAF9F6] p-0.5 text-xs">
           <button
             onClick={() => setLanguage('ku')}
-            className={`rounded-md px-2.5 py-1 font-bold transition-colors ${
-              language === 'ku' ? 'bg-[#FFFFFF] text-[#171717] shadow-xs' : 'text-[#737373] hover:text-[#171717]'
-            }`}
+            className={`rounded-md px-2.5 py-1 font-bold transition-colors ${language === 'ku' ? 'bg-[#FFFFFF] text-[#171717] shadow-xs' : 'text-[#737373] hover:text-[#171717]'
+              }`}
           >
             کوردی
           </button>
           <button
             onClick={() => setLanguage('ar')}
-            className={`rounded-md px-2.5 py-1 font-bold transition-colors ${
-              language === 'ar' ? 'bg-[#FFFFFF] text-[#171717] shadow-xs' : 'text-[#737373] hover:text-[#171717]'
-            }`}
+            className={`rounded-md px-2.5 py-1 font-bold transition-colors ${language === 'ar' ? 'bg-[#FFFFFF] text-[#171717] shadow-xs' : 'text-[#737373] hover:text-[#171717]'
+              }`}
           >
             عربي
           </button>
           <button
             onClick={() => setLanguage('en')}
-            className={`rounded-md px-2.5 py-1 font-bold transition-colors ${
-              language === 'en' ? 'bg-[#FFFFFF] text-[#171717] shadow-xs' : 'text-[#737373] hover:text-[#171717]'
-            }`}
+            className={`rounded-md px-2.5 py-1 font-bold transition-colors ${language === 'en' ? 'bg-[#FFFFFF] text-[#171717] shadow-xs' : 'text-[#737373] hover:text-[#171717]'
+              }`}
           >
             EN
           </button>
@@ -165,7 +162,7 @@ export function Navbar({ onOpenNewProduct, onOpenNewSeller }: NavbarProps) {
               </div>
               <div className="mt-2 space-y-2 max-h-64 overflow-y-auto">
                 {pendingSellers.map(seller => (
-                  <div 
+                  <div
                     key={seller.id}
                     onClick={() => {
                       setShowNotifications(false);
@@ -186,7 +183,7 @@ export function Navbar({ onOpenNewProduct, onOpenNewSeller }: NavbarProps) {
                 ))}
 
                 {missingSignalProducts.length > 0 && (
-                  <div 
+                  <div
                     onClick={() => {
                       setShowNotifications(false);
                       setCurrentView('products');
@@ -213,7 +210,7 @@ export function Navbar({ onOpenNewProduct, onOpenNewSeller }: NavbarProps) {
             BG
           </div>
           <div className="hidden xl:block text-start">
-            <p className="text-xs font-bold leading-tight text-[#171717]">بەڕێوەبەری گەورە</p>
+            <p className="text-xs font-bold leading-tight text-[#171717]">بازاڕی گەورە</p>
             <p className="text-[10px] text-[#737373]">سلێمانی - ناوەندی سەرەکی</p>
           </div>
         </div>

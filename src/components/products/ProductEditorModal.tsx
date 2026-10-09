@@ -74,7 +74,40 @@ function ProductEditorForm({
   const [returnPolicyType, setReturnPolicyType] = useState<ReturnPolicyType>(product?.return_policy_type || 'exchange_only');
   const [returnConditions, setReturnConditions] = useState<string>(product?.return_conditions || 'پشکنینی کاڵا لە کاتی وەرگرتندا');
 
-  // Auto-translate from Kurdish into English and Arabic
+  // Auto-translate on blur if English or Arabic are empty
+  const handleNameKuBlur = async () => {
+    if (!nameKu || nameKu.trim() === '') return;
+    if (!nameEn || nameEn === nameKu || !nameAr || nameAr === nameKu) {
+      setIsTranslating(true);
+      try {
+        const res = await autoTranslateProduct(nameKu, descKu);
+        if (!nameEn || nameEn === nameKu) setNameEn(res.nameEn);
+        if (!nameAr || nameAr === nameKu) setNameAr(res.nameAr);
+      } catch (err) {
+        console.warn('Auto translate on blur warning:', err);
+      } finally {
+        setIsTranslating(false);
+      }
+    }
+  };
+
+  const handleDescKuBlur = async () => {
+    if (!descKu || descKu.trim() === '') return;
+    if (!descEn || descEn === descKu || !descAr || descAr === descKu) {
+      setIsTranslating(true);
+      try {
+        const res = await autoTranslateProduct(nameKu, descKu);
+        if (!descEn || descEn === descKu) setDescEn(res.descEn);
+        if (!descAr || descAr === descKu) setDescAr(res.descAr);
+      } catch (err) {
+        console.warn('Auto translate on blur warning:', err);
+      } finally {
+        setIsTranslating(false);
+      }
+    }
+  };
+
+  // Auto-translate from Kurdish into English and Arabic manually if requested
   const handleAutoTranslate = async () => {
     if (!nameKu && !descKu) return;
     setIsTranslating(true);
@@ -131,30 +164,48 @@ function ProductEditorForm({
     return_policy_type: returnPolicyType,
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsTranslating(true);
+
+    let finalNameEn = nameEn;
+    let finalNameAr = nameAr;
+    let finalDescEn = descEn;
+    let finalDescAr = descAr;
+
+    const baseName = nameKu || nameEn || nameAr;
+    const baseDesc = descKu || descEn || descAr;
+
+    // AUTOMATIC TRANSLATION: If EN or AR are empty or identical to Kurdish, translate dynamically now!
+    const needEn = !finalNameEn || finalNameEn.trim() === '' || finalNameEn === baseName;
+    const needAr = !finalNameAr || finalNameAr.trim() === '' || finalNameAr === baseName;
+    const needDescEn = !finalDescEn || finalDescEn.trim() === '' || finalDescEn === baseDesc;
+    const needDescAr = !finalDescAr || finalDescAr.trim() === '' || finalDescAr === baseDesc;
+
+    if (needEn || needAr || (baseDesc && (needDescEn || needDescAr))) {
+      try {
+        const transRes = await autoTranslateProduct(baseName, baseDesc);
+        if (needEn) finalNameEn = transRes.nameEn || baseName;
+        if (needAr) finalNameAr = transRes.nameAr || baseName;
+        if (needDescEn) finalDescEn = transRes.descEn || baseDesc;
+        if (needDescAr) finalDescAr = transRes.descAr || baseDesc;
+      } catch (err) {
+        console.warn('Auto-translate during submit fallback:', err);
+      }
+    }
 
     const priceUsd = Math.round(priceIqd / 1500);
-
     const finalImages = images.length > 0 ? images : (primaryImage ? [primaryImage] : []);
     const finalPrimary = primaryImage || (finalImages[0] || 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=600&auto=format&fit=crop&q=80');
 
-    // Guarantee no empty language strings - fallback chains
-    const validNameKu = nameKu || nameEn || nameAr;
-    const validNameEn = nameEn || nameKu || nameAr;
-    const validNameAr = nameAr || nameKu || nameEn;
-    const validDescKu = descKu || descEn || descAr;
-    const validDescEn = descEn || descKu || descAr;
-    const validDescAr = descAr || descKu || descEn;
-
     const dataPayload = {
       seller_id: sellerId || sellers[0]?.id || '',
-      name_ku: validNameKu,
-      name_en: validNameEn,
-      name_ar: validNameAr,
-      description_ku: validDescKu,
-      description_en: validDescEn,
-      description_ar: validDescAr,
+      name_ku: baseName,
+      name_en: finalNameEn || baseName,
+      name_ar: finalNameAr || baseName,
+      description_ku: baseDesc,
+      description_en: finalDescEn || baseDesc,
+      description_ar: finalDescAr || baseDesc,
       price_iqd: priceIqd,
       price_usd: priceUsd,
       category_id: categoryId || categories[0]?.id || '',
@@ -173,13 +224,17 @@ function ProductEditorForm({
       return_conditions: returnConditions,
     };
 
-    if (product) {
-      updateProduct({
-        ...product,
-        ...dataPayload,
-      });
-    } else {
-      addProduct(dataPayload);
+    try {
+      if (product) {
+        await updateProduct({
+          ...product,
+          ...dataPayload,
+        });
+      } else {
+        await addProduct(dataPayload);
+      }
+    } finally {
+      setIsTranslating(false);
     }
 
     onClose();
@@ -296,12 +351,16 @@ function ProductEditorForm({
             {activeLangTab === 'ku' && (
               <>
                 <div>
-                  <label className="font-bold text-[#171717]">{t.titleKurdishLabel} *</label>
+                  <div className="flex items-center justify-between">
+                    <label className="font-bold text-[#171717]">{t.titleKurdishLabel} *</label>
+                    <span className="text-[10px] text-[#657A52] font-semibold">✨ وەرگێڕانی خۆکار بۆ ئینگلیزی و عەرەبی</span>
+                  </div>
                   <input
                     type="text"
                     dir="rtl"
                     value={nameKu}
                     onChange={(e) => setNameKu(e.target.value)}
+                    onBlur={handleNameKuBlur}
                     placeholder="نموونە: چاییکەری کارەبایی کاراجا ٣.٥ لیتر"
                     className="mt-1 w-full rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] p-2.5 text-xs text-[#171717] focus:border-[#F4B942] focus:bg-white focus:outline-none"
                     required
@@ -313,6 +372,7 @@ function ProductEditorForm({
                     dir="rtl"
                     value={descKu}
                     onChange={(e) => setDescKu(e.target.value)}
+                    onBlur={handleDescKuBlur}
                     rows={3}
                     placeholder="تایبەتمەندی و وەسفی کاڵا بە زمانی کوردی سۆرانی بنووسە..."
                     className="mt-1 w-full rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] p-2.5 text-xs text-[#171717] focus:border-[#F4B942] focus:bg-white focus:outline-none"
@@ -612,10 +672,20 @@ function ProductEditorForm({
           </button>
           <button
             type="submit"
-            className="flex items-center gap-1.5 rounded-xl bg-[#657A52] px-6 py-2 font-bold text-white hover:bg-[#536543] shadow-sm transition-all"
+            disabled={isTranslating}
+            className="flex items-center gap-1.5 rounded-xl bg-[#657A52] px-6 py-2 font-bold text-white hover:bg-[#536543] shadow-sm transition-all disabled:opacity-75"
           >
-            <CheckCircle2 className="h-4 w-4" />
-            <span>{t.saveChanges}</span>
+            {isTranslating ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>وەرگێڕانی خۆکار و پاشەکەوتکردن...</span>
+              </>
+            ) : (
+              <>
+                <CheckCircle2 className="h-4 w-4" />
+                <span>{t.saveChanges}</span>
+              </>
+            )}
           </button>
         </div>
       </form>
