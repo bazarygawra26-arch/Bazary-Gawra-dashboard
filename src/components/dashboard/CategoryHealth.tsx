@@ -72,34 +72,27 @@ export function CategoryHealth() {
               onClick={() => setCurrentView('products')}
               className="group cursor-pointer rounded-xl border border-[#EAE7DF] p-3 transition-all hover:border-[#657A52] hover:bg-[#FAF9F6]"
             >
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white border border-[#EAE7DF] shadow-xs">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white border border-[#EAE7DF] shadow-xs">
                     {getIcon(cat.icon)}
                   </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-[#171717] group-hover:text-[#657A52] transition-colors line-clamp-1">
+                  <div className="min-w-0">
+                    <h4 className="text-xs font-bold text-[#171717] group-hover:text-[#657A52] transition-colors truncate">
                       {language === 'ku' ? cat.name_ku : language === 'ar' ? cat.name_ar : cat.name_en}
                     </h4>
-                    <p className="text-[10px] text-[#737373]">
-                      {cat.liveCount} {t.navProducts} ({cat.totalStock} {t.stockUnits})
+                    <p className="text-[10px] text-[#737373] truncate">
+                      {cat.liveCount} کاڵا ({cat.totalStock} دانە)
                     </p>
                   </div>
                 </div>
 
-                <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${
                   cat.avgScore >= 80 ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
                 }`}>
                   {cat.avgScore}%
                 </span>
               </div>
-
-              {cat.missingCount > 0 && (
-                <div className="mt-2 flex items-center gap-1 text-[10px] text-amber-700 font-medium">
-                  <AlertCircle className="h-3 w-3" />
-                  <span>{cat.missingCount} listings need warranty audit</span>
-                </div>
-              )}
             </div>
           ))}
         </div>

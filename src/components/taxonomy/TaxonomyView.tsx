@@ -45,8 +45,8 @@ export function TaxonomyView() {
         <div className="flex items-center gap-2 border-b border-[#EAE7DF] pb-3">
           <MapPin className="h-5 w-5 text-[#657A52]" />
           <div>
-            <h2 className="text-sm font-bold text-[#171717]">Kurdistan Governorates & Historical Bazaars</h2>
-            <p className="text-[11px] text-[#737373]">Active local hubs and verified neighborhood markets</p>
+            <h2 className="text-sm font-bold text-[#171717]">پارێزگاکانی کوردستان و بازاڕە مێژووییەکان</h2>
+            <p className="text-[11px] text-[#737373]">ناوەندە چالاکە ناوخۆییەکان و بازاڕە پەسەندکراوەکان</p>
           </div>
         </div>
 
@@ -63,18 +63,18 @@ export function TaxonomyView() {
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-sm font-extrabold text-[#171717]">
-                      {city.name_ku} <span className="font-semibold text-[#737373]">({city.name_en})</span>
+                      {city.name_ku}
                     </h3>
-                    <p className="text-[10px] text-[#737373]">{city.governorate}</p>
+                    <p className="text-[10px] text-[#737373]">{city.name_ku}</p>
                   </div>
                   <span className="rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
-                    {verifiedCitySellers.length} Verified
+                    {verifiedCitySellers.length} پەسەندکراو
                   </span>
                 </div>
 
                 <div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#737373]">
-                    Prominent Bazaars:
+                  <span className="text-[10px] font-bold tracking-wider text-[#737373]">
+                    بازاڕە سەرەکییەکان:
                   </span>
                   <div className="mt-1.5 flex flex-wrap gap-1">
                     {city.bazaars.map((bazaar, idx) => (
@@ -89,8 +89,8 @@ export function TaxonomyView() {
                 </div>
 
                 <div className="flex items-center justify-between border-t border-[#EAE7DF] pt-2 text-[11px] text-[#737373]">
-                  <span>Total Merchants:</span>
-                  <span className="font-bold text-[#171717]">{citySellers.length} stores</span>
+                  <span>کۆی فرۆشیاران:</span>
+                  <span className="font-bold text-[#171717]">{citySellers.length} فرۆشگا</span>
                 </div>
               </div>
             );
@@ -103,8 +103,8 @@ export function TaxonomyView() {
         <div className="flex items-center gap-2 border-b border-[#EAE7DF] pb-3">
           <Layers className="h-5 w-5 text-[#F4B942]" />
           <div>
-            <h2 className="text-sm font-bold text-[#171717]">Platform Marketplace Categories</h2>
-            <p className="text-[11px] text-[#737373]">Standardized classification across all 5 governorates</p>
+            <h2 className="text-sm font-bold text-[#171717]">پۆلەکانی بازاڕی گەورە</h2>
+            <p className="text-[11px] text-[#737373]">پۆلێنکردنی ستاندارد لە سەرجەم پارێزگاکان</p>
           </div>
         </div>
 
@@ -124,9 +124,8 @@ export function TaxonomyView() {
                   <h3 className="text-xs font-extrabold text-[#171717]">
                     {language === 'ku' ? cat.name_ku : language === 'ar' ? cat.name_ar : cat.name_en}
                   </h3>
-                  <p className="text-[11px] text-[#737373]">{cat.name_en}</p>
                   <p className="mt-1 text-[10px] font-bold text-[#657A52]">
-                    {catProducts.length} active listings
+                    {catProducts.length} کاڵای چالاک
                   </p>
                 </div>
               </div>

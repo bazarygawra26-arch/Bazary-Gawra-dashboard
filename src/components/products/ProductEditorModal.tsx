@@ -10,6 +10,7 @@ import {
   Truck, 
   RotateCcw, 
   CheckCircle2,
+  Sparkles,
 } from 'lucide-react';
 import { calculateTransparencyScore } from '@/lib/utils';
 import { ImageUploadDropzone } from '@/components/common/ImageUploadDropzone';
@@ -58,8 +59,8 @@ function ProductEditorForm({
   );
 
   const [warrantyType, setWarrantyType] = useState<WarrantyType>(product?.warranty_type || 'shop_local');
-  const [warrantyPeriod, setWarrantyPeriod] = useState<string>(product?.warranty_period || '6 Months (٦ مانگ)');
-  const [warrantyNotes, setWarrantyNotes] = useState<string>(product?.warranty_notes || 'Direct shop replacement warranty');
+  const [warrantyPeriod, setWarrantyPeriod] = useState<string>(product?.warranty_period || '١ ساڵ گرەنتی ناوخۆیی دووکان');
+  const [warrantyNotes, setWarrantyNotes] = useState<string>(product?.warranty_notes || 'گرەنتی گۆڕینەوە لە شوێنی خۆی');
 
   const [deliveryType, setDeliveryType] = useState<DeliveryType>(product?.delivery_type || 'same_day');
   const [deliveryCostIqd, setDeliveryCostIqd] = useState<number>(product?.delivery_cost_iqd ?? 3000);
@@ -67,7 +68,31 @@ function ProductEditorForm({
 
   const [returnWindowDays, setReturnWindowDays] = useState<number>(product?.return_window_days ?? 3);
   const [returnPolicyType, setReturnPolicyType] = useState<ReturnPolicyType>(product?.return_policy_type || 'exchange_only');
-  const [returnConditions, setReturnConditions] = useState<string>(product?.return_conditions || 'Check item upon delivery');
+  const [returnConditions, setReturnConditions] = useState<string>(product?.return_conditions || 'پشکنینی کاڵا لە کاتی وەرگرتندا');
+
+  // AI Assistant Feature to quickly fill descriptions & 100% transparency signals
+  const handleAiAutoFill = () => {
+    const baseTitle = nameKu || 'چاییکەری کارەبایی کاراجا ٣.٥ لیتر';
+    if (!nameKu) setNameKu(baseTitle);
+    if (!nameEn) setNameEn('Karaca Electric Samovar 3.5L Tea Maker');
+    if (!nameAr) setNameAr('صانعة الشاي وسماور كهربائي كاراجا ٣.٥ لتر');
+
+    setDescKu('کاڵایەکی پلە یەک و باوەڕپێکراو لە بازاڕی سلێمانی و هەولێر. لە ستیلی دژە ژەنگ دروستکراوە بە تایبەتمەندی کوژانەوەی خۆکار و گەرمڕاگرتنی بەردەوام.');
+    setDescEn('Authentic local bazaar listing with verified local shop warranty and quick city delivery.');
+    setDescAr('منتج محلي أصلي مع ضمان المحل المعتمد وفحص مباشر عند الاستلام في محافظات كوردستان.');
+
+    setWarrantyType('shop_local');
+    setWarrantyPeriod('١ ساڵ گرەنتی ناوخۆیی دووکان');
+    setWarrantyNotes('گرەنتی فەرمی گۆڕینەوە لە شوێنی دووکان لە کاتی هەر کێشەیەکدا');
+
+    setDeliveryType('same_day');
+    setDeliveryCostIqd(3000);
+    setDeliveryTimeHours(4);
+
+    setReturnWindowDays(3);
+    setReturnPolicyType('money_back');
+    setReturnConditions('پشکنینی کاڵا لە کاتی وەرگرتن بە مافی گەڕاندنەوە');
+  };
 
   const liveScore = calculateTransparencyScore({
     warranty_type: warrantyType,
@@ -137,15 +162,25 @@ function ProductEditorForm({
               {product ? t.editorTitleEdit : t.editorTitleNew}
             </h3>
             <p className="text-xs text-[#737373]">
-              Native Kurdish, Arabic & English listings with mandatory transparency verification
+              تۆمارکردنی کاڵا بە سێ زمان لەگەڵ دیاریکردنی پێوەرەکانی متمانە
             </p>
           </div>
         </div>
 
-        {/* Live Score Pill */}
+        {/* Live Score Pill & AI Assistant */}
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleAiAutoFill}
+            className="flex items-center gap-1.5 rounded-xl bg-indigo-50 border border-indigo-200 px-3 py-1.5 text-xs font-bold text-indigo-700 hover:bg-indigo-100 transition-colors shadow-xs active:scale-95"
+            title="پڕکردنەوەی خۆکار بە زیرەکی دەستکرد"
+          >
+            <Sparkles className="h-3.5 w-3.5 text-indigo-600" />
+            <span>پڕکردنەوە بە AI</span>
+          </button>
+
           <div className="hidden sm:flex items-center gap-1.5 rounded-full border border-[#EAE7DF] bg-[#FAF9F6] px-3 py-1 text-xs">
-            <span className="text-[#737373]">Transparency:</span>
+            <span className="text-[#737373]">نمرەی متمانە:</span>
             <span className={`font-extrabold ${liveScore >= 80 ? 'text-emerald-700' : 'text-amber-700'}`}>
               {liveScore}%
             </span>
@@ -164,7 +199,7 @@ function ProductEditorForm({
         {/* SECTION 1: Multilingual Details Tabs */}
         <div className="rounded-xl border border-[#EAE7DF] bg-white p-4">
           <div className="flex items-center justify-between border-b border-[#EAE7DF] pb-2">
-            <span className="font-bold text-[#171717]">Multilingual Content</span>
+            <span className="font-bold text-[#171717]">زانیاری کاڵا بە سێ زمان</span>
             <div className="flex items-center gap-1 rounded-lg bg-[#FAF9F6] p-0.5 border border-[#EAE7DF]">
               <button
                 type="button"
@@ -343,16 +378,16 @@ function ProductEditorForm({
           </div>
 
           <div>
-            <label className="font-bold text-[#171717]">Listing Status *</label>
+            <label className="font-bold text-[#171717]">دۆخی کاڵا *</label>
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value as ProductStatus)}
               className="mt-1 w-full rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] p-2.5 text-xs font-medium text-[#171717] focus:border-[#F4B942] focus:outline-none"
             >
-              <option value="active">Active (چالاک)</option>
-              <option value="draft">Draft (ڕەشنووس)</option>
-              <option value="out_of_stock">Out of Stock (نەماوە)</option>
-              <option value="archived">Archived (ئەرشیڤ)</option>
+              <option value="active">چالاک بۆ کڕین</option>
+              <option value="draft">ڕەشنووس</option>
+              <option value="out_of_stock">نەماوە لە کۆگا</option>
+              <option value="archived">ئەرشیڤکراو</option>
             </select>
           </div>
         </div>
@@ -390,17 +425,17 @@ function ProductEditorForm({
                   type="text"
                   value={warrantyPeriod}
                   onChange={(e) => setWarrantyPeriod(e.target.value)}
-                  placeholder="e.g. 12 Months (١٢ مانگ)"
+                  placeholder="نموونە: ١٢ مانگ (١ ساڵ)"
                   className="mt-1 w-full rounded-lg border border-[#EAE7DF] p-1.5 text-xs text-[#171717]"
                 />
               </div>
               <div>
-                <label className="text-[11px] text-[#737373]">Warranty Terms</label>
+                <label className="text-[11px] text-[#737373]">مەرج و وردەکاری گرەنتی</label>
                 <input
                   type="text"
                   value={warrantyNotes}
                   onChange={(e) => setWarrantyNotes(e.target.value)}
-                  placeholder="e.g. Official service center"
+                  placeholder="نموونە: گرەنتی گۆڕینەوە لە دووکان"
                   className="mt-1 w-full rounded-lg border border-[#EAE7DF] p-1.5 text-xs text-[#171717]"
                 />
               </div>
@@ -436,7 +471,7 @@ function ProductEditorForm({
                 />
               </div>
               <div>
-                <label className="text-[11px] text-[#737373]">Delivery Time (Hours)</label>
+                <label className="text-[11px] text-[#737373]">ماوەی گەیاندن (بە کاتژمێر)</label>
                 <input
                   type="number"
                   value={deliveryTimeHours}
@@ -477,12 +512,12 @@ function ProductEditorForm({
                 />
               </div>
               <div>
-                <label className="text-[11px] text-[#737373]">Return Condition</label>
+                <label className="text-[11px] text-[#737373]">مەرجی تاقیکردنەوە و گەڕاندنەوە</label>
                 <input
                   type="text"
                   value={returnConditions}
                   onChange={(e) => setReturnConditions(e.target.value)}
-                  placeholder="e.g. In original packaging"
+                  placeholder="نموونە: بە کارتۆن و پاکەتی خۆیەوە بێت"
                   className="mt-1 w-full rounded-lg border border-[#EAE7DF] p-1.5 text-xs text-[#171717]"
                 />
               </div>

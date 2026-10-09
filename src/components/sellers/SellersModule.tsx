@@ -203,7 +203,7 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
               {filteredSellers.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-12 text-center text-[#737373]">
-                    No merchants match the selected filter.
+                    هیچ فرۆشیارێک نەدۆزرایەوە بەپێی ئەم فلتەرە.
                   </td>
                 </tr>
               ) : (
@@ -274,7 +274,7 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
                           className="inline-flex items-center gap-1.5 rounded-lg border border-[#EAE7DF] bg-[#FAF9F6] px-2.5 py-1 text-xs font-bold text-[#171717] hover:border-[#657A52] hover:bg-white transition-colors"
                         >
                           <Package className="h-3.5 w-3.5 text-[#F4B942]" />
-                          <span>{sellerProducts.length} {t.navProducts}</span>
+                          <span>{sellerProducts.length} کاڵا</span>
                         </button>
                       </td>
 
@@ -283,8 +283,8 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
                         <div className="space-y-1">
                           <div>{getStatusBadge(seller.verification_status)}</div>
                           <div className="flex items-center gap-1.5 text-[10px] text-[#737373]">
-                            <span>Trust Score:</span>
-                            <span className="font-bold text-[#171717]">{seller.transparency_score}%</span>
+                            <span>نمرەی متمانە:</span>
+                            <span className="font-bold text-[#171717]">{seller.transparency_score}٪</span>
                           </div>
                         </div>
                       </td>
@@ -369,7 +369,7 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
                     className="h-56 w-full object-cover"
                   />
                   <div className="absolute bottom-2 rtl:right-2 ltr:left-2 rounded-lg bg-black/70 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur-xs">
-                    Physical Storefront Inspection
+                    پشکنینی فیزیایی دووکان
                   </div>
                 </div>
               </div>
@@ -386,7 +386,9 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
 
                 <div className="rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] p-3">
                   <span className="text-[#737373] font-medium">{t.merchantContact}</span>
-                  <p className="mt-1 font-bold text-[#171717]">{verifyingSeller.owner_name}</p>
+                  <p className="mt-1 font-bold text-[#171717]">
+                    {verifyingSeller.owner_name}
+                  </p>
                   <div className="mt-1 flex items-center gap-2">
                     <span className="text-[11px] text-[#737373]">{verifyingSeller.phone}</span>
                     <a
@@ -395,7 +397,7 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
                       rel="noopener noreferrer"
                       className="text-[11px] font-bold text-emerald-700 hover:underline"
                     >
-                      (WhatsApp Live)
+                      (واتسئاپ)
                     </a>
                   </div>
                 </div>
@@ -408,7 +410,7 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
                   value={adminNotes}
                   onChange={(e) => setAdminNotes(e.target.value)}
                   rows={3}
-                  placeholder="Record verification inspection notes, physical visits, or trade license checks..."
+                  placeholder="تێبینیەکانی پشکنین، سەردانی مەیدانی، یان مۆڵەت بنووسە..."
                   className="mt-1 w-full rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] p-3 text-xs text-[#171717] focus:border-[#657A52] focus:bg-white focus:outline-none"
                 />
               </div>
@@ -432,7 +434,7 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
                     }}
                     className="rounded-xl border border-[#EAE7DF] bg-white px-3 py-2 text-xs font-semibold text-[#737373] hover:bg-[#FAF9F6]"
                   >
-                    Set Unverified
+                    پەسەندنەکراو
                   </button>
                 </div>
 
@@ -483,7 +485,7 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
             <div className="mt-4 flex-1">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs font-bold text-[#171717]">
-                  Store Catalog ({products.filter(p => p.seller_id === selectedDrawerSeller.id).length} listings)
+                  کاڵاکانی فرۆشگا ({products.filter(p => p.seller_id === selectedDrawerSeller.id).length} دانە)
                 </span>
                 {onOpenNewProductForSeller && (
                   <button
@@ -495,7 +497,7 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
                     className="flex items-center gap-1 text-xs font-bold text-[#657A52] hover:underline"
                   >
                     <Plus className="h-3.5 w-3.5" />
-                    <span>Add Product</span>
+                    <span>زیادکردنی کاڵا</span>
                   </button>
                 )}
               </div>
@@ -503,7 +505,7 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
               <div className="space-y-2.5">
                 {products.filter(p => p.seller_id === selectedDrawerSeller.id).length === 0 ? (
                   <p className="py-8 text-center text-xs text-[#737373]">
-                    This seller has no active listings yet.
+                    ئەم فرۆشیارە هێشتا هیچ کاڵایەکی نییە.
                   </p>
                 ) : (
                   products
@@ -526,14 +528,14 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
                             <span className="font-extrabold text-[#657A52]">
                               {formatIqd(product.price_iqd, language)}
                             </span>
-                            <span className="text-[#737373]">· {product.stock_quantity} in stock</span>
+                            <span className="text-[#737373]">· {product.stock_quantity} لە کۆگا</span>
                           </div>
                           <div className="mt-1 flex items-center gap-1.5 text-[10px]">
                             <span className="rounded bg-emerald-50 px-1.5 py-0.2 font-semibold text-emerald-800">
-                              {product.warranty_period || 'No warranty'}
+                              {product.warranty_period || 'بێ گرەنتی'}
                             </span>
                             <span className="text-[#737373]">
-                              Transparency: {product.transparency_score}%
+                              نمرەی متمانە: {product.transparency_score}٪
                             </span>
                           </div>
                         </div>
@@ -551,7 +553,7 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 shadow-sm transition-all"
               >
                 <MessageSquare className="h-4 w-4" />
-                <span>Contact Merchant on WhatsApp ({selectedDrawerSeller.whatsapp})</span>
+                <span>پەیوەندی بە فرۆشیار لە واتسئاپ ({selectedDrawerSeller.whatsapp})</span>
               </a>
             </div>
           </div>
@@ -581,7 +583,7 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
               className="mt-4 space-y-3.5 text-xs"
             >
               <div>
-                <label className="font-bold text-[#171717]">Store Name (Kurdish)</label>
+                <label className="font-bold text-[#171717]">ناوی دووکان / فرۆشگا بە کوردی</label>
                 <input
                   type="text"
                   value={editingSeller.name_ku}
@@ -592,7 +594,7 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
               </div>
 
               <div>
-                <label className="font-bold text-[#171717]">Store Name (English)</label>
+                <label className="font-bold text-[#171717]">ناوی دووکان بە ئینگلیزی (Store Name)</label>
                 <input
                   type="text"
                   value={editingSeller.name_en}
@@ -604,7 +606,7 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="font-bold text-[#171717]">Owner Name</label>
+                  <label className="font-bold text-[#171717]">ناوی خاوەن کار</label>
                   <input
                     type="text"
                     value={editingSeller.owner_name}
@@ -614,24 +616,24 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
                   />
                 </div>
                 <div>
-                  <label className="font-bold text-[#171717]">Governorate / City</label>
+                  <label className="font-bold text-[#171717]">شار / پارێزگا</label>
                   <select
                     value={editingSeller.city}
                     onChange={(e) => setEditingSeller({ ...editingSeller, city: e.target.value as KurdishCity })}
                     className="mt-1 w-full rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] p-2.5 text-xs focus:border-[#657A52] focus:bg-white focus:outline-none"
                   >
-                    <option value="Sulaymaniyah">Sulaymaniyah</option>
-                    <option value="Erbil">Erbil</option>
-                    <option value="Duhok">Duhok</option>
-                    <option value="Halabja">Halabja</option>
-                    <option value="Kirkuk">Kirkuk</option>
+                    <option value="Sulaymaniyah">سلێمانی</option>
+                    <option value="Erbil">هەولێر</option>
+                    <option value="Duhok">دهۆک</option>
+                    <option value="Halabja">هەڵەبجە</option>
+                    <option value="Kirkuk">کەرکووک</option>
                   </select>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="font-bold text-[#171717]">Phone</label>
+                  <label className="font-bold text-[#171717]">ژمارەی مۆبایل</label>
                   <input
                     type="text"
                     value={editingSeller.phone}
@@ -641,7 +643,7 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
                   />
                 </div>
                 <div>
-                  <label className="font-bold text-[#171717]">WhatsApp Number</label>
+                  <label className="font-bold text-[#171717]">ژمارەی واتسئاپ</label>
                   <input
                     type="text"
                     value={editingSeller.whatsapp}
@@ -653,7 +655,7 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
               </div>
 
               <div>
-                <label className="font-bold text-[#171717]">Bazaar Neighborhood</label>
+                <label className="font-bold text-[#171717]">ناونیشانی بازاڕ و شوێنی دووکان</label>
                 <input
                   type="text"
                   value={editingSeller.bazaar_name}

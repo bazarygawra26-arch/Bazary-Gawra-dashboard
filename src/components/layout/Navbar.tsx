@@ -160,7 +160,7 @@ export function Navbar({ onOpenNewProduct, onOpenNewSeller }: NavbarProps) {
               <div className="flex items-center justify-between border-b border-[#EAE7DF] pb-2">
                 <span className="font-bold text-xs text-[#171717]">{t.notifications}</span>
                 <span className="rounded-full bg-[#FAF9F6] px-2 py-0.5 text-[10px] text-[#737373]">
-                  {totalAlerts} new
+                  {totalAlerts} نوێ
                 </span>
               </div>
               <div className="mt-2 space-y-2 max-h-64 overflow-y-auto">
@@ -198,7 +198,7 @@ export function Navbar({ onOpenNewProduct, onOpenNewSeller }: NavbarProps) {
                       <span className="text-xs font-semibold">{t.auditMissingSignals}</span>
                     </div>
                     <p className="mt-1 text-[11px] text-amber-700">
-                      {missingSignalProducts.length} listings need warranty or delivery information signals.
+                      {missingSignalProducts.length} کاڵا پێویستیان بە زانیاری گرەنتی یان گەیاندن هەیە.
                     </p>
                   </div>
                 )}
@@ -208,13 +208,13 @@ export function Navbar({ onOpenNewProduct, onOpenNewSeller }: NavbarProps) {
         </div>
 
         {/* Admin Avatar */}
-        <div className="flex items-center gap-2.5 rounded-full border border-[#EAE7DF] bg-white p-1 pl-1 pr-2.5">
+        <div className="flex items-center gap-2.5 rounded-full border border-[#EAE7DF] bg-white p-1 ps-1 pe-2.5">
           <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#657A52] text-xs font-bold text-white shadow-xs">
             BG
           </div>
           <div className="hidden xl:block text-start">
-            <p className="text-xs font-bold leading-tight text-[#171717]">Admin Slemani</p>
-            <p className="text-[10px] text-[#737373]">Operations HQ</p>
+            <p className="text-xs font-bold leading-tight text-[#171717]">بەڕێوەبەری گەورە</p>
+            <p className="text-[10px] text-[#737373]">سلێمانی - ناوەندی سەرەکی</p>
           </div>
         </div>
       </div>

@@ -47,7 +47,7 @@ export function DashboardOverview({ onOpenNewProduct, onOpenNewSeller }: Dashboa
               {t.navOverview} — {t.appName}
             </h1>
             <span className="rounded-full bg-[#657A52]/10 px-2 py-0.5 text-[10px] font-bold text-[#657A52]">
-              Kurdistan Region
+              هەرێمی کوردستان
             </span>
           </div>
           <p className="mt-1 text-xs text-[#737373]">
@@ -100,12 +100,12 @@ export function DashboardOverview({ onOpenNewProduct, onOpenNewSeller }: Dashboa
                 {t.auditAlertTitle}
               </h4>
               <p className="text-[11px] text-amber-800">
-                {missingSignals.length} products require warranty type or delivery fees to qualify for verified buyer badges.
+                {missingSignals.length} کاڵا پێویستیان بە دیاریکردنی جۆری گرەنتی یان تێچووی گەیاندن هەیە بۆ وەرگرتنی متمانە.
               </p>
             </div>
           </div>
           <span className="text-xs font-bold text-amber-900 group-hover:underline">
-            Audit Listings →
+            وردبینی کردنی کاڵاکان ←
           </span>
         </div>
       )}
@@ -130,25 +130,25 @@ export function DashboardOverview({ onOpenNewProduct, onOpenNewSeller }: Dashboa
                 <Sparkles className="h-4 w-4" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-[#171717]">Kurdish AI Search Trends</h3>
-                <p className="text-[11px] text-[#737373]">Live intent queries in Kurdish Sorani</p>
+                <h3 className="text-sm font-bold text-[#171717]">گەڕانە باوەکانی زیرەکی دەستکرد</h3>
+                <p className="text-[11px] text-[#737373]">پرسیار و گەڕانی کڕیاران بە کوردی سۆرانی</p>
               </div>
             </div>
 
             <div className="mt-4 space-y-2.5">
               <div className="rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] p-2.5 text-xs">
-                <p className="font-bold text-[#171717]">&quot;Tea Maker with 2yr Samovar Warranty&quot;</p>
+                <p className="font-bold text-[#171717]">&quot;چایەدەنی کارەبایی بە ٢ ساڵ گرەنتی&quot;</p>
                 <div className="mt-1 flex items-center justify-between text-[10px] text-[#737373]">
-                  <span>Sulaymaniyah Mawlawi</span>
-                  <span className="font-bold text-emerald-700">96% Matched</span>
+                  <span>سلێمانی، شەقامی مەولەوی</span>
+                  <span className="font-bold text-emerald-700">٩٦٪ هاوتا بووە</span>
                 </div>
               </div>
 
               <div className="rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] p-2.5 text-xs">
-                <p className="font-bold text-[#171717]">&quot;Original iPhone 15 Titanium Erbil&quot;</p>
+                <p className="font-bold text-[#171717]">&quot;ئایفۆن ١٥ پرۆ ماکس ئەسڵی&quot;</p>
                 <div className="mt-1 flex items-center justify-between text-[10px] text-[#737373]">
-                  <span>Erbil Nishtiman</span>
-                  <span className="font-bold text-emerald-700">Converted</span>
+                  <span>هەولێر، نیشتیمان</span>
+                  <span className="font-bold text-emerald-700">کڕدراوە (سەرکەوتوو)</span>
                 </div>
               </div>
             </div>
@@ -158,7 +158,7 @@ export function DashboardOverview({ onOpenNewProduct, onOpenNewSeller }: Dashboa
             onClick={() => setCurrentView('ai-insights')}
             className="mt-4 w-full rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] py-2 text-xs font-bold text-[#171717] hover:bg-white transition-colors"
           >
-            {t.aiInsightsTitle} →
+            {t.aiInsightsTitle} ←
           </button>
         </div>
       </div>

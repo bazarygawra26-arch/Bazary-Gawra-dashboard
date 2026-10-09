@@ -109,19 +109,19 @@ export function Sidebar() {
       </div>
 
       {/* Footer Info Box */}
-      <div className="rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] p-3 text-start">
+      <div className="rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] p-3">
         <div className="flex items-center gap-2">
-          <ShieldCheck className="h-4 w-4 text-[#657A52]" />
-          <span className="text-xs font-bold text-[#171717]">Kurdistan Trust Engine</span>
+          <ShieldCheck className="h-4 w-4 shrink-0 text-[#657A52]" />
+          <span className="text-xs font-bold text-[#171717]">ئامرازی متمانەی کوردستان</span>
         </div>
         <p className="mt-1 text-[11px] leading-relaxed text-[#737373]">
-          Real-time transparency validation for Sulaymaniyah, Erbil, Duhok & Halabja bazaars.
+          پشکنینی ڕوونی ئەنجامدراوی بازاڕەکانی سلێمانی، هەولێر، دهۆک و هەڵەبجە.
         </p>
         <div className="mt-2.5 flex items-center justify-between border-t border-[#EAE7DF] pt-2 text-[10px] font-medium text-[#737373]">
-          <span>App v2.4.0</span>
+          <span>v2.4.0</span>
           <span className="flex items-center gap-1 text-[#657A52] font-semibold">
             <span className="h-1.5 w-1.5 rounded-full bg-[#657A52]"></span>
-            Active
+            چالاک
           </span>
         </div>
       </div>

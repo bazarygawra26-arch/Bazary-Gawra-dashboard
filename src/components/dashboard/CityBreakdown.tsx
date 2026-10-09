@@ -59,10 +59,10 @@ export function CityBreakdown() {
             <div key={city.id} className="space-y-1.5">
               <div className="flex items-center justify-between text-xs">
                 <span className="font-bold text-[#171717]">
-                  {city.nameKu} <span className="font-normal text-[#737373]">({city.nameEn})</span>
+                  {city.nameKu}
                 </span>
                 <span className="font-semibold text-[#737373]">
-                  {city.sellersCount} {t.navSellers} · {city.productsCount} {t.navProducts}
+                  {city.sellersCount} فرۆشیار · {city.productsCount} کاڵا
                 </span>
               </div>
               <div className="h-2 w-full overflow-hidden rounded-full bg-[#FAF9F6] border border-[#EAE7DF]">
@@ -78,11 +78,11 @@ export function CityBreakdown() {
 
       <div className="mt-5 rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] p-3 text-start">
         <div className="flex items-center justify-between">
-          <span className="text-[11px] font-medium text-[#737373]">Major Bazaar Hubs</span>
-          <span className="text-[10px] font-bold text-[#657A52]">Sulaymaniyah & Erbil lead</span>
+          <span className="text-[11px] font-bold text-[#171717]">بازاڕە سەرەکییەکان</span>
+          <span className="text-[10px] font-bold text-[#657A52]">سلێمانی و هەولێر لە پێشەوەن</span>
         </div>
-        <p className="mt-1 text-[11px] text-[#171717] font-medium">
-          Mawlawi St, Qaysari Erbil, Nishtiman & Central Duhok cover 82% of active platform listings.
+        <p className="mt-1 text-[11px] text-[#737373] leading-relaxed">
+          شەقامی مەولەوی، قەیسەری هەولێر، نیشتیمان و دهۆک ٨٢٪ی سەرجەم کاڵاکان پێکدەهێنن.
         </p>
       </div>
     </div>

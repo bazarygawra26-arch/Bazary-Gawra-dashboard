@@ -39,11 +39,11 @@ export function AiInsightsView() {
                   {t.unmetDemandGap}
                 </h3>
                 <span className="rounded-full bg-indigo-200/80 px-2 py-0.5 text-[10px] font-bold text-indigo-800">
-                  {zeroResultQueries.length} Unmet Opportunities
+                  {zeroResultQueries.length} داواکاری بەردەستنەکراو
                 </span>
               </div>
               <p className="mt-1 text-xs text-indigo-900/80 leading-relaxed">
-                Shoppers in Kurdistan are actively asking the AI assistant for these products, but no local merchants have listed them yet. Reach out to bazaar merchants in these cities!
+                کڕیارانی کوردستان بەدوای ئەم کاڵایانەدا دەگەڕێن بەڵام هێشتا هیچ فرۆشیارێک لە بازاڕەکاندا داینەناون. دەتوانیت پەیوەندی بە فرۆشیارانی ئەم شارانەوە بکەیت.
               </p>
 
               <div className="mt-3 flex flex-wrap gap-2">
@@ -74,7 +74,7 @@ export function AiInsightsView() {
               <h3 className="text-sm font-bold text-[#171717]">{t.liveAiSearches}</h3>
             </div>
             <span className="rounded-full bg-[#FAF9F6] px-2.5 py-0.5 text-[10px] font-bold text-[#737373]">
-              {aiQueries.length} Total
+              {aiQueries.length} کۆی گشتی
             </span>
           </div>
 
@@ -95,7 +95,7 @@ export function AiInsightsView() {
                       ? 'bg-rose-50 text-rose-700 border border-rose-200'
                       : 'bg-blue-50 text-blue-700 border border-blue-200'
                   }`}>
-                    {query.status}
+                    {query.status === 'converted' ? 'کڕدراوە' : query.status === 'zero_results' ? 'بێ ئەنجام' : 'هاوتاکراوە'}
                   </span>
                 </div>
 
@@ -104,7 +104,7 @@ export function AiInsightsView() {
                     <MapPin className="h-3 w-3 text-[#657A52]" />
                     {query.user_city}
                   </span>
-                  <span>{query.matched_products_count} matched results</span>
+                  <span>{query.matched_products_count} کاڵای دۆزراوە</span>
                 </div>
               </div>
             ))}
@@ -119,7 +119,7 @@ export function AiInsightsView() {
               <h3 className="text-sm font-bold text-[#171717]">{t.visualScans}</h3>
             </div>
             <span className="rounded-full bg-[#FAF9F6] px-2.5 py-0.5 text-[10px] font-bold text-[#737373]">
-              {aiScans.length} Scans
+              {aiScans.length} سکان
             </span>
           </div>
 
@@ -137,9 +137,9 @@ export function AiInsightsView() {
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
                     <span className="rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
-                      {Math.round(scan.match_confidence * 100)}% Match
+                      {Math.round(scan.match_confidence * 100)}٪ هاوتاکراوە
                     </span>
-                    <span className="text-[10px] text-[#737373]">Mobile Scan</span>
+                    <span className="text-[10px] text-[#737373]">سکانی مۆبایل</span>
                   </div>
 
                   <h4 className="mt-1 text-xs font-bold text-[#171717] line-clamp-1">

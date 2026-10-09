@@ -153,7 +153,7 @@ export function ProductsModule({ onOpenNewProduct, onSetEditingProduct }: Produc
             onClick={() => setStatusFilter('missing_signals')}
             className="shrink-0 rounded-xl bg-amber-800 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-amber-900 transition-colors shadow-xs"
           >
-            Filter {auditFlaggedProducts.length} Missing Signal Listings
+            فلتەرکردنی {auditFlaggedProducts.length} کاڵای کەم زانیاری
           </button>
         </div>
       )}
@@ -223,7 +223,7 @@ export function ProductsModule({ onOpenNewProduct, onSetEditingProduct }: Produc
               {filteredProducts.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-12 text-center text-[#737373]">
-                    No products found matching filter criteria.
+                    هیچ کاڵایەک نەدۆزرایەوە بەپێی ئەم فلتەرە.
                   </td>
                 </tr>
               ) : (
@@ -252,7 +252,7 @@ export function ProductsModule({ onOpenNewProduct, onSetEditingProduct }: Produc
                               {language === 'ku' ? product.name_ku : language === 'ar' ? product.name_ar : product.name_en}
                             </h4>
                             <p className="text-[11px] text-[#737373] line-clamp-1">
-                              {product.name_en}
+                              {product.name_ku || product.name_en}
                             </p>
                           </div>
                         </div>
@@ -268,9 +268,9 @@ export function ProductsModule({ onOpenNewProduct, onSetEditingProduct }: Produc
                       {/* Merchant & City */}
                       <td className="px-4 py-3.5">
                         <div className="font-semibold text-[#171717]">
-                          {seller ? (language === 'ku' ? seller.name_ku : seller.name_en) : 'Direct Merchant'}
+                          {seller ? (language === 'ku' ? seller.name_ku : seller.name_en) : 'فرۆشیار'}
                         </div>
-                        <p className="text-[11px] text-[#737373]">{seller?.city || 'Sulaymaniyah'}</p>
+                        <p className="text-[11px] text-[#737373]">{seller?.city || 'سلێمانی'}</p>
                       </td>
 
                       {/* Price */}
@@ -291,22 +291,22 @@ export function ProductsModule({ onOpenNewProduct, onSetEditingProduct }: Produc
                                 : 'bg-rose-50 text-rose-800 border border-rose-200'
                             }`}>
                               <ShieldCheck className="h-3 w-3" />
-                              {product.warranty_period || 'No Warranty'}
+                              {product.warranty_period || 'بێ گرەنتی'}
                             </span>
 
                             {/* Delivery Badge */}
                             <span className="inline-flex items-center gap-1 rounded bg-blue-50 border border-blue-200 px-1.5 py-0.5 text-[10px] font-bold text-blue-800">
                               <Truck className="h-3 w-3" />
-                              {product.delivery_type === 'same_day' ? 'Same Day' : product.delivery_type === 'express_kurdistan' ? '24-48h' : 'Pickup'}
+                              {product.delivery_type === 'same_day' ? 'هەمان ڕۆژ' : product.delivery_type === 'express_kurdistan' ? '٢٤-٤٨ کاتژمێر' : 'وەرگرتن لە دووکان'}
                             </span>
                           </div>
 
                           <div className="flex items-center gap-2 text-[10px]">
                             <span className="text-[#737373]">
-                              Return: {product.return_window_days > 0 ? `${product.return_window_days}d window` : 'No returns'}
+                              گەڕاندنەوە: {product.return_window_days > 0 ? `${product.return_window_days} ڕۆژ` : 'ناگەڕێنرێتەوە'}
                             </span>
                             <span className={`font-bold ${product.transparency_score >= 80 ? 'text-emerald-700' : 'text-amber-700'}`}>
-                              ({product.transparency_score}% Score)
+                              ({product.transparency_score}٪ نمرەی متمانە)
                             </span>
                           </div>
                         </div>
@@ -348,7 +348,7 @@ export function ProductsModule({ onOpenNewProduct, onSetEditingProduct }: Produc
                           {/* Delete */}
                           <button
                             onClick={() => {
-                              if (confirm('Are you sure you want to delete this listing?')) {
+                              if (confirm('ئایا دڵنیایت لە سڕینەوەی ئەم کاڵایە؟')) {
                                 deleteProduct(product.id);
                               }
                             }}

@@ -57,7 +57,7 @@ export function AddSellerModal({ isOpen, onClose }: AddSellerModalProps) {
             </div>
             <div>
               <h3 className="text-base font-extrabold text-[#171717]">{t.addMerchant}</h3>
-              <p className="text-xs text-[#737373]">Register new Kurdistan physical storefront</p>
+              <p className="text-xs text-[#737373]">تۆمارکردنی فرۆشگا و دووکانی فیزیایی لە بازاڕەکانی کوردستان</p>
             </div>
           </div>
           <button
@@ -70,7 +70,7 @@ export function AddSellerModal({ isOpen, onClose }: AddSellerModalProps) {
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-3.5 text-xs">
           <div>
-            <label className="font-bold text-[#171717]">Store Name (Kurdish) *</label>
+            <label className="font-bold text-[#171717]">ناوی دووکان بە کوردی *</label>
             <input
               type="text"
               dir="rtl"
@@ -84,7 +84,7 @@ export function AddSellerModal({ isOpen, onClose }: AddSellerModalProps) {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="font-bold text-[#171717]">Store Name (English) *</label>
+              <label className="font-bold text-[#171717]">ناوی دووکان بە ئینگلیزی (Store Name) *</label>
               <input
                 type="text"
                 value={nameEn}
@@ -95,12 +95,12 @@ export function AddSellerModal({ isOpen, onClose }: AddSellerModalProps) {
               />
             </div>
             <div>
-              <label className="font-bold text-[#171717]">Owner Name *</label>
+              <label className="font-bold text-[#171717]">ناوی تەواوی خاوەن کار *</label>
               <input
                 type="text"
                 value={ownerName}
                 onChange={(e) => setOwnerName(e.target.value)}
-                placeholder="Owner Full Name"
+                placeholder="ناوی سیانی خاوەن کار"
                 className="mt-1 w-full rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] p-2.5 text-xs text-[#171717] focus:border-[#657A52] focus:bg-white focus:outline-none"
                 required
               />
@@ -109,26 +109,26 @@ export function AddSellerModal({ isOpen, onClose }: AddSellerModalProps) {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="font-bold text-[#171717]">Governorate *</label>
+              <label className="font-bold text-[#171717]">پارێزگا / شار *</label>
               <select
                 value={city}
                 onChange={(e) => setCity(e.target.value as KurdishCity)}
                 className="mt-1 w-full rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] p-2.5 text-xs font-medium text-[#171717] focus:border-[#657A52] focus:outline-none"
               >
-                <option value="Sulaymaniyah">Sulaymaniyah (سلێمانی)</option>
-                <option value="Erbil">Erbil (هەولێر)</option>
-                <option value="Duhok">Duhok (دهۆک)</option>
-                <option value="Halabja">Halabja (هەڵەبجە)</option>
-                <option value="Kirkuk">Kirkuk (کەرکووک)</option>
+                <option value="Sulaymaniyah">سلێمانی (Sulaymaniyah)</option>
+                <option value="Erbil">هەولێر (Erbil)</option>
+                <option value="Duhok">دهۆک (Duhok)</option>
+                <option value="Halabja">هەڵەبجە (Halabja)</option>
+                <option value="Kirkuk">کەرکووک (Kirkuk)</option>
               </select>
             </div>
             <div>
-              <label className="font-bold text-[#171717]">Bazaar / Neighborhood *</label>
+              <label className="font-bold text-[#171717]">بازاڕ / گەڕەک *</label>
               <input
                 type="text"
                 value={bazaarName}
                 onChange={(e) => setBazaarName(e.target.value)}
-                placeholder="e.g. Mawlawi Street, Qaysari"
+                placeholder="نموونە: شەقامی مەولەوی، قەیسەری"
                 className="mt-1 w-full rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] p-2.5 text-xs text-[#171717] focus:border-[#657A52] focus:bg-white focus:outline-none"
                 required
               />
@@ -137,7 +137,7 @@ export function AddSellerModal({ isOpen, onClose }: AddSellerModalProps) {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="font-bold text-[#171717]">Phone Number *</label>
+              <label className="font-bold text-[#171717]">ژمارەی مۆبایل *</label>
               <input
                 type="text"
                 value={phone}
@@ -147,7 +147,7 @@ export function AddSellerModal({ isOpen, onClose }: AddSellerModalProps) {
               />
             </div>
             <div>
-              <label className="font-bold text-[#171717]">WhatsApp (Without +) *</label>
+              <label className="font-bold text-[#171717]">ژمارەی واتسئاپ (بەبێ +) *</label>
               <input
                 type="text"
                 value={whatsapp}
@@ -160,12 +160,12 @@ export function AddSellerModal({ isOpen, onClose }: AddSellerModalProps) {
           </div>
 
           <div>
-            <label className="font-bold text-[#171717]">Address Details</label>
+            <label className="font-bold text-[#171717]">ناونیشانی وردی دووکان</label>
             <input
               type="text"
               value={addressDetails}
               onChange={(e) => setAddressDetails(e.target.value)}
-              placeholder="e.g. Near Grand Mosque, Shop 18"
+              placeholder="نموونە: نزیک مزگەوتی گەورە، دووکانی ١٨"
               className="mt-1 w-full rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] p-2.5 text-xs text-[#171717] focus:border-[#657A52] focus:bg-white focus:outline-none"
             />
           </div>
