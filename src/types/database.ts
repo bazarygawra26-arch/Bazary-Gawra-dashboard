@@ -68,6 +68,9 @@ export interface Product {
 export interface AiSearchQuery {
   id: string;
   query_text: string;
+  query_text_ku?: string;
+  query_text_en?: string;
+  query_text_ar?: string;
   user_city: KurdishCity;
   matched_products_count: number;
   intent_category: string;
@@ -79,10 +82,19 @@ export interface AiProductScan {
   id: string;
   scan_image_url: string;
   detected_labels: string[];
+  detected_labels_ku?: string[];
+  detected_labels_en?: string[];
+  detected_labels_ar?: string[];
   match_confidence: number;
   matched_product_name: string;
+  matched_product_name_ku?: string;
+  matched_product_name_en?: string;
+  matched_product_name_ar?: string;
   matched_product_id?: string;
   matched_seller_name: string;
+  matched_seller_name_ku?: string;
+  matched_seller_name_en?: string;
+  matched_seller_name_ar?: string;
   matched_seller_id?: string;
   created_at: string;
 }

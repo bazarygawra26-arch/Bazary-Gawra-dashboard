@@ -16,7 +16,7 @@ import {
   X
 } from 'lucide-react';
 import { formatIqd, downloadCsv } from '@/lib/utils';
-import { getLocalizedField } from '@/lib/translator';
+import { getLocalizedField, getLocalizedCity, getLocalizedWarranty } from '@/lib/translator';
 
 interface ProductsModuleProps {
   onOpenNewProduct: () => void;
@@ -261,7 +261,7 @@ export function ProductsModule({ onOpenNewProduct, onSetEditingProduct }: Produc
 
                       {/* Category */}
                       <td className="px-4 py-3.5">
-                        <span className="rounded-lg border border-[#EAE7DF] bg-[#FAF9F6] px-2.5 py-1 text-[11px] font-semibold text-[#171717]">
+                        <span className="inline-block whitespace-nowrap rounded-lg border border-[#EAE7DF] bg-[#FAF9F6] px-2.5 py-1 text-[11px] font-semibold text-[#171717]">
                           {category ? getLocalizedField(category, 'name', language) : product.category_id}
                         </span>
                       </td>
@@ -269,9 +269,9 @@ export function ProductsModule({ onOpenNewProduct, onSetEditingProduct }: Produc
                       {/* Merchant & City */}
                       <td className="px-4 py-3.5">
                         <div className="font-semibold text-[#171717]">
-                          {seller ? getLocalizedField(seller, 'name', language) : 'فرۆشیار'}
+                          {seller ? getLocalizedField(seller, 'name', language) : (language === 'ku' ? 'فرۆشیار' : language === 'ar' ? 'تاجر' : 'Merchant')}
                         </div>
-                        <p className="text-[11px] text-[#737373]">{seller?.city || 'سلێمانی'}</p>
+                        <p className="text-[11px] text-[#737373]">{seller ? getLocalizedCity(seller.city, language) : (language === 'ku' ? 'سلێمانی' : language === 'ar' ? 'السليمانية' : 'Sulaymaniyah')}</p>
                       </td>
 
                       {/* Price */}
@@ -284,30 +284,39 @@ export function ProductsModule({ onOpenNewProduct, onSetEditingProduct }: Produc
                       {/* Information Signals */}
                       <td className="px-4 py-3.5">
                         <div className="space-y-1">
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex items-center gap-1.5 flex-wrap">
                             {/* Warranty Badge */}
                             <span className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-bold ${
                               product.warranty_type !== 'none' 
                                 ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' 
                                 : 'bg-rose-50 text-rose-800 border border-rose-200'
                             }`}>
-                              <ShieldCheck className="h-3 w-3" />
-                              {product.warranty_period || 'بێ گرەنتی'}
+                              <ShieldCheck className="h-3 w-3 shrink-0" />
+                              <span>{getLocalizedWarranty(product.warranty_period, product.warranty_type, language)}</span>
                             </span>
 
                             {/* Delivery Badge */}
                             <span className="inline-flex items-center gap-1 rounded bg-blue-50 border border-blue-200 px-1.5 py-0.5 text-[10px] font-bold text-blue-800">
-                              <Truck className="h-3 w-3" />
-                              {product.delivery_type === 'same_day' ? 'هەمان ڕۆژ' : product.delivery_type === 'express_kurdistan' ? '٢٤-٤٨ کاتژمێر' : 'وەرگرتن لە دووکان'}
+                              <Truck className="h-3 w-3 shrink-0" />
+                              <span>
+                                {product.delivery_type === 'same_day' 
+                                  ? (language === 'ku' ? 'هەمان ڕۆژ' : language === 'ar' ? 'نفس اليوم' : 'Same Day') 
+                                  : product.delivery_type === 'express_kurdistan' 
+                                  ? (language === 'ku' ? '٢٤-٤٨ کاتژمێر' : language === 'ar' ? '٢٤-٤٨ ساعة' : '24-48h Express') 
+                                  : (language === 'ku' ? 'وەرگرتن لە دووکان' : language === 'ar' ? 'استلام من المتجر' : 'Pickup Only')}
+                              </span>
                             </span>
                           </div>
 
                           <div className="flex items-center gap-2 text-[10px]">
                             <span className="text-[#737373]">
-                              گەڕاندنەوە: {product.return_window_days > 0 ? `${product.return_window_days} ڕۆژ` : 'ناگەڕێنرێتەوە'}
+                              {language === 'ku' ? 'گەڕاندنەوە:' : language === 'ar' ? 'الإرجاع:' : 'Return:'}{' '}
+                              {product.return_window_days > 0 
+                                ? `${product.return_window_days} ${language === 'ku' ? 'ڕۆژ' : language === 'ar' ? 'أيام' : 'days'}` 
+                                : (language === 'ku' ? 'ناگەڕێنرێتەوە' : language === 'ar' ? 'غير قابل للإرجاع' : 'Non-returnable')}
                             </span>
                             <span className={`font-bold ${product.transparency_score >= 80 ? 'text-emerald-700' : 'text-amber-700'}`}>
-                              ({product.transparency_score}٪ نمرەی متمانە)
+                              ({product.transparency_score}٪ {language === 'ku' ? 'نمرەی متمانە' : language === 'ar' ? 'نسبة الشفافية' : 'Trust'})
                             </span>
                           </div>
                         </div>

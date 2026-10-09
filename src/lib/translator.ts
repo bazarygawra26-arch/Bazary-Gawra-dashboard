@@ -59,6 +59,96 @@ export function getLocalizedField(
   return '';
 }
 
+export const KURDISH_CITIES_MAP: Record<string, { ku: string; en: string; ar: string }> = {
+  Sulaymaniyah: { ku: 'سلێمانی', en: 'Sulaymaniyah', ar: 'السليمانية' },
+  Slemani: { ku: 'سلێمانی', en: 'Sulaymaniyah', ar: 'السليمانية' },
+  Erbil: { ku: 'هەولێر', en: 'Erbil', ar: 'أربيل' },
+  Hawler: { ku: 'هەولێر', en: 'Erbil', ar: 'أربيل' },
+  Duhok: { ku: 'دهۆک', en: 'Duhok', ar: 'دهوك' },
+  Halabja: { ku: 'هەڵەبجە', en: 'Halabja', ar: 'حلبجة' },
+  Kirkuk: { ku: 'کەرکووک', en: 'Kirkuk', ar: 'كركوك' },
+  Zakho: { ku: 'زاخۆ', en: 'Zakho', ar: 'زاخو' },
+  Kalar: { ku: 'کەلار', en: 'Kalar', ar: 'كلار' },
+  Ranya: { ku: 'ڕانیە', en: 'Ranya', ar: 'رانية' },
+  Soran: { ku: 'سۆران', en: 'Soran', ar: 'سوران' },
+};
+
+/**
+ * Universal City Localizer: Maps Kurdistan cities properly in ku, ar, en
+ */
+export function getLocalizedCity(cityName: string | undefined | null, locale: string = 'ku'): string {
+  if (!cityName) return locale === 'ku' ? 'سلێمانی' : locale === 'ar' ? 'السليمانية' : 'Sulaymaniyah';
+  const clean = cityName.trim();
+  const found = KURDISH_CITIES_MAP[clean];
+  if (found) {
+    return locale === 'ar' ? found.ar : locale === 'en' ? found.en : found.ku;
+  }
+  const lower = clean.toLowerCase();
+  for (const [key, val] of Object.entries(KURDISH_CITIES_MAP)) {
+    if (key.toLowerCase() === lower || val.ku.toLowerCase() === lower || val.ar.toLowerCase() === lower) {
+      return locale === 'ar' ? val.ar : locale === 'en' ? val.en : val.ku;
+    }
+  }
+  return clean;
+}
+
+/**
+ * Universal Warranty Localizer: Ensures warranty text is always in the user's language
+ */
+export function getLocalizedWarranty(
+  warrantyPeriod: string | undefined | null,
+  warrantyType: string = 'none',
+  locale: string = 'ku'
+): string {
+  if (warrantyType === 'none' || !warrantyPeriod || !warrantyPeriod.trim()) {
+    return locale === 'ku' ? 'بێ گرەنتی' : locale === 'ar' ? 'بدون ضمان' : 'No Warranty';
+  }
+
+  const raw = warrantyPeriod.trim();
+
+  // If already in Kurdish and Kurdish is requested, return it directly
+  if (locale === 'ku' && /[ۆێڵەڕژگچپ]/i.test(raw)) {
+    return raw;
+  }
+
+  const lower = raw.toLowerCase();
+
+  if (locale === 'ku') {
+    if (lower.includes('publisher') || lower.includes('first-print')) return 'گەرەنتی چاپی یەکەم و دەستنووس';
+    if (lower.includes('heritage') || lower.includes('craft')) return 'گەرەنتی کاری دەستی و کەلەپوور';
+    if (lower.includes('erbil') && lower.includes('year')) return '١ ساڵ گرەنتی ناوخۆیی لە هەولێر';
+    if (lower.includes('1 year') && lower.includes('local')) return '١ ساڵ گرەنتی ناوخۆیی دووکان';
+    if (lower.includes('2 year') || lower.includes('24 month')) return '٢٤ مانگ گرەنتی فەرمی';
+    if (lower.includes('1 year') || lower.includes('12 month')) return '١٢ مانگ گرەنتی فەرمی';
+    if (lower.includes('6 month')) return '٦ مانگ گرەنتی ناوخۆیی';
+    if (lower.includes('3 month')) return '٣ مانگ گرەنتی ناوخۆیی';
+    if (lower.includes('purity') || lower.includes('100%')) return '١٠٠٪ گەرەنتی پاکی و بنەڕەتی';
+    if (lower.includes('official')) return 'گرەنتی فەرمی بریکار';
+    if (lower.includes('shop') || lower.includes('local')) return 'گرەنتی ناوخۆیی دووکان';
+    const match = raw.match(/(\d+)\s*(month|year)/i);
+    if (match) {
+      const num = match[1];
+      const unit = match[2].toLowerCase().startsWith('y') ? 'ساڵ' : 'مانگ';
+      return `${num} ${unit} گرەنتی`;
+    }
+    return raw;
+  } else if (locale === 'ar') {
+    if (lower.includes('publisher') || lower.includes('first-print')) return 'ضمان الطبعة الأولى والنسخة الأصلية';
+    if (lower.includes('heritage') || lower.includes('craft')) return 'ضمان أصالة الحرف التراثية';
+    if (lower.includes('erbil') && lower.includes('year')) return 'ضمان محلي سنة واحدة في أربيل';
+    if (lower.includes('1 year') || lower.includes('12 month')) return 'ضمان ١٢ شهر معتمد';
+    if (lower.includes('2 year') || lower.includes('24 month')) return 'ضمان ٢٤ شهر معتمد';
+    if (lower.includes('6 month')) return 'ضمان ٦ أشهر محلي';
+    if (lower.includes('3 month')) return 'ضمان ٣ أشهر محلي';
+    if (lower.includes('purity') || lower.includes('100%')) return 'ضمان نقاء وجودة ١٠٠٪';
+    if (lower.includes('official')) return 'ضمان رسمي معتمد';
+    if (lower.includes('shop') || lower.includes('local')) return 'ضمان محلي من المتجر';
+    return raw;
+  }
+
+  return raw;
+}
+
 /**
  * Dynamically translate any string via the Next.js translation engine
  */

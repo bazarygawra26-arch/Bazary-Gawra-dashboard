@@ -10,6 +10,7 @@ import {
   Camera, 
   Clock
 } from 'lucide-react';
+import { getLocalizedCity, getLocalizedWarranty, getLocalizedField } from '@/lib/translator';
 
 interface ActivityItem {
   id: string;
@@ -52,7 +53,7 @@ export function RecentActivity() {
     {
       id: 'act-3',
       type: 'seller',
-      title: `${sellers[sellers.length - 1]?.name_ku || 'فرۆشگای کارۆ'} خۆی تۆمارکرد لە ${sellers[sellers.length - 1]?.city || 'سلێمانی'}`,
+      title: `${getLocalizedField(sellers[sellers.length - 1], 'name', language) || 'فرۆشگای کارۆ'} خۆی تۆمارکرد لە ${getLocalizedCity(sellers[sellers.length - 1]?.city, language)}`,
       meta: `${sellers[sellers.length - 1]?.bazaar_name || 'شەقامی مەولەوی'} · چاوەڕوانی پەسەندکردن`,
       time: `1 ${t.hoursAgo}`,
       icon: <Store className="h-4 w-4 text-[#657A52]" />,
@@ -63,8 +64,8 @@ export function RecentActivity() {
     {
       id: 'act-4',
       type: 'product',
-      title: products[0] ? (language === 'ku' ? products[0].name_ku : products[0].name_en) : 'نوێکردنەوەی کاڵا',
-      meta: `${products[0]?.warranty_period || '٦ مانگ گرەنتی'} · نمرەی متمانە ${products[0]?.transparency_score || 95}٪`,
+      title: products[0] ? getLocalizedField(products[0], 'name', language) : 'نوێکردنەوەی کاڵا',
+      meta: `${getLocalizedWarranty(products[0]?.warranty_period, products[0]?.warranty_type, language)} · نمرەی متمانە ${products[0]?.transparency_score || 95}٪`,
       time: `2 ${t.hoursAgo}`,
       icon: <Package className="h-4 w-4 text-emerald-600" />,
       badge: 'نوێکردنەوەی کاڵا',

@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { downloadCsv, formatIqd } from '@/lib/utils';
 import { ImageUploadDropzone } from '@/components/common/ImageUploadDropzone';
-import { getLocalizedField, autoTranslateSeller } from '@/lib/translator';
+import { getLocalizedField, autoTranslateSeller, getLocalizedCity, getLocalizedWarranty } from '@/lib/translator';
 
 interface SellersModuleProps {
   onOpenNewSeller: () => void;
@@ -180,11 +180,11 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
             className="rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] px-3 py-2 text-xs font-medium text-[#171717] focus:border-[#657A52] focus:outline-none"
           >
             <option value="all">{t.allCities}</option>
-            <option value="Sulaymaniyah">سلێمانی (Sulaymaniyah)</option>
-            <option value="Erbil">هەولێر (Erbil)</option>
-            <option value="Duhok">دهۆک (Duhok)</option>
-            <option value="Halabja">هەڵەبجە (Halabja)</option>
-            <option value="Kirkuk">کەرکووک (Kirkuk)</option>
+            <option value="Sulaymaniyah">{getLocalizedCity('Sulaymaniyah', language)}</option>
+            <option value="Erbil">{getLocalizedCity('Erbil', language)}</option>
+            <option value="Duhok">{getLocalizedCity('Duhok', language)}</option>
+            <option value="Halabja">{getLocalizedCity('Halabja', language)}</option>
+            <option value="Kirkuk">{getLocalizedCity('Kirkuk', language)}</option>
           </select>
         </div>
       </div>
@@ -242,7 +242,7 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
                       <td className="px-4 py-3.5">
                         <div className="flex items-center gap-1.5 font-semibold text-[#171717]">
                           <MapPin className="h-3.5 w-3.5 text-[#657A52]" />
-                          <span>{seller.city}</span>
+                          <span>{getLocalizedCity(seller.city, language)}</span>
                         </div>
                         <p className="text-[11px] text-[#737373]">{seller.bazaar_name}</p>
                       </td>
@@ -383,7 +383,7 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
                 <div className="rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] p-3">
                   <span className="text-[#737373] font-medium">{t.bazaarLocation}</span>
                   <p className="mt-1 font-bold text-[#171717]">
-                    {verifyingSeller.city} — {verifyingSeller.bazaar_name}
+                    {getLocalizedCity(verifyingSeller.city, language)} — {verifyingSeller.bazaar_name}
                   </p>
                   <p className="mt-0.5 text-[11px] text-[#737373]">{verifyingSeller.address_details}</p>
                 </div>
@@ -473,7 +473,7 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
                   )}
                 </div>
                 <p className="text-xs text-[#737373]">
-                  {selectedDrawerSeller.city} — {selectedDrawerSeller.bazaar_name}
+                  {getLocalizedCity(selectedDrawerSeller.city, language)} — {selectedDrawerSeller.bazaar_name}
                 </p>
               </div>
 
@@ -536,7 +536,7 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
                           </div>
                           <div className="mt-1 flex items-center gap-1.5 text-[10px]">
                             <span className="rounded bg-emerald-50 px-1.5 py-0.2 font-semibold text-emerald-800">
-                              {product.warranty_period || 'بێ گرەنتی'}
+                              {getLocalizedWarranty(product.warranty_period, product.warranty_type, language)}
                             </span>
                             <span className="text-[#737373]">
                               نمرەی متمانە: {product.transparency_score}٪

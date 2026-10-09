@@ -63,9 +63,9 @@ export function TaxonomyView() {
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-sm font-extrabold text-[#171717]">
-                      {city.name_ku}
+                      {language === 'ku' ? city.name_ku : language === 'ar' ? city.name_ar : city.name_en}
                     </h3>
-                    <p className="text-[10px] text-[#737373]">{city.name_ku}</p>
+                    <p className="text-[10px] text-[#737373]">{city.name_en}</p>
                   </div>
                   <span className="rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
                     {verifiedCitySellers.length} پەسەندکراو

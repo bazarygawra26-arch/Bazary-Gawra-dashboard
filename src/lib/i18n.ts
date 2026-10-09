@@ -390,7 +390,7 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
     aiInsightsSubtitle: 'تێگەیشتن لە داواکاری و پێداویستیەکانی خەڵکی کوردستان لە بازاڕەکاندا',
     liveAiSearches: 'دوایین گەڕانە زیرەکەکانی کڕیاران',
     visualScans: 'سکانی وێنەیی کاڵاکان لە مۆبایلەوە',
-    unmetDemandGap: 'کاڵا داواکراوەکان کە لە بازاڕدا نین (Demand Gap)',
+    unmetDemandGap: 'کاڵا داواکراوەکان کە لە بازاڕدا نین (کەلێنی داواکاری بازاڕ)',
     queryText: 'دەقی پرسیار و گەڕان',
     userCity: 'شاری کڕیار',
     matchedResults: 'کاڵای دۆزراوە',
