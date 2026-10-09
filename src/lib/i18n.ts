@@ -53,7 +53,7 @@ export interface TranslationDictionary {
   catKitchen: string;
   catHomeAppliances: string;
   catTech: string;
-  catFashion: string;
+  catBooks: string;
   
   // Recent Activity
   recentActivityTitle: string;
@@ -250,7 +250,7 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
     catKitchen: 'کەلوپەلی چێشتخانە و دەفر',
     catHomeAppliances: 'ئامێرەکانی ناوماڵ و کارەبایی',
     catTech: 'مۆبایل و تەکنەلۆژیا',
-    catFashion: 'جلوبەرگ و بەرهەمی نەریتی',
+    catBooks: 'کتێب و بەرهەمی ئەدەبی',
     
     recentActivityTitle: 'دوایین جووڵە و ڕووداوەکان',
     recentActivitySubtitle: 'تۆمارکردنی فرۆشیار، کاڵای نوێ و گەڕانی کڕیاران',
@@ -308,7 +308,7 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
     productTitleCol: 'وێنە و ناوی کاڵا',
     productCategoryCol: 'پۆل',
     productSellerCol: 'فرۆشیار و شوێن',
-    productPriceCol: 'نرخ (IQD / USD)',
+    productPriceCol: 'نرخ (دینار - IQD)',
     productSignalsCol: 'نیشانەکانی ڕوونی (گرەنتی/گەیاندن/گەڕانەوە)',
     productStockCol: 'کۆگا',
     productActionsCol: 'کردار',
@@ -317,7 +317,7 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
     returnPolicy: 'گەڕاندنەوە',
     transparencyScore: 'نمرەی ڕوونی',
     iqd: 'دینار',
-    usd: 'دۆلار',
+    usd: 'دینار',
     stockUnits: 'دانە',
     quickEdit: 'دەستکاری خێرا',
     fullEdit: 'دەستکاری تەواو',
@@ -352,7 +352,7 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
     descArabicLabel: 'الوصف والمواصفات بالعربية',
     pricingSection: 'نرخ و بڕی کۆگا',
     priceIqdLabel: 'نرخ بە دیناری عێراقی (IQD)',
-    priceUsdLabel: 'نرخی هاوتا بە دۆلار ($)',
+    priceUsdLabel: 'نرخ بە دینار (IQD)',
     stockQuantityLabel: 'بڕی بەردەست لە کۆگا',
     sellerLabel: 'فرۆشیار (دووکان)',
     categoryLabel: 'پۆلی کاڵا',
@@ -439,7 +439,7 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
     catKitchen: 'مستلزمات وأواني المطبخ',
     catHomeAppliances: 'الأجهزة المنزلية والكهربائية',
     catTech: 'الهواتف الذكية والتكنولوجيا',
-    catFashion: 'الملابس والأزياء التقليدية',
+    catBooks: 'الكتب والمطبوعات والأدب',
     
     recentActivityTitle: 'أحدث العمليات والأنشطة',
     recentActivitySubtitle: 'تسجيل التجار الجدد والمنتجات وبحث الزبائن',
@@ -497,7 +497,7 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
     productTitleCol: 'الصورة والمنتج',
     productCategoryCol: 'الفئة',
     productSellerCol: 'التاجر والمدينة',
-    productPriceCol: 'السعر (IQD / USD)',
+    productPriceCol: 'السعر (دینار - IQD)',
     productSignalsCol: 'إشارات الشفافية (الضمان/التوصيل/الاسترجاع)',
     productStockCol: 'المخزون',
     productActionsCol: 'الإجراءات',
@@ -506,7 +506,7 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
     returnPolicy: 'الاسترجاع',
     transparencyScore: 'مؤشر الشفافية',
     iqd: 'دينار',
-    usd: 'دولار',
+    usd: 'د.ع',
     stockUnits: 'قطعة',
     quickEdit: 'تعديل سريع',
     fullEdit: 'تعديل كامل',
@@ -541,7 +541,7 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
     descArabicLabel: 'الوصف والمواصفات بالعربية',
     pricingSection: 'الأسعار والمخزون',
     priceIqdLabel: 'السعر بالدينار العراقي (IQD)',
-    priceUsdLabel: 'السعر بالدولار ($)',
+    priceUsdLabel: 'السعر بالدينار (IQD)',
     stockQuantityLabel: 'الكمية المتوفرة في المخزن',
     sellerLabel: 'التاجر (المحل)',
     categoryLabel: 'تصنيف المنتج',
@@ -628,7 +628,7 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
     catKitchen: 'Kitchenware & Supplies',
     catHomeAppliances: 'Home Appliances & Electronics',
     catTech: 'Tech & Mobile Accessories',
-    catFashion: 'Traditional Fashion & Wear',
+    catBooks: 'Books & Literature',
     
     recentActivityTitle: 'Real-Time Activity Feed',
     recentActivitySubtitle: 'New merchant onboardings, catalog updates, and buyer AI queries',
@@ -686,7 +686,7 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
     productTitleCol: 'Product Details',
     productCategoryCol: 'Category',
     productSellerCol: 'Merchant & City',
-    productPriceCol: 'Price (IQD / USD)',
+    productPriceCol: 'Price (IQD)',
     productSignalsCol: 'Information Signals (Warranty / Delivery / Return)',
     productStockCol: 'Stock',
     productActionsCol: 'Actions',
@@ -695,7 +695,7 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
     returnPolicy: 'Returns',
     transparencyScore: 'Transparency',
     iqd: 'IQD',
-    usd: 'USD',
+    usd: 'IQD',
     stockUnits: 'units',
     quickEdit: 'Quick Edit',
     fullEdit: 'Full Editor',
@@ -730,7 +730,7 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
     descArabicLabel: 'Description & Specs in Arabic',
     pricingSection: 'Pricing & Inventory',
     priceIqdLabel: 'Price in Iraqi Dinar (IQD)',
-    priceUsdLabel: 'Approximate USD ($)',
+    priceUsdLabel: 'Price (IQD)',
     stockQuantityLabel: 'Available Stock Quantity',
     sellerLabel: 'Merchant Store',
     categoryLabel: 'Product Category',

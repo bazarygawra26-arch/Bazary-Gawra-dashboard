@@ -12,10 +12,10 @@ import {
   Truck, 
   AlertTriangle, 
   Download,
-  DollarSign,
+  Coins,
   X
 } from 'lucide-react';
-import { formatIqd, formatUsd, downloadCsv } from '@/lib/utils';
+import { formatIqd, downloadCsv } from '@/lib/utils';
 
 interface ProductsModuleProps {
   onOpenNewProduct: () => void;
@@ -79,7 +79,6 @@ export function ProductsModule({ onOpenNewProduct, onSetEditingProduct }: Produc
         Seller: seller?.name_en || p.seller_id,
         City: seller?.city || '',
         Price_IQD: p.price_iqd,
-        Price_USD: p.price_usd,
         Stock: p.stock_quantity,
         Warranty: p.warranty_period || 'None',
         Delivery: p.delivery_type,
@@ -279,9 +278,6 @@ export function ProductsModule({ onOpenNewProduct, onSetEditingProduct }: Produc
                         <div className="font-extrabold text-sm text-[#171717]">
                           {formatIqd(product.price_iqd, language)}
                         </div>
-                        <div className="text-[11px] font-medium text-[#737373]">
-                          ≈ {formatUsd(product.price_usd)}
-                        </div>
                       </td>
 
                       {/* Information Signals */}
@@ -337,7 +333,7 @@ export function ProductsModule({ onOpenNewProduct, onSetEditingProduct }: Produc
                             className="rounded-lg border border-[#EAE7DF] p-1.5 text-[#737373] hover:border-[#F4B942] hover:bg-[#F4B942]/10 hover:text-[#171717] transition-colors"
                             title={t.quickEdit}
                           >
-                            <DollarSign className="h-4 w-4" />
+                            <Coins className="h-4 w-4" />
                           </button>
 
                           {/* Full Multilingual Editor */}
@@ -393,16 +389,15 @@ export function ProductsModule({ onOpenNewProduct, onSetEditingProduct }: Produc
             <div className="mt-4 space-y-3 text-xs">
               <div>
                 <label className="font-bold text-[#171717]">{t.priceIqdLabel}</label>
-                <input
-                  type="number"
-                  value={quickPrice}
-                  onChange={(e) => setQuickPrice(Number(e.target.value))}
-                  step={500}
-                  className="mt-1 w-full rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] p-2 text-xs font-extrabold text-[#171717] focus:border-[#F4B942] focus:bg-white focus:outline-none"
-                />
-                <span className="text-[10px] text-[#737373]">
-                  ≈ ${Math.round(quickPrice / 1500)} USD
-                </span>
+                <div className="relative mt-1">
+                  <input
+                    type="number"
+                    value={quickPrice}
+                    onChange={(e) => setQuickPrice(Number(e.target.value))}
+                    step={500}
+                    className="w-full rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] p-2 text-xs font-extrabold text-[#171717] focus:border-[#F4B942] focus:bg-white focus:outline-none"
+                  />
+                </div>
               </div>
 
               <div>

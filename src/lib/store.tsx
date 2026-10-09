@@ -135,13 +135,24 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (catData && catData.length > 0) {
+        const getIconForSlug = (slug: string) => {
+          const s = (slug || '').toLowerCase();
+          if (s.includes('food') || s.includes('honey')) return 'Apple';
+          if (s.includes('kitchen')) return 'UtensilsCrossed';
+          if (s.includes('appliance')) return 'Tv';
+          if (s.includes('electronic') || s.includes('tech') || s.includes('mobile')) return 'Smartphone';
+          if (s.includes('book')) return 'BookOpen';
+          if (s.includes('craft') || s.includes('heritage') || s.includes('beauty')) return 'Sparkles';
+          return 'Layers';
+        };
+
         const liveCategories: Category[] = catData.map((c: { id: string; slug: string; name_en?: string; name_ku?: string; name_ar?: string }) => ({
           id: c.id,
           slug: c.slug || c.id,
           name_en: c.name_en || c.slug,
           name_ku: c.name_ku || c.name_en || c.slug,
           name_ar: c.name_ar || c.name_en || c.slug,
-          icon: 'Layers',
+          icon: getIconForSlug(c.slug || c.id),
         }));
         setCategories(liveCategories);
       }

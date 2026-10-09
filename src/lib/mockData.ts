@@ -95,13 +95,13 @@ export const initialCategories: Category[] = [
     item_count: 89,
   },
   {
-    id: 'traditional_fashion',
-    slug: 'traditional-fashion',
-    name_ku: 'جلوبەرگ و بەرهەمی نەریتی',
-    name_en: 'Traditional Fashion & Wear',
-    name_ar: 'الأزياء والملابس التقليدية',
-    icon: 'Shirt',
-    item_count: 112,
+    id: 'books',
+    slug: 'books',
+    name_ku: 'کتێب و بڵاوکراوە',
+    name_en: 'Books & Literature',
+    name_ar: 'الكتب والمطبوعات والأدب',
+    icon: 'BookOpen',
+    item_count: 85,
   },
 ];
 
@@ -519,10 +519,10 @@ export const initialAiQueries: AiSearchQuery[] = [
   },
   {
     id: 'ai_q6',
-    query_text: 'قوماشی جلی کوردی دەستچن لە بازاڕی عەسری',
+    query_text: 'دیوانی حەزرەتی نالی و مەم و زین بە بەرگی ڕەق لە سلێمانی',
     user_city: 'Sulaymaniyah',
     matched_products_count: 0,
-    intent_category: 'traditional_fashion',
+    intent_category: 'books',
     timestamp: '2026-10-08T22:30:00Z',
     status: 'zero_results', // DEMAND GAP!
   },

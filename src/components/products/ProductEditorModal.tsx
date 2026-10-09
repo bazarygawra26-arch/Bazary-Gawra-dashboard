@@ -275,7 +275,7 @@ function ProductEditorForm({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="font-bold text-[#171717]">{t.priceIqdLabel} *</label>
-            <div className="mt-1 flex items-center gap-2">
+            <div className="relative mt-1">
               <input
                 type="number"
                 value={priceIqd}
@@ -284,9 +284,6 @@ function ProductEditorForm({
                 className="w-full rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] p-2.5 text-xs font-extrabold text-[#171717] focus:border-[#F4B942] focus:bg-white focus:outline-none"
                 required
               />
-              <span className="shrink-0 text-xs text-[#737373]">
-                ≈ ${Math.round(priceIqd / 1500)} USD
-              </span>
             </div>
           </div>
 

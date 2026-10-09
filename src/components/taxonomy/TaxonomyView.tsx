@@ -10,7 +10,7 @@ import {
   Tv, 
   Smartphone, 
   Sparkles, 
-  Shirt 
+  BookOpen 
 } from 'lucide-react';
 
 export function TaxonomyView() {
@@ -23,7 +23,7 @@ export function TaxonomyView() {
       case 'Tv': return <Tv className="h-5 w-5 text-blue-600" />;
       case 'Smartphone': return <Smartphone className="h-5 w-5 text-indigo-600" />;
       case 'Sparkles': return <Sparkles className="h-5 w-5 text-purple-600" />;
-      case 'Shirt': return <Shirt className="h-5 w-5 text-pink-600" />;
+      case 'BookOpen': return <BookOpen className="h-5 w-5 text-amber-700" />;
       default: return <Layers className="h-5 w-5 text-[#737373]" />;
     }
   };

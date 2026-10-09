@@ -8,7 +8,7 @@ import {
   Tv, 
   Smartphone, 
   Sparkles, 
-  Shirt, 
+  BookOpen, 
   Layers,
   AlertCircle
 } from 'lucide-react';
@@ -23,7 +23,7 @@ export function CategoryHealth() {
       case 'Tv': return <Tv className="h-4 w-4 text-blue-600" />;
       case 'Smartphone': return <Smartphone className="h-4 w-4 text-indigo-600" />;
       case 'Sparkles': return <Sparkles className="h-4 w-4 text-purple-600" />;
-      case 'Shirt': return <Shirt className="h-4 w-4 text-pink-600" />;
+      case 'BookOpen': return <BookOpen className="h-4 w-4 text-amber-700" />;
       default: return <Layers className="h-4 w-4 text-[#737373]" />;
     }
   };
