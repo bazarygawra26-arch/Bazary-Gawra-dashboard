@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { downloadCsv, formatIqd } from '@/lib/utils';
 import { ImageUploadDropzone } from '@/components/common/ImageUploadDropzone';
+import { getLocalizedField } from '@/lib/translator';
 
 interface SellersModuleProps {
   onOpenNewSeller: () => void;
@@ -223,7 +224,7 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
                           <div>
                             <div className="flex items-center gap-1.5">
                               <span className="font-extrabold text-sm text-[#171717]">
-                                {language === 'ku' ? seller.name_ku : language === 'ar' ? seller.name_ar : seller.name_en}
+                                {getLocalizedField(seller, 'name', language)}
                               </span>
                               {seller.verification_status === 'verified' && (
                                 <ShieldCheck className="h-4 w-4 text-[#657A52]" />
@@ -346,7 +347,7 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
                     {t.verificationDetails}
                   </h3>
                   <p className="text-xs text-[#737373]">
-                    {language === 'ku' ? verifyingSeller.name_ku : verifyingSeller.name_en}
+                    {getLocalizedField(verifyingSeller, 'name', language)}
                   </p>
                 </div>
               </div>
@@ -462,7 +463,7 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
               <div>
                 <div className="flex items-center gap-2">
                   <h3 className="text-base font-extrabold text-[#171717]">
-                    {language === 'ku' ? selectedDrawerSeller.name_ku : selectedDrawerSeller.name_en}
+                    {getLocalizedField(selectedDrawerSeller, 'name', language)}
                   </h3>
                   {selectedDrawerSeller.verification_status === 'verified' && (
                     <ShieldCheck className="h-4 w-4 text-[#657A52]" />
@@ -517,12 +518,12 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
                       >
                         <img
                           src={product.primary_image}
-                          alt={product.name_en}
+                          alt={product.name_en || product.name_ku}
                           className="h-12 w-12 rounded-lg object-cover border border-[#EAE7DF]"
                         />
                         <div className="flex-1">
                           <h4 className="text-xs font-bold text-[#171717] line-clamp-1">
-                            {language === 'ku' ? product.name_ku : product.name_en}
+                            {getLocalizedField(product, 'name', language)}
                           </h4>
                           <div className="mt-0.5 flex items-center gap-2 text-[11px]">
                             <span className="font-extrabold text-[#657A52]">

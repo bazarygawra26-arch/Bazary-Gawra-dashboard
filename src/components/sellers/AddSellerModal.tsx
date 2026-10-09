@@ -3,8 +3,9 @@
 import React, { useState } from 'react';
 import { useAdmin } from '@/lib/store';
 import { KurdishCity } from '@/types/database';
-import { X, Store, CheckCircle2 } from 'lucide-react';
+import { X, Store, CheckCircle2, Languages, Loader2 } from 'lucide-react';
 import { ImageUploadDropzone } from '@/components/common/ImageUploadDropzone';
+import { autoTranslateSeller } from '@/lib/translator';
 
 interface AddSellerModalProps {
   isOpen: boolean;
@@ -16,6 +17,9 @@ export function AddSellerModal({ isOpen, onClose }: AddSellerModalProps) {
 
   const [nameKu, setNameKu] = useState('');
   const [nameEn, setNameEn] = useState('');
+  const [nameAr, setNameAr] = useState('');
+  const [isTranslating, setIsTranslating] = useState(false);
+
   const [ownerName, setOwnerName] = useState('');
   const [phone, setPhone] = useState('+964 770 ');
   const [whatsapp, setWhatsapp] = useState('964770');
@@ -26,12 +30,29 @@ export function AddSellerModal({ isOpen, onClose }: AddSellerModalProps) {
 
   if (!isOpen) return null;
 
+  const handleAutoTranslate = async () => {
+    if (!nameKu) return;
+    setIsTranslating(true);
+    try {
+      const res = await autoTranslateSeller(nameKu, bazaarName);
+      setNameEn(res.nameEn);
+      setNameAr(res.nameAr);
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    const validNameKu = nameKu || nameEn || nameAr;
+    const validNameEn = nameEn || nameKu || nameAr;
+    const validNameAr = nameAr || nameKu || nameEn;
+
     addSeller({
-      name_ku: nameKu || nameEn,
-      name_en: nameEn || nameKu,
-      name_ar: nameEn || nameKu,
+      name_ku: validNameKu,
+      name_en: validNameEn,
+      name_ar: validNameAr,
       owner_name: ownerName,
       phone,
       whatsapp,
@@ -70,7 +91,25 @@ export function AddSellerModal({ isOpen, onClose }: AddSellerModalProps) {
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-3.5 text-xs">
           <div>
-            <label className="font-bold text-[#171717]">ناوی دووکان بە کوردی *</label>
+            <div className="flex items-center justify-between">
+              <label className="font-bold text-[#171717]">ناوی دووکان بە کوردی *</label>
+              {nameKu && (
+                <button
+                  type="button"
+                  onClick={handleAutoTranslate}
+                  disabled={isTranslating}
+                  className="flex items-center gap-1 rounded-lg border border-[#657A52]/30 bg-[#657A52]/10 px-2 py-0.5 text-[11px] font-bold text-[#657A52] hover:bg-[#657A52]/20 transition-colors disabled:opacity-50"
+                  title="وەرگێڕانی ناوی دووکان بۆ ئینگلیزی بە خۆکاری"
+                >
+                  {isTranslating ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <Languages className="h-3 w-3" />
+                  )}
+                  <span>وەرگێڕان بۆ ئینگلیزی و عەرەبی</span>
+                </button>
+              )}
+            </div>
             <input
               type="text"
               dir="rtl"

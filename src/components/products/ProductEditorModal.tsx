@@ -11,9 +11,12 @@ import {
   RotateCcw, 
   CheckCircle2,
   Sparkles,
+  Languages,
+  Loader2,
 } from 'lucide-react';
 import { calculateTransparencyScore } from '@/lib/utils';
 import { ImageUploadDropzone } from '@/components/common/ImageUploadDropzone';
+import { autoTranslateProduct } from '@/lib/translator';
 
 interface ProductEditorModalProps {
   product: Product | null;
@@ -34,6 +37,7 @@ function ProductEditorForm({
   const { t, sellers, categories, addProduct, updateProduct } = useAdmin();
 
   const [activeLangTab, setActiveLangTab] = useState<'ku' | 'en' | 'ar'>('ku');
+  const [isTranslating, setIsTranslating] = useState(false);
 
   const [nameKu, setNameKu] = useState(product?.name_ku || '');
   const [nameEn, setNameEn] = useState(product?.name_en || '');
@@ -70,16 +74,40 @@ function ProductEditorForm({
   const [returnPolicyType, setReturnPolicyType] = useState<ReturnPolicyType>(product?.return_policy_type || 'exchange_only');
   const [returnConditions, setReturnConditions] = useState<string>(product?.return_conditions || 'پشکنینی کاڵا لە کاتی وەرگرتندا');
 
+  // Auto-translate from Kurdish into English and Arabic
+  const handleAutoTranslate = async () => {
+    if (!nameKu && !descKu) return;
+    setIsTranslating(true);
+    try {
+      const res = await autoTranslateProduct(nameKu, descKu);
+      setNameEn(res.nameEn);
+      setNameAr(res.nameAr);
+      if (res.descEn) setDescEn(res.descEn);
+      if (res.descAr) setDescAr(res.descAr);
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
   // AI Assistant Feature to quickly fill descriptions & 100% transparency signals
-  const handleAiAutoFill = () => {
+  const handleAiAutoFill = async () => {
     const baseTitle = nameKu || 'چاییکەری کارەبایی کاراجا ٣.٥ لیتر';
     if (!nameKu) setNameKu(baseTitle);
-    if (!nameEn) setNameEn('Karaca Electric Samovar 3.5L Tea Maker');
-    if (!nameAr) setNameAr('صانعة الشاي وسماور كهربائي كاراجا ٣.٥ لتر');
 
-    setDescKu('کاڵایەکی پلە یەک و باوەڕپێکراو لە بازاڕی سلێمانی و هەولێر. لە ستیلی دژە ژەنگ دروستکراوە بە تایبەتمەندی کوژانەوەی خۆکار و گەرمڕاگرتنی بەردەوام.');
-    setDescEn('Authentic local bazaar listing with verified local shop warranty and quick city delivery.');
-    setDescAr('منتج محلي أصلي مع ضمان المحل المعتمد وفحص مباشر عند الاستلام في محافظات كوردستان.');
+    setIsTranslating(true);
+    try {
+      const res = await autoTranslateProduct(
+        baseTitle,
+        descKu || 'کاڵایەکی پلە یەک و باوەڕپێکراو لە بازاڕی سلێمانی و هەولێر. لە ستیلی دژە ژەنگ دروستکراوە بە تایبەتمەندی کوژانەوەی خۆکار و گەرمڕاگرتنی بەردەوام.'
+      );
+      setNameEn(res.nameEn);
+      setNameAr(res.nameAr);
+      setDescKu('کاڵایەکی پلە یەک و باوەڕپێکراو لە بازاڕی سلێمانی و هەولێر. لە ستیلی دژە ژەنگ دروستکراوە بە تایبەتمەندی کوژانەوەی خۆکار و گەرمڕاگرتنی بەردەوام.');
+      setDescEn(res.descEn);
+      setDescAr(res.descAr);
+    } finally {
+      setIsTranslating(false);
+    }
 
     setWarrantyType('shop_local');
     setWarrantyPeriod('١ ساڵ گرەنتی ناوخۆیی دووکان');
@@ -111,14 +139,22 @@ function ProductEditorForm({
     const finalImages = images.length > 0 ? images : (primaryImage ? [primaryImage] : []);
     const finalPrimary = primaryImage || (finalImages[0] || 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=600&auto=format&fit=crop&q=80');
 
+    // Guarantee no empty language strings - fallback chains
+    const validNameKu = nameKu || nameEn || nameAr;
+    const validNameEn = nameEn || nameKu || nameAr;
+    const validNameAr = nameAr || nameKu || nameEn;
+    const validDescKu = descKu || descEn || descAr;
+    const validDescEn = descEn || descKu || descAr;
+    const validDescAr = descAr || descKu || descEn;
+
     const dataPayload = {
       seller_id: sellerId || sellers[0]?.id || '',
-      name_ku: nameKu || nameEn,
-      name_en: nameEn || nameKu,
-      name_ar: nameAr || nameKu,
-      description_ku: descKu,
-      description_en: descEn,
-      description_ar: descAr,
+      name_ku: validNameKu,
+      name_en: validNameEn,
+      name_ar: validNameAr,
+      description_ku: validDescKu,
+      description_en: validDescEn,
+      description_ar: validDescAr,
       price_iqd: priceIqd,
       price_usd: priceUsd,
       category_id: categoryId || categories[0]?.id || '',
@@ -172,10 +208,15 @@ function ProductEditorForm({
           <button
             type="button"
             onClick={handleAiAutoFill}
-            className="flex items-center gap-1.5 rounded-xl bg-indigo-50 border border-indigo-200 px-3 py-1.5 text-xs font-bold text-indigo-700 hover:bg-indigo-100 transition-colors shadow-xs active:scale-95"
+            disabled={isTranslating}
+            className="flex items-center gap-1.5 rounded-xl bg-indigo-50 border border-indigo-200 px-3 py-1.5 text-xs font-bold text-indigo-700 hover:bg-indigo-100 transition-colors shadow-xs active:scale-95 disabled:opacity-50"
             title="پڕکردنەوەی خۆکار بە زیرەکی دەستکرد"
           >
-            <Sparkles className="h-3.5 w-3.5 text-indigo-600" />
+            {isTranslating ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-indigo-600" />
+            ) : (
+              <Sparkles className="h-3.5 w-3.5 text-indigo-600" />
+            )}
             <span>پڕکردنەوە بە AI</span>
           </button>
 
@@ -198,8 +239,28 @@ function ProductEditorForm({
       <form onSubmit={handleSubmit} className="mt-5 space-y-6 text-xs">
         {/* SECTION 1: Multilingual Details Tabs */}
         <div className="rounded-xl border border-[#EAE7DF] bg-white p-4">
-          <div className="flex items-center justify-between border-b border-[#EAE7DF] pb-2">
-            <span className="font-bold text-[#171717]">زانیاری کاڵا بە سێ زمان</span>
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#EAE7DF] pb-2">
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-[#171717]">زانیاری کاڵا بە سێ زمان</span>
+              {/* Quick Auto-Translate to AR & EN Button */}
+              {nameKu && (
+                <button
+                  type="button"
+                  onClick={handleAutoTranslate}
+                  disabled={isTranslating}
+                  className="flex items-center gap-1 rounded-lg border border-[#657A52]/30 bg-[#657A52]/10 px-2 py-0.5 text-[11px] font-bold text-[#657A52] hover:bg-[#657A52]/20 transition-colors disabled:opacity-50"
+                  title="وەرگێڕانی دەقی کوردی بۆ عەرەبی و ئینگلیزی بە خۆکاری"
+                >
+                  {isTranslating ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <Languages className="h-3 w-3" />
+                  )}
+                  <span>وەرگێڕان بۆ EN و AR</span>
+                </button>
+              )}
+            </div>
+
             <div className="flex items-center gap-1 rounded-lg bg-[#FAF9F6] p-0.5 border border-[#EAE7DF]">
               <button
                 type="button"
@@ -217,7 +278,7 @@ function ProductEditorForm({
                   activeLangTab === 'en' ? 'bg-white text-[#171717] shadow-xs' : 'text-[#737373]'
                 }`}
               >
-                {t.tabEnglish}
+                {t.tabEnglish} {nameEn && '✓'}
               </button>
               <button
                 type="button"
@@ -226,7 +287,7 @@ function ProductEditorForm({
                   activeLangTab === 'ar' ? 'bg-white text-[#171717] shadow-xs' : 'text-[#737373]'
                 }`}
               >
-                {t.tabArabic}
+                {t.tabArabic} {nameAr && '✓'}
               </button>
             </div>
           </div>

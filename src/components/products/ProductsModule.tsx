@@ -16,6 +16,7 @@ import {
   X
 } from 'lucide-react';
 import { formatIqd, downloadCsv } from '@/lib/utils';
+import { getLocalizedField } from '@/lib/translator';
 
 interface ProductsModuleProps {
   onOpenNewProduct: () => void;
@@ -244,12 +245,12 @@ export function ProductsModule({ onOpenNewProduct, onSetEditingProduct }: Produc
                         <div className="flex items-center gap-3">
                           <img
                             src={product.primary_image}
-                            alt={product.name_en}
+                            alt={product.name_en || product.name_ku}
                             className="h-12 w-12 shrink-0 rounded-xl object-cover border border-[#EAE7DF]"
                           />
                           <div className="max-w-xs">
                             <h4 className="font-bold text-sm text-[#171717] line-clamp-1">
-                              {language === 'ku' ? product.name_ku : language === 'ar' ? product.name_ar : product.name_en}
+                              {getLocalizedField(product, 'name', language)}
                             </h4>
                             <p className="text-[11px] text-[#737373] line-clamp-1">
                               {product.name_ku || product.name_en}
@@ -261,14 +262,14 @@ export function ProductsModule({ onOpenNewProduct, onSetEditingProduct }: Produc
                       {/* Category */}
                       <td className="px-4 py-3.5">
                         <span className="rounded-lg border border-[#EAE7DF] bg-[#FAF9F6] px-2.5 py-1 text-[11px] font-semibold text-[#171717]">
-                          {category ? (language === 'ku' ? category.name_ku : language === 'ar' ? category.name_ar : category.name_en) : product.category_id}
+                          {category ? getLocalizedField(category, 'name', language) : product.category_id}
                         </span>
                       </td>
 
                       {/* Merchant & City */}
                       <td className="px-4 py-3.5">
                         <div className="font-semibold text-[#171717]">
-                          {seller ? (language === 'ku' ? seller.name_ku : seller.name_en) : 'فرۆشیار'}
+                          {seller ? getLocalizedField(seller, 'name', language) : 'فرۆشیار'}
                         </div>
                         <p className="text-[11px] text-[#737373]">{seller?.city || 'سلێمانی'}</p>
                       </td>
