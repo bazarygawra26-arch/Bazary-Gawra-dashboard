@@ -66,28 +66,28 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
     switch (status) {
       case 'verified':
         return (
-          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-xs font-bold text-emerald-800">
-            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+          <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-xs font-bold text-emerald-800">
+            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
             {t.statusVerified}
           </span>
         );
       case 'pending':
         return (
-          <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-xs font-bold text-amber-800">
-            <Clock className="h-3.5 w-3.5 text-amber-600" />
+          <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-xs font-bold text-amber-800">
+            <Clock className="h-3.5 w-3.5 text-amber-600 shrink-0" />
             {t.statusPending}
           </span>
         );
       case 'suspended':
         return (
-          <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 border border-rose-200 px-2.5 py-0.5 text-xs font-bold text-rose-800">
-            <XCircle className="h-3.5 w-3.5 text-rose-600" />
+          <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-rose-50 border border-rose-200 px-2.5 py-0.5 text-xs font-bold text-rose-800">
+            <XCircle className="h-3.5 w-3.5 text-rose-600 shrink-0" />
             {t.statusSuspended}
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1 rounded-full bg-gray-50 border border-gray-200 px-2.5 py-0.5 text-xs font-bold text-gray-700">
+          <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-gray-50 border border-gray-200 px-2.5 py-0.5 text-xs font-bold text-gray-700">
             <AlertCircle className="h-3.5 w-3.5 text-gray-500" />
             {t.statusUnverified}
           </span>
@@ -195,12 +195,12 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
           <table className="w-full text-start text-xs">
             <thead className="border-b border-[#EAE7DF] bg-[#FAF9F6] text-[#737373]">
               <tr>
-                <th className="px-4 py-3.5 font-bold text-start">{t.merchantName}</th>
-                <th className="px-4 py-3.5 font-bold text-start">{t.merchantCityBazaar}</th>
-                <th className="px-4 py-3.5 font-bold text-start">{t.merchantContact}</th>
-                <th className="px-4 py-3.5 font-bold text-start">{t.merchantProducts}</th>
-                <th className="px-4 py-3.5 font-bold text-start">{t.merchantTrust}</th>
-                <th className="px-4 py-3.5 font-bold text-center">{t.merchantActions}</th>
+                <th className="px-4 py-3.5 font-bold text-start min-w-[200px]">{t.merchantName}</th>
+                <th className="px-4 py-3.5 font-bold text-start whitespace-nowrap min-w-[130px]">{t.merchantCityBazaar}</th>
+                <th className="px-4 py-3.5 font-bold text-start whitespace-nowrap min-w-[140px]">{t.merchantContact}</th>
+                <th className="px-4 py-3.5 font-bold text-start whitespace-nowrap min-w-[110px]">{t.merchantProducts}</th>
+                <th className="px-4 py-3.5 font-bold text-start whitespace-nowrap min-w-[140px]">{t.merchantTrust}</th>
+                <th className="px-4 py-3.5 font-bold text-center whitespace-nowrap min-w-[120px]">{t.merchantActions}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#EAE7DF]">
@@ -272,7 +272,7 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
                       </td>
 
                       {/* Products Count */}
-                      <td className="px-4 py-3.5">
+                      <td className="px-4 py-3.5 whitespace-nowrap">
                         <button
                           onClick={() => setSelectedDrawerSeller(seller)}
                           className="inline-flex items-center gap-1.5 rounded-lg border border-[#EAE7DF] bg-[#FAF9F6] px-2.5 py-1 text-xs font-bold text-[#171717] hover:border-[#657A52] hover:bg-white transition-colors"
@@ -283,10 +283,10 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
                       </td>
 
                       {/* Trust & Status */}
-                      <td className="px-4 py-3.5">
+                      <td className="px-4 py-3.5 whitespace-nowrap">
                         <div className="space-y-1">
-                          <div>{getStatusBadge(seller.verification_status)}</div>
-                          <div className="flex items-center gap-1.5 text-[10px] text-[#737373]">
+                          <div className="whitespace-nowrap">{getStatusBadge(seller.verification_status)}</div>
+                          <div className="flex items-center gap-1.5 text-[10px] text-[#737373] whitespace-nowrap">
                             <span>نمرەی متمانە:</span>
                             <span className="font-bold text-[#171717]">{seller.transparency_score}٪</span>
                           </div>
@@ -294,8 +294,8 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
                       </td>
 
                       {/* Actions */}
-                      <td className="px-4 py-3.5 text-center">
-                        <div className="flex items-center justify-center gap-1.5">
+                      <td className="px-4 py-3.5 text-center whitespace-nowrap">
+                        <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
                           {/* Verification Review Modal Button */}
                           <button
                             onClick={() => {

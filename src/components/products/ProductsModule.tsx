@@ -94,13 +94,13 @@ export function ProductsModule({ onOpenNewProduct, onSetEditingProduct }: Produc
   const getStatusBadge = (status: ProductStatus) => {
     switch (status) {
       case 'active':
-        return <span className="rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-bold text-emerald-800">{t.statusActive}</span>;
+        return <span className="inline-flex items-center justify-center whitespace-nowrap rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800">{t.statusActive}</span>;
       case 'draft':
-        return <span className="rounded-full bg-gray-50 border border-gray-200 px-2 py-0.5 text-[10px] font-bold text-gray-700">{t.statusDraft}</span>;
+        return <span className="inline-flex items-center justify-center whitespace-nowrap rounded-full bg-gray-50 border border-gray-200 px-2.5 py-0.5 text-[10px] font-bold text-gray-700">{t.statusDraft}</span>;
       case 'out_of_stock':
-        return <span className="rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-[10px] font-bold text-amber-800">{t.statusOutOfStock}</span>;
+        return <span className="inline-flex items-center justify-center whitespace-nowrap rounded-full bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-[10px] font-bold text-amber-800">{t.statusOutOfStock}</span>;
       case 'archived':
-        return <span className="rounded-full bg-rose-50 border border-rose-200 px-2 py-0.5 text-[10px] font-bold text-rose-800">{t.statusArchived}</span>;
+        return <span className="inline-flex items-center justify-center whitespace-nowrap rounded-full bg-rose-50 border border-rose-200 px-2.5 py-0.5 text-[10px] font-bold text-rose-800">{t.statusArchived}</span>;
     }
   };
 
@@ -211,13 +211,13 @@ export function ProductsModule({ onOpenNewProduct, onSetEditingProduct }: Produc
           <table className="w-full text-start text-xs">
             <thead className="border-b border-[#EAE7DF] bg-[#FAF9F6] text-[#737373]">
               <tr>
-                <th className="px-4 py-3.5 font-bold text-start">{t.productTitleCol}</th>
-                <th className="px-4 py-3.5 font-bold text-start">{t.productCategoryCol}</th>
-                <th className="px-4 py-3.5 font-bold text-start">{t.productSellerCol}</th>
-                <th className="px-4 py-3.5 font-bold text-start">{t.productPriceCol}</th>
-                <th className="px-4 py-3.5 font-bold text-start">{t.productSignalsCol}</th>
-                <th className="px-4 py-3.5 font-bold text-start">{t.productStockCol}</th>
-                <th className="px-4 py-3.5 font-bold text-center">{t.productActionsCol}</th>
+                <th className="px-4 py-3.5 font-bold text-start min-w-[220px]">{t.productTitleCol}</th>
+                <th className="px-4 py-3.5 font-bold text-start whitespace-nowrap min-w-[100px]">{t.productCategoryCol}</th>
+                <th className="px-4 py-3.5 font-bold text-start whitespace-nowrap min-w-[120px]">{t.productSellerCol}</th>
+                <th className="px-4 py-3.5 font-bold text-start whitespace-nowrap min-w-[110px]">{t.productPriceCol}</th>
+                <th className="px-4 py-3.5 font-bold text-start min-w-[210px]">{t.productSignalsCol}</th>
+                <th className="px-4 py-3.5 font-bold text-start whitespace-nowrap min-w-[110px]">{t.productStockCol}</th>
+                <th className="px-4 py-3.5 font-bold text-center whitespace-nowrap min-w-[120px]">{t.productActionsCol}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#EAE7DF]">
@@ -323,16 +323,16 @@ export function ProductsModule({ onOpenNewProduct, onSetEditingProduct }: Produc
                       </td>
 
                       {/* Stock & Status */}
-                      <td className="px-4 py-3.5">
-                        <div className="font-bold text-[#171717]">
+                      <td className="px-4 py-3.5 whitespace-nowrap">
+                        <div className="font-bold text-[#171717] whitespace-nowrap">
                           {product.stock_quantity} <span className="font-normal text-[#737373] text-[10px]">{t.stockUnits}</span>
                         </div>
-                        <div className="mt-1">{getStatusBadge(product.status)}</div>
+                        <div className="mt-1 whitespace-nowrap">{getStatusBadge(product.status)}</div>
                       </td>
 
                       {/* Actions */}
-                      <td className="px-4 py-3.5 text-center">
-                        <div className="flex items-center justify-center gap-1.5">
+                      <td className="px-4 py-3.5 text-center whitespace-nowrap">
+                        <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
                           {/* Quick Edit */}
                           <button
                             onClick={() => {
