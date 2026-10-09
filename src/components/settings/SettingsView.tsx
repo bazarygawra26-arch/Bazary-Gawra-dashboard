@@ -10,7 +10,8 @@ import {
   RefreshCw, 
   Download, 
   FileCode2,
-  RotateCcw
+  RotateCcw,
+  ShieldCheck
 } from 'lucide-react';
 
 export function SettingsView() {
@@ -25,7 +26,39 @@ export function SettingsView() {
   } = useAdmin();
 
   const [copied, setCopied] = useState(false);
+  const [copiedRls, setCopiedRls] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
+
+  const disableRlsSqlScript = `-- ================================================================
+-- DISABLE ROW LEVEL SECURITY (RLS) ON ALL TABLES
+-- Removes policy 42501 and allows unrestricted insert/update/delete
+-- ================================================================
+
+ALTER TABLE IF EXISTS public.product_translations DISABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.products DISABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.sellers DISABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.categories DISABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.ai_search_queries DISABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.ai_product_scans DISABLE ROW LEVEL SECURITY;
+
+-- Storage: Ensure unrestricted public access & upload for product-images
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('product-images', 'product-images', true)
+ON CONFLICT (id) DO UPDATE SET public = true;
+
+DO $$ BEGIN
+    DROP POLICY IF EXISTS "Allow public read product-images" ON storage.objects;
+    CREATE POLICY "Allow public read product-images" ON storage.objects FOR SELECT USING (bucket_id = 'product-images');
+
+    DROP POLICY IF EXISTS "Allow upload product-images" ON storage.objects;
+    CREATE POLICY "Allow upload product-images" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'product-images');
+
+    DROP POLICY IF EXISTS "Allow update product-images" ON storage.objects;
+    CREATE POLICY "Allow update product-images" ON storage.objects FOR UPDATE USING (bucket_id = 'product-images') WITH CHECK (bucket_id = 'product-images');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+`;
 
   const sqlMigrationScript = `-- ============================================================
 -- BAZARY GAWRA (بازاڕی گەورە) - SUPABASE POSTGRESQL SCHEMA
@@ -194,6 +227,12 @@ END $$;
     setTimeout(() => setCopied(false), 2500);
   };
 
+  const handleCopyDisableRls = () => {
+    navigator.clipboard.writeText(disableRlsSqlScript);
+    setCopiedRls(true);
+    setTimeout(() => setCopiedRls(false), 2500);
+  };
+
   const handleRecheck = async () => {
     setIsChecking(true);
     await recheckSupabase();
@@ -284,6 +323,35 @@ END $$;
           <pre className="mt-2 rounded-lg bg-[#171717] p-2.5 text-[11px] text-white overflow-x-auto font-mono">
             NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co&#10;NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
           </pre>
+        </div>
+      </div>
+
+      {/* Quick Fix 42501: Disable RLS Card */}
+      <div className="rounded-2xl border border-amber-300 bg-amber-50/70 p-5 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-amber-200 pb-4">
+          <div className="flex items-center gap-2.5">
+            <ShieldCheck className="h-5 w-5 text-amber-700" />
+            <div>
+              <h3 className="text-sm font-extrabold text-amber-950">
+                ⚡ لابردنی ڕێگرییەکانی RLS (Fix 42501 Permission Error)
+              </h3>
+              <p className="text-[11px] text-amber-850">
+                لابردنی ڕاستەوخۆی سنووردارکردن لەسەر هەموو خشتەکان تا وێنە و کاڵا و وەرگێڕان بێ کێشە نوێببنەوە
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={handleCopyDisableRls}
+            className="flex items-center gap-1.5 rounded-xl bg-amber-800 px-4 py-2 text-xs font-bold text-white hover:bg-amber-900 shadow-sm transition-all"
+          >
+            <Copy className="h-4 w-4" />
+            <span>{copiedRls ? t.copiedToClipboard : 'کۆپیکردنی کۆدی لابردنی RLS'}</span>
+          </button>
+        </div>
+
+        <div className="mt-3.5 max-h-48 overflow-y-auto rounded-xl border border-amber-200 bg-[#171717] p-3.5 text-[11px] text-[#FAF9F6] font-mono leading-relaxed">
+          <pre>{disableRlsSqlScript}</pre>
         </div>
       </div>
 
