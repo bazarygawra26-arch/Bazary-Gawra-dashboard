@@ -4,6 +4,11 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Bazary Gawra (بازاڕی گەورە) — Admin & Operations Dashboard",
   description: "Operations management, merchant verification and listing transparency moderation for Bazary Gawra - Kurdistan's AI-powered local marketplace.",
+  icons: {
+    icon: "/logo.png",
+    shortcut: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({

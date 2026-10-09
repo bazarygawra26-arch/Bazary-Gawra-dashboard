@@ -8,8 +8,7 @@ import {
   Package, 
   Sparkles, 
   MapPin, 
-  ShieldCheck, 
-  ShoppingBag
+  ShieldCheck
 } from 'lucide-react';
 
 export function Sidebar() {
@@ -55,19 +54,23 @@ export function Sidebar() {
       <div>
         {/* Brand Header */}
         <div className="flex items-center gap-3 px-2 py-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#F4B942] to-[#D89B24] shadow-md shadow-[#F4B942]/20">
-            <ShoppingBag className="h-5 w-5 text-white" />
+          <div className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white shadow-xs ring-1 ring-[#EAE7DF]">
+            <img
+              src="/logo.png"
+              alt="Bazary Gawra Logo"
+              className="h-full w-full object-contain p-0.5"
+            />
           </div>
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-1.5">
-              <h1 className="font-extrabold text-base tracking-tight text-[#171717]">
+              <h1 className="font-extrabold text-base tracking-tight text-[#171717] truncate">
                 {t.appName}
               </h1>
-              <span className="rounded bg-[#657A52]/10 px-1.5 py-0.2 text-[9px] font-bold text-[#657A52]">
+              <span className="shrink-0 rounded bg-[#657A52]/10 px-1.5 py-0.2 text-[9px] font-bold text-[#657A52]">
                 PRO
               </span>
             </div>
-            <p className="text-[11px] font-medium text-[#737373]">{t.adminPortal}</p>
+            <p className="text-[11px] font-medium text-[#737373] truncate">{t.adminPortal}</p>
           </div>
         </div>
 
