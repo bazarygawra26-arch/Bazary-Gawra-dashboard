@@ -147,7 +147,15 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
           return 'Layers';
         };
 
-        const liveCategories: Category[] = catData.map((c: { id: string; slug: string; name_en?: string; name_ku?: string; name_ar?: string }) => ({
+        // Filter out subcategories (c.parent_id) and redundant duplicates, exactly matching client side
+        const excludedSlugs = new Set(['clothing', 'food-honey', 'local-products', 'handmade']);
+        const topLevelCats = catData.filter((c: any) => 
+          !c.parent_id && 
+          c.is_active !== false && 
+          !excludedSlugs.has(c.slug)
+        );
+
+        const liveCategories: Category[] = topLevelCats.map((c: any) => ({
           id: c.id,
           slug: c.slug || c.id,
           name_en: c.name_en || c.slug,
@@ -471,42 +479,15 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
 
     saveProducts([newProd, ...products]);
 
-    if (isSupabaseConfigured && supabase) {
+    if (isSupabaseConfigured) {
       try {
-        const addPrimaryImage = enrichedData.primary_image || (Array.isArray(enrichedData.images) && enrichedData.images[0]) || '';
-        const addImagesList = Array.isArray(enrichedData.images) && enrichedData.images.length > 0
-          ? enrichedData.images
-          : (addPrimaryImage ? [addPrimaryImage] : []);
-
-        const { data: insertedProd } = await supabase.from('products').insert({
-          seller_id: enrichedData.seller_id,
-          category_id: enrichedData.category_id,
-          price: enrichedData.price_iqd,
-          currency: 'IQD',
-          warranty_applicable: enrichedData.warranty_type !== 'none',
-          warranty_details: enrichedData.warranty_period,
-          delivery_available: enrichedData.delivery_type !== 'pickup_only',
-          delivery_info: enrichedData.delivery_type === 'pickup_only' ? 'Pickup only' : (enrichedData.delivery_cost_iqd ? `Delivery ${enrichedData.delivery_cost_iqd.toLocaleString()} IQD` : 'Delivery available'),
-          return_days: enrichedData.return_window_days,
-          return_policy: enrichedData.return_conditions,
-          image_url: addPrimaryImage,
-          specs: {
-            images: addImagesList,
-            delivery_type: enrichedData.delivery_type,
-            warranty_type: enrichedData.warranty_type,
-          },
-          status: enrichedData.status,
-        }).select('id').single();
-
-        if (insertedProd?.id) {
-          await supabase.from('product_translations').insert([
-            { product_id: insertedProd.id, lang: 'ku', name: enrichedData.name_ku, description: enrichedData.description_ku },
-            { product_id: insertedProd.id, lang: 'en', name: enrichedData.name_en, description: enrichedData.description_en },
-            { product_id: insertedProd.id, lang: 'ar', name: enrichedData.name_ar, description: enrichedData.description_ar },
-          ]);
-        }
+        await fetch('/api/products', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ productData: enrichedData }),
+        });
       } catch (err) {
-        console.warn('Supabase product insert warning:', err);
+        console.warn('API product insert warning:', err);
       }
     }
   };
@@ -529,41 +510,15 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     );
     saveProducts(updated);
 
-    if (isSupabaseConfigured && supabase) {
+    if (isSupabaseConfigured) {
       try {
-        const prodPrimaryImage = enrichedProduct.primary_image || (Array.isArray(enrichedProduct.images) && enrichedProduct.images[0]) || '';
-        const prodImagesList = Array.isArray(enrichedProduct.images) && enrichedProduct.images.length > 0 
-          ? enrichedProduct.images 
-          : (prodPrimaryImage ? [prodPrimaryImage] : []);
-
-        await supabase.from('products').update({
-          price: enrichedProduct.price_iqd,
-          category_id: enrichedProduct.category_id || undefined,
-          seller_id: enrichedProduct.seller_id || undefined,
-          warranty_applicable: enrichedProduct.warranty_type !== 'none',
-          warranty_details: enrichedProduct.warranty_period,
-          delivery_available: enrichedProduct.delivery_type !== 'pickup_only',
-          delivery_info: enrichedProduct.delivery_type === 'pickup_only' ? 'Pickup only' : (enrichedProduct.delivery_cost_iqd ? `Delivery ${enrichedProduct.delivery_cost_iqd.toLocaleString()} IQD` : 'Delivery available'),
-          return_days: enrichedProduct.return_window_days,
-          return_policy: enrichedProduct.return_conditions,
-          status: enrichedProduct.status,
-          image_url: prodPrimaryImage,
-          specs: {
-            images: prodImagesList,
-            delivery_type: enrichedProduct.delivery_type,
-            warranty_type: enrichedProduct.warranty_type,
-          },
-          updated_at: new Date().toISOString(),
-        }).eq('id', product.id);
-
-        // Also update product_translations in Supabase
-        await supabase.from('product_translations').upsert([
-          { product_id: product.id, lang: 'ku', name: enrichedProduct.name_ku, description: enrichedProduct.description_ku },
-          { product_id: product.id, lang: 'en', name: enrichedProduct.name_en, description: enrichedProduct.description_en },
-          { product_id: product.id, lang: 'ar', name: enrichedProduct.name_ar, description: enrichedProduct.description_ar },
-        ], { onConflict: 'product_id,lang' });
+        await fetch('/api/products', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ product: enrichedProduct }),
+        });
       } catch (err) {
-        console.warn('Supabase product update warning:', err);
+        console.warn('API product update warning:', err);
       }
     }
   };
@@ -572,11 +527,13 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     const updated = products.filter(p => p.id !== productId);
     saveProducts(updated);
 
-    if (isSupabaseConfigured && supabase) {
+    if (isSupabaseConfigured) {
       try {
-        await supabase.from('products').delete().eq('id', productId);
+        await fetch(`/api/products?id=${productId}`, {
+          method: 'DELETE',
+        });
       } catch (err) {
-        console.warn('Supabase product delete warning:', err);
+        console.warn('API product delete warning:', err);
       }
     }
   };
@@ -589,14 +546,15 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     );
     saveProducts(updated);
 
-    if (isSupabaseConfigured && supabase) {
+    if (isSupabaseConfigured) {
       try {
-        await supabase.from('products').update({
-          price: priceIqd,
-          updated_at: new Date().toISOString(),
-        }).eq('id', productId);
+        await fetch('/api/products', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ quickUpdate: true, productId, priceIqd }),
+        });
       } catch (err) {
-        console.warn('Supabase quick update warning:', err);
+        console.warn('API quick update warning:', err);
       }
     }
   };
