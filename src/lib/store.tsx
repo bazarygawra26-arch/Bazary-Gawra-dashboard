@@ -238,8 +238,10 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
             category_id: p.category_id,
             stock_quantity: 12,
             status: p.status === 'active' ? 'active' : 'draft',
-            images: [p.image_url || 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=600&auto=format&fit=crop&q=80'],
-            primary_image: p.image_url || 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=600&auto=format&fit=crop&q=80',
+            images: (Array.isArray(p.specs?.images) && p.specs.images.length > 0)
+              ? p.specs.images
+              : [p.image_url || 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=600&auto=format&fit=crop&q=80'],
+            primary_image: p.image_url || (Array.isArray(p.specs?.images) && p.specs.images[0]) || 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=600&auto=format&fit=crop&q=80',
             warranty_type: warrantyType,
             warranty_period: p.warranty_details || (p.warranty_months ? `${p.warranty_months} Months` : 'No Warranty'),
             warranty_notes: p.warranty_details || '',
@@ -471,6 +473,11 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
 
     if (isSupabaseConfigured && supabase) {
       try {
+        const addPrimaryImage = enrichedData.primary_image || (Array.isArray(enrichedData.images) && enrichedData.images[0]) || '';
+        const addImagesList = Array.isArray(enrichedData.images) && enrichedData.images.length > 0
+          ? enrichedData.images
+          : (addPrimaryImage ? [addPrimaryImage] : []);
+
         const { data: insertedProd } = await supabase.from('products').insert({
           seller_id: enrichedData.seller_id,
           category_id: enrichedData.category_id,
@@ -479,9 +486,15 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
           warranty_applicable: enrichedData.warranty_type !== 'none',
           warranty_details: enrichedData.warranty_period,
           delivery_available: enrichedData.delivery_type !== 'pickup_only',
+          delivery_info: enrichedData.delivery_type === 'pickup_only' ? 'Pickup only' : (enrichedData.delivery_cost_iqd ? `Delivery ${enrichedData.delivery_cost_iqd.toLocaleString()} IQD` : 'Delivery available'),
           return_days: enrichedData.return_window_days,
           return_policy: enrichedData.return_conditions,
-          image_url: enrichedData.primary_image,
+          image_url: addPrimaryImage,
+          specs: {
+            images: addImagesList,
+            delivery_type: enrichedData.delivery_type,
+            warranty_type: enrichedData.warranty_type,
+          },
           status: enrichedData.status,
         }).select('id').single();
 
@@ -518,11 +531,28 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
 
     if (isSupabaseConfigured && supabase) {
       try {
+        const prodPrimaryImage = enrichedProduct.primary_image || (Array.isArray(enrichedProduct.images) && enrichedProduct.images[0]) || '';
+        const prodImagesList = Array.isArray(enrichedProduct.images) && enrichedProduct.images.length > 0 
+          ? enrichedProduct.images 
+          : (prodPrimaryImage ? [prodPrimaryImage] : []);
+
         await supabase.from('products').update({
           price: enrichedProduct.price_iqd,
+          category_id: enrichedProduct.category_id || undefined,
+          seller_id: enrichedProduct.seller_id || undefined,
+          warranty_applicable: enrichedProduct.warranty_type !== 'none',
           warranty_details: enrichedProduct.warranty_period,
+          delivery_available: enrichedProduct.delivery_type !== 'pickup_only',
+          delivery_info: enrichedProduct.delivery_type === 'pickup_only' ? 'Pickup only' : (enrichedProduct.delivery_cost_iqd ? `Delivery ${enrichedProduct.delivery_cost_iqd.toLocaleString()} IQD` : 'Delivery available'),
           return_days: enrichedProduct.return_window_days,
+          return_policy: enrichedProduct.return_conditions,
           status: enrichedProduct.status,
+          image_url: prodPrimaryImage,
+          specs: {
+            images: prodImagesList,
+            delivery_type: enrichedProduct.delivery_type,
+            warranty_type: enrichedProduct.warranty_type,
+          },
           updated_at: new Date().toISOString(),
         }).eq('id', product.id);
 
