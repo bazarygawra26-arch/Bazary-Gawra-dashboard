@@ -124,18 +124,65 @@ CREATE TABLE IF NOT EXISTS public.ai_product_scans (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 7. ENABLE ROW LEVEL SECURITY (RLS)
+-- 7. PRODUCT TRANSLATIONS TABLE
+CREATE TABLE IF NOT EXISTS public.product_translations (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    product_id UUID REFERENCES public.products(id) ON DELETE CASCADE,
+    lang VARCHAR(5) NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    CONSTRAINT product_translations_product_lang_uniq UNIQUE (product_id, lang)
+);
+
+-- 8. ENABLE ROW LEVEL SECURITY (RLS)
 ALTER TABLE public.sellers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.product_translations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.ai_search_queries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.ai_product_scans ENABLE ROW LEVEL SECURITY;
 
--- 8. RLS POLICIES (Public read, authenticated write)
+-- 9. RLS POLICIES (Allow read & write operations)
 DO $$ BEGIN
-    CREATE POLICY "Allow public read on sellers" ON public.sellers FOR SELECT USING (true);
-    CREATE POLICY "Allow public read on products" ON public.products FOR SELECT USING (true);
-    CREATE POLICY "Allow public read on ai_queries" ON public.ai_search_queries FOR SELECT USING (true);
-    CREATE POLICY "Allow public read on ai_scans" ON public.ai_product_scans FOR SELECT USING (true);
+    -- Sellers
+    DROP POLICY IF EXISTS "Allow all on sellers" ON public.sellers;
+    CREATE POLICY "Allow all on sellers" ON public.sellers FOR ALL USING (true) WITH CHECK (true);
+
+    -- Products
+    DROP POLICY IF EXISTS "Allow all on products" ON public.products;
+    CREATE POLICY "Allow all on products" ON public.products FOR ALL USING (true) WITH CHECK (true);
+
+    -- Product Translations
+    DROP POLICY IF EXISTS "Allow all on product_translations" ON public.product_translations;
+    CREATE POLICY "Allow all on product_translations" ON public.product_translations FOR ALL USING (true) WITH CHECK (true);
+
+    -- AI Queries & Scans
+    DROP POLICY IF EXISTS "Allow all on ai_queries" ON public.ai_search_queries;
+    CREATE POLICY "Allow all on ai_queries" ON public.ai_search_queries FOR ALL USING (true) WITH CHECK (true);
+
+    DROP POLICY IF EXISTS "Allow all on ai_scans" ON public.ai_product_scans;
+    CREATE POLICY "Allow all on ai_scans" ON public.ai_product_scans FOR ALL USING (true) WITH CHECK (true);
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+-- 10. STORAGE BUCKET FOR PRODUCT IMAGES
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('product-images', 'product-images', true)
+ON CONFLICT (id) DO UPDATE SET public = true;
+
+DO $$ BEGIN
+    DROP POLICY IF EXISTS "Allow public read product-images" ON storage.objects;
+    CREATE POLICY "Allow public read product-images" ON storage.objects FOR SELECT USING (bucket_id = 'product-images');
+
+    DROP POLICY IF EXISTS "Allow upload product-images" ON storage.objects;
+    CREATE POLICY "Allow upload product-images" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'product-images');
+
+    DROP POLICY IF EXISTS "Allow update product-images" ON storage.objects;
+    CREATE POLICY "Allow update product-images" ON storage.objects FOR UPDATE USING (bucket_id = 'product-images') WITH CHECK (bucket_id = 'product-images');
+
+    DROP POLICY IF EXISTS "Allow delete product-images" ON storage.objects;
+    CREATE POLICY "Allow delete product-images" ON storage.objects FOR DELETE USING (bucket_id = 'product-images');
 EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;
