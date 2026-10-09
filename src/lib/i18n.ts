@@ -173,6 +173,15 @@ export interface TranslationDictionary {
   returnTypeLabel: string;
   imagesSection: string;
   imageUrlPlaceholder: string;
+  uploadImageLabel: string;
+  dragDropImages: string;
+  clickToUpload: string;
+  uploadingImage: string;
+  presetImagesLabel: string;
+  setAsPrimary: string;
+  primaryImageBadge: string;
+  removeImage: string;
+  pasteUrlInstead: string;
   saveChanges: string;
   cancel: string;
   
@@ -365,6 +374,15 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
     returnTypeLabel: 'مەرجی گەڕاندنەوە',
     imagesSection: 'وێنەی کاڵا',
     imageUrlPlaceholder: 'لینکی وێنە لێرە دابنێ (URL)',
+    uploadImageLabel: 'بارکردنی وێنەی کاڵا لە ئامێرەکەت',
+    dragDropImages: 'وێنەکە ڕابکێشە بۆ ئێرە یان کلیک بکە بۆ هەڵبژاردن',
+    clickToUpload: 'هەڵبژاردنی وێنە لە کۆمپیوتەر یان مۆبایل',
+    uploadingImage: 'وێنە باردەکرێت...',
+    presetImagesLabel: 'وێنەی نموونەیی ئامادەکراو',
+    setAsPrimary: 'دیاریکردن وەک وێنەی سەرەکی',
+    primaryImageBadge: 'سەرەکی',
+    removeImage: 'سڕینەوەی وێنە',
+    pasteUrlInstead: 'یان دابنانی لینکی وێنە (URL)',
     saveChanges: 'پاشەکەوتکردنی گۆڕانکارییەکان',
     cancel: 'پاشگەزبوونەوە',
     
@@ -554,6 +572,15 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
     returnTypeLabel: 'سياسة الاسترجاع',
     imagesSection: 'صور المنتج',
     imageUrlPlaceholder: 'أدخل رابط الصورة (URL)',
+    uploadImageLabel: 'رفع صور المنتج من جهازك',
+    dragDropImages: 'اسحب الصورة هنا أو اضغط للاختيار من جهازك',
+    clickToUpload: 'اختر الصور من هاتفك أو حاسوبك',
+    uploadingImage: 'جاري رفع الصورة...',
+    presetImagesLabel: 'نماذج صور جاهزة للتجربة',
+    setAsPrimary: 'تعيين كصورة رئيسية',
+    primaryImageBadge: 'الرئيسية',
+    removeImage: 'حذف الصورة',
+    pasteUrlInstead: 'أو إدخال رابط الصورة (URL)',
     saveChanges: 'حفظ التغييرات',
     cancel: 'إلغاء',
     
@@ -743,6 +770,15 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
     returnTypeLabel: 'Return Policy',
     imagesSection: 'Product Photography',
     imageUrlPlaceholder: 'Paste image URL here...',
+    uploadImageLabel: 'Upload Product Images from Device',
+    dragDropImages: 'Drag & drop image here or click to browse files',
+    clickToUpload: 'Choose photos from computer or mobile',
+    uploadingImage: 'Uploading image...',
+    presetImagesLabel: 'Quick Curated Presets',
+    setAsPrimary: 'Set as primary image',
+    primaryImageBadge: 'Primary',
+    removeImage: 'Remove image',
+    pasteUrlInstead: 'Or paste image URL instead',
     saveChanges: 'Save Changes',
     cancel: 'Cancel',
     

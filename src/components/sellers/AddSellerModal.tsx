@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useAdmin } from '@/lib/store';
 import { KurdishCity } from '@/types/database';
 import { X, Store, CheckCircle2 } from 'lucide-react';
+import { ImageUploadDropzone } from '@/components/common/ImageUploadDropzone';
 
 interface AddSellerModalProps {
   isOpen: boolean;
@@ -170,13 +171,17 @@ export function AddSellerModal({ isOpen, onClose }: AddSellerModalProps) {
           </div>
 
           <div>
-            <label className="font-bold text-[#171717]">Shop Facade Photo URL</label>
-            <input
-              type="text"
-              value={facadeImageUrl}
-              onChange={(e) => setFacadeImageUrl(e.target.value)}
-              className="mt-1 w-full rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] p-2.5 text-xs text-[#171717] focus:border-[#657A52] focus:bg-white focus:outline-none"
-            />
+            <label className="font-bold text-[#171717]">{t.shopFacade}</label>
+            <div className="mt-2">
+              <ImageUploadDropzone
+                images={facadeImageUrl ? [facadeImageUrl] : []}
+                primaryImage={facadeImageUrl}
+                onImagesChange={(imgs) => setFacadeImageUrl(imgs[0] || '')}
+                onPrimaryImageChange={(primary) => setFacadeImageUrl(primary)}
+                bucket="seller-facades"
+                maxFiles={1}
+              />
+            </div>
           </div>
 
           <div className="flex justify-end gap-2 border-t border-[#EAE7DF] pt-4">

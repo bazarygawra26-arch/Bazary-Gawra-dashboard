@@ -21,6 +21,7 @@ import {
   Download
 } from 'lucide-react';
 import { downloadCsv, formatIqd } from '@/lib/utils';
+import { ImageUploadDropzone } from '@/components/common/ImageUploadDropzone';
 
 interface SellersModuleProps {
   onOpenNewSeller: () => void;
@@ -663,14 +664,17 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
               </div>
 
               <div>
-                <label className="font-bold text-[#171717]">Shop Facade Image URL</label>
-                <input
-                  type="text"
-                  value={editingSeller.facade_image_url}
-                  onChange={(e) => setEditingSeller({ ...editingSeller, facade_image_url: e.target.value })}
-                  className="mt-1 w-full rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] p-2.5 text-xs text-[#171717] focus:border-[#657A52] focus:bg-white focus:outline-none"
-                  required
-                />
+                <label className="font-bold text-[#171717]">{t.shopFacade}</label>
+                <div className="mt-2">
+                  <ImageUploadDropzone
+                    images={editingSeller.facade_image_url ? [editingSeller.facade_image_url] : []}
+                    primaryImage={editingSeller.facade_image_url}
+                    onImagesChange={(imgs) => setEditingSeller({ ...editingSeller, facade_image_url: imgs[0] || '' })}
+                    onPrimaryImageChange={(primary) => setEditingSeller({ ...editingSeller, facade_image_url: primary })}
+                    bucket="seller-facades"
+                    maxFiles={1}
+                  />
+                </div>
               </div>
 
               <div className="flex justify-end gap-2 border-t border-[#EAE7DF] pt-4">

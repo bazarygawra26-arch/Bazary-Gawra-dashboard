@@ -60,9 +60,7 @@ export function Navbar({ onOpenNewProduct, onOpenNewSeller }: NavbarProps) {
       <div className="flex items-center gap-2 sm:gap-3 rtl:mr-4 ltr:ml-4">
         {/* Supabase Connection Status Pill */}
         <div 
-          onClick={() => setCurrentView('settings')}
-          className="hidden md:flex cursor-pointer items-center gap-1.5 rounded-full border border-[#EAE7DF] bg-[#FAF9F6] px-3 py-1.5 text-xs font-medium text-[#171717] hover:border-[#F4B942] transition-colors"
-          title="Click to view Supabase settings"
+          className="hidden md:flex items-center gap-1.5 rounded-full border border-[#EAE7DF] bg-[#FAF9F6] px-3 py-1.5 text-xs font-medium text-[#171717]"
         >
           <div className="relative flex h-2 w-2">
             {isSupabaseLive ? (

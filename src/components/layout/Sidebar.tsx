@@ -8,8 +8,7 @@ import {
   Package, 
   Sparkles, 
   MapPin, 
-  Database,
-  ShieldCheck,
+  ShieldCheck, 
   ShoppingBag
 } from 'lucide-react';
 
@@ -48,11 +47,6 @@ export function Sidebar() {
       id: 'taxonomy',
       label: t.navTaxonomy,
       icon: <MapPin className="h-5 w-5" />,
-    },
-    {
-      id: 'settings',
-      label: t.navSettings,
-      icon: <Database className="h-5 w-5" />,
     },
   ];
 

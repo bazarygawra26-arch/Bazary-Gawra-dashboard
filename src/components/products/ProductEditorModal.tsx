@@ -12,6 +12,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { calculateTransparencyScore } from '@/lib/utils';
+import { ImageUploadDropzone } from '@/components/common/ImageUploadDropzone';
 
 interface ProductEditorModalProps {
   product: Product | null;
@@ -45,8 +46,15 @@ function ProductEditorForm({
   const [categoryId, setCategoryId] = useState<string>(product?.category_id || (categories[0]?.id || ''));
   const [stockQuantity, setStockQuantity] = useState<number>(product?.stock_quantity ?? 15);
   const [status, setStatus] = useState<ProductStatus>(product?.status || 'active');
+  const [images, setImages] = useState<string[]>(
+    product?.images && product.images.length > 0
+      ? product.images
+      : product?.primary_image
+        ? [product.primary_image]
+        : []
+  );
   const [primaryImage, setPrimaryImage] = useState<string>(
-    product?.primary_image || 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=600&auto=format&fit=crop&q=80'
+    product?.primary_image || (product?.images && product.images[0]) || ''
   );
 
   const [warrantyType, setWarrantyType] = useState<WarrantyType>(product?.warranty_type || 'shop_local');
@@ -75,6 +83,9 @@ function ProductEditorForm({
 
     const priceUsd = Math.round(priceIqd / 1500);
 
+    const finalImages = images.length > 0 ? images : (primaryImage ? [primaryImage] : []);
+    const finalPrimary = primaryImage || (finalImages[0] || 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=600&auto=format&fit=crop&q=80');
+
     const dataPayload = {
       seller_id: sellerId || sellers[0]?.id || '',
       name_ku: nameKu || nameEn,
@@ -88,8 +99,8 @@ function ProductEditorForm({
       category_id: categoryId || categories[0]?.id || '',
       stock_quantity: stockQuantity,
       status,
-      images: [primaryImage],
-      primary_image: primaryImage,
+      images: finalImages.length > 0 ? finalImages : [finalPrimary],
+      primary_image: finalPrimary,
       warranty_type: warrantyType,
       warranty_period: warrantyPeriod,
       warranty_notes: warrantyNotes,
@@ -479,25 +490,18 @@ function ProductEditorForm({
           </div>
         </div>
 
-        {/* SECTION 4: Primary Image */}
+        {/* SECTION 4: Product Image Upload */}
         <div>
-          <label className="font-bold text-[#171717]">{t.imagesSection}</label>
-          <div className="mt-1 flex gap-3">
-            <input
-              type="text"
-              value={primaryImage}
-              onChange={(e) => setPrimaryImage(e.target.value)}
-              placeholder={t.imageUrlPlaceholder}
-              className="flex-1 rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] p-2.5 text-xs text-[#171717] focus:border-[#F4B942] focus:bg-white focus:outline-none"
-              required
+          <label className="font-bold text-[#171717]">{t.uploadImageLabel}</label>
+          <div className="mt-2">
+            <ImageUploadDropzone
+              images={images}
+              primaryImage={primaryImage}
+              onImagesChange={setImages}
+              onPrimaryImageChange={setPrimaryImage}
+              bucket="product-images"
+              maxFiles={6}
             />
-            {primaryImage && (
-              <img
-                src={primaryImage}
-                alt="Preview"
-                className="h-10 w-10 shrink-0 rounded-xl object-cover border border-[#EAE7DF]"
-              />
-            )}
           </div>
         </div>
 
