@@ -36,6 +36,7 @@ interface AdminContextType {
   updateSellerVerification: (sellerId: string, status: VerificationStatus, notes?: string) => Promise<void>;
   addSeller: (seller: Omit<Seller, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
   updateSeller: (seller: Seller) => Promise<void>;
+  addCategory: (category: Omit<Category, 'id'>) => Promise<void>;
 
   addProduct: (product: Omit<Product, 'id' | 'created_at' | 'updated_at' | 'transparency_score'>) => Promise<void>;
   updateProduct: (product: Product) => Promise<void>;
@@ -189,6 +190,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
           updated_at: s.updated_at || new Date().toISOString(),
         }));
         setSellers(mappedSellers);
+        try { localStorage.setItem(STORAGE_KEYS.SELLERS, JSON.stringify(mappedSellers)); } catch {}
       }
 
       // 3. Fetch Products & Translations
@@ -265,6 +267,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
           };
         });
         setProducts(mappedProducts);
+        try { localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(mappedProducts)); } catch {}
       }
     } catch (err) {
       console.warn('Error loading live Supabase records:', err);
@@ -400,6 +403,33 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const addCategory = async (catData: Omit<Category, 'id'>) => {
+    const tempId = `cat_${Date.now()}`;
+    const newCat: Category = {
+      ...catData,
+      id: tempId,
+    };
+    setCategories(prev => [...prev, newCat]);
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { data: inserted } = await supabase.from('categories').insert({
+          slug: catData.slug || catData.name_en.toLowerCase().replace(/\s+/g, '-'),
+          name_ku: catData.name_ku,
+          name_en: catData.name_en,
+          name_ar: catData.name_ar,
+          icon: catData.icon || 'Layers',
+          is_active: true,
+        }).select('id').single();
+
+        if (inserted?.id) {
+          setCategories(prev => prev.map(c => c.id === tempId ? { ...c, id: inserted.id } : c));
+        }
+      } catch (err) {
+        console.warn('Supabase category insert warning:', err);
+      }
+    }
+  };
   const addSeller = async (data: Omit<Seller, 'id' | 'created_at' | 'updated_at'>) => {
     // AUTOMATIC TRANSLATION: Dynamically translate seller name and details into EN & AR
     const enrichedData = await ensureMultilingualSeller(data);
@@ -594,6 +624,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         searchQuery,
         setSearchQuery,
         updateSellerVerification,
+        addCategory,
         addSeller,
         updateSeller,
         addProduct,
