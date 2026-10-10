@@ -128,6 +128,16 @@ export interface TranslationDictionary {
   quickEdit: string;
   fullEdit: string;
   deleteProduct: string;
+
+  // Sponsor feature
+  sponsored: string;
+  isSponsored: string;
+  sponsoredBadge: string;
+  sponsoredDesc: string;
+  filterSponsored: string;
+  makeSponsored: string;
+  removeSponsored: string;
+  sponsorProductToggle: string;
   
   // Signals & Audit
   auditAlertTitle: string;
@@ -331,6 +341,15 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
     quickEdit: 'دەستکاری خێرا',
     fullEdit: 'دەستکاری تەواو',
     deleteProduct: 'سڕینەوە',
+
+    sponsored: 'سپۆنسەرکراو',
+    isSponsored: 'کاڵای سپۆنسەرکراو',
+    sponsoredBadge: 'بە سپۆنسەر',
+    sponsoredDesc: 'ئەم کاڵایە وەک سپۆنسەر لە سەرووی ئەنجامەکان و بەشی تایبەت نیشان دەدرێت',
+    filterSponsored: 'تەنها سپۆنسەرکراوەکان',
+    makeSponsored: 'کردن بە سپۆنسەر',
+    removeSponsored: 'لابردنی سپۆنسەر',
+    sponsorProductToggle: 'چالاککردنی سپۆنسەر بۆ ئەم کاڵایە',
     
     auditAlertTitle: 'ئاگاداری وردبینی: بەشێک لە کاڵاکان زانیاری متمانەیان کەمە!',
     auditAlertDesc: 'کڕیارانی کوردستان بەدوای گرەنتی لۆکاڵی، خێرایی گەیاندن و ماوەی تاقیکردنەوە دەگەڕێن. ئەو کاڵایانەی زانیارییان کەمە نیشانی کڕیار نادەین.',
@@ -529,6 +548,15 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
     quickEdit: 'تعديل سريع',
     fullEdit: 'تعديل كامل',
     deleteProduct: 'حذف',
+
+    sponsored: 'مُموَّل',
+    isSponsored: 'منتج مُموّل',
+    sponsoredBadge: 'برعاية',
+    sponsoredDesc: 'عرض هذا المنتج في الواجهة الرئيسية وأعلى نتائج البحث كمنتج مُموّل',
+    filterSponsored: 'المموّلة فقط',
+    makeSponsored: 'ترقية إلى مُموّل',
+    removeSponsored: 'إلغاء التمويل',
+    sponsorProductToggle: 'تفعيل ميزة التمويل لهذا المنتج',
     
     auditAlertTitle: 'تنبيه التدقيق: بعض المنتجات تفتقر لمعلومات الضمان والتوصيل!',
     auditAlertDesc: 'يبحث المتسوقون عن الضمان المحلي ومدة التجربة وسرعة التوصيل. المنتجات الناقصة تحتاج إكمال بياناتها.',
@@ -727,6 +755,15 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
     quickEdit: 'Quick Edit',
     fullEdit: 'Full Editor',
     deleteProduct: 'Delete',
+
+    sponsored: 'Sponsored',
+    isSponsored: 'Sponsored Product',
+    sponsoredBadge: 'Sponsored',
+    sponsoredDesc: 'Feature this product in the homepage spotlight and top search rankings',
+    filterSponsored: 'Sponsored Only',
+    makeSponsored: 'Feature as Sponsored',
+    removeSponsored: 'Remove Sponsor',
+    sponsorProductToggle: 'Enable Sponsor feature for this product',
     
     auditAlertTitle: 'Transparency Audit: Some products lack essential buyer confidence signals!',
     auditAlertDesc: 'Kurdish buyers demand transparent local shop warranty, verified same-day delivery, and test-period return terms. Complete these listings to maximize conversion.',

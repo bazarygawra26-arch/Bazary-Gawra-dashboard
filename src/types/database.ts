@@ -61,6 +61,11 @@ export interface Product {
   created_at: string;
   updated_at: string;
 
+  // Sponsorship & Promotion
+  is_sponsored?: boolean;
+  is_promoted?: boolean;
+  promotion_expires_at?: string;
+
   // Joined fields for display
   seller?: Seller;
 }

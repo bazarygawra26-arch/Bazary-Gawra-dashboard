@@ -42,6 +42,7 @@ interface AdminContextType {
   updateProduct: (product: Product) => Promise<void>;
   deleteProduct: (productId: string) => Promise<void>;
   quickUpdateStockAndPrice: (productId: string, priceIqd: number, stock: number) => Promise<void>;
+  toggleProductSponsor: (productId: string) => Promise<void>;
 
   resetDemoData: () => void;
 }
@@ -262,6 +263,8 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
             return_policy_type: returnPolicyType,
             return_conditions: p.return_policy || 'Inspect upon receipt',
             transparency_score: score,
+            is_sponsored: Boolean(p.specs?.is_sponsored || p.specs?.is_promoted || p.is_sponsored || p.is_promoted),
+            is_promoted: Boolean(p.specs?.is_sponsored || p.specs?.is_promoted || p.is_sponsored || p.is_promoted),
             created_at: p.created_at || new Date().toISOString(),
             updated_at: p.updated_at || new Date().toISOString(),
           };
@@ -589,6 +592,30 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const toggleProductSponsor = async (productId: string) => {
+    const target = products.find(p => p.id === productId);
+    if (!target) return;
+    const nextStatus = !Boolean(target.is_sponsored ?? target.is_promoted);
+    const updated = products.map(p =>
+      p.id === productId
+        ? { ...p, is_sponsored: nextStatus, is_promoted: nextStatus, updated_at: new Date().toISOString() }
+        : p
+    );
+    saveProducts(updated);
+
+    if (isSupabaseConfigured) {
+      try {
+        await fetch('/api/products', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ toggleSponsor: true, productId, isSponsored: nextStatus }),
+        });
+      } catch (err) {
+        console.warn('API toggle sponsor warning:', err);
+      }
+    }
+  };
+
   const resetDemoData = () => {
     saveSellers(initialSellers);
     saveProducts(initialProducts);
@@ -631,6 +658,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         updateProduct,
         deleteProduct,
         quickUpdateStockAndPrice,
+        toggleProductSponsor,
         resetDemoData,
       }}
     >

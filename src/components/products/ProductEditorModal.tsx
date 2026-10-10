@@ -61,6 +61,9 @@ function ProductEditorForm({
   const [primaryImage, setPrimaryImage] = useState<string>(
     product?.primary_image || (product?.images && product.images[0]) || ''
   );
+  const [isSponsored, setIsSponsored] = useState<boolean>(
+    Boolean(product?.is_sponsored ?? product?.is_promoted ?? false)
+  );
 
   const [warrantyType, setWarrantyType] = useState<WarrantyType>(product?.warranty_type || 'shop_local');
   const [warrantyPeriod, setWarrantyPeriod] = useState<string>(product?.warranty_period || '١ ساڵ گرەنتی ناوخۆیی دووکان');
@@ -222,6 +225,8 @@ function ProductEditorForm({
       return_window_days: returnWindowDays,
       return_policy_type: returnPolicyType,
       return_conditions: returnConditions,
+      is_sponsored: isSponsored,
+      is_promoted: isSponsored,
     };
 
     try {
@@ -510,6 +515,54 @@ function ProductEditorForm({
               <option value="out_of_stock">نەماوە لە کۆگا</option>
               <option value="archived">ئەرشیڤکراو</option>
             </select>
+          </div>
+        </div>
+
+        {/* SECTION 2.5: Product Sponsorship & Promotion */}
+        <div className={`rounded-xl border p-4 transition-all ${
+          isSponsored 
+            ? 'border-[#F4B942] bg-gradient-to-r from-[#FFFDF7] to-[#FFF9E6] shadow-xs' 
+            : 'border-[#EAE7DF] bg-[#FAF9F6]'
+        }`}>
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors ${
+                isSponsored ? 'bg-[#F4B942] text-white shadow-sm' : 'bg-neutral-200 text-neutral-500'
+              }`}>
+                <Sparkles className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black text-[#171717]">{t.isSponsored}</span>
+                  {isSponsored && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#F4B942]/20 border border-[#F4B942]/40 text-[#8C5E00] text-[10px] font-black">
+                      <Sparkles className="w-2.5 h-2.5 fill-[#8C5E00]" />
+                      {t.sponsoredBadge}
+                    </span>
+                  )}
+                </div>
+                <p className="mt-0.5 text-[11px] text-[#737373] leading-relaxed">
+                  {t.sponsoredDesc}
+                </p>
+              </div>
+            </div>
+
+            {/* Toggle Switch */}
+            <button
+              type="button"
+              role="switch"
+              aria-checked={isSponsored}
+              onClick={() => setIsSponsored(!isSponsored)}
+              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                isSponsored ? 'bg-[#F4B942]' : 'bg-neutral-300'
+              }`}
+            >
+              <span
+                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                  isSponsored ? 'translate-x-5' : 'translate-x-0'
+                }`}
+              />
+            </button>
           </div>
         </div>
 

@@ -14,6 +14,7 @@ export async function POST(req: NextRequest) {
     const addImagesList = Array.isArray(productData.images) && productData.images.length > 0
       ? productData.images
       : (addPrimaryImage ? [addPrimaryImage] : []);
+    const isSponsoredProduct = Boolean(productData.is_sponsored ?? productData.is_promoted);
 
     const { data: insertedProd, error: insertError } = await supabaseAdmin.from('products').insert({
       seller_id: productData.seller_id,
@@ -33,6 +34,8 @@ export async function POST(req: NextRequest) {
         images: addImagesList,
         delivery_type: productData.delivery_type,
         warranty_type: productData.warranty_type,
+        is_sponsored: isSponsoredProduct,
+        is_promoted: isSponsoredProduct,
       },
       status: productData.status,
     }).select('id').single();
@@ -78,12 +81,43 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ success: true });
     }
 
+    if (body.toggleSponsor) {
+      const { productId, isSponsored } = body;
+      const { data: existingData } = await supabaseAdmin.from('products').select('specs').eq('id', productId).single();
+      const nextSpecs = {
+        ...(existingData?.specs || {}),
+        is_sponsored: Boolean(isSponsored),
+        is_promoted: Boolean(isSponsored),
+      };
+      const { error: toggleErr } = await supabaseAdmin.from('products').update({
+        specs: nextSpecs,
+        updated_at: new Date().toISOString(),
+      }).eq('id', productId);
+      if (toggleErr) {
+        console.warn('API /api/products toggleSponsor error:', toggleErr);
+        return NextResponse.json({ error: toggleErr.message }, { status: 400 });
+      }
+      return NextResponse.json({ success: true, isSponsored: Boolean(isSponsored) });
+    }
+
     const { product } = body;
 
     const prodPrimaryImage = product.primary_image || (Array.isArray(product.images) && product.images[0]) || '';
     const prodImagesList = Array.isArray(product.images) && product.images.length > 0 
       ? product.images 
       : (prodPrimaryImage ? [prodPrimaryImage] : []);
+    const isSpon = Boolean(product.is_sponsored ?? product.is_promoted);
+
+    // Merge with existing specs to preserve other custom metadata
+    const { data: existingProd } = await supabaseAdmin.from('products').select('specs').eq('id', product.id).single();
+    const mergedSpecs = {
+      ...(existingProd?.specs || {}),
+      images: prodImagesList,
+      delivery_type: product.delivery_type,
+      warranty_type: product.warranty_type,
+      is_sponsored: isSpon,
+      is_promoted: isSpon,
+    };
 
     const { error: updateError } = await supabaseAdmin.from('products').update({
       price: product.price_iqd,
@@ -99,11 +133,7 @@ export async function PUT(req: NextRequest) {
       return_policy: product.return_conditions,
       status: product.status,
       image_url: prodPrimaryImage,
-      specs: {
-        images: prodImagesList,
-        delivery_type: product.delivery_type,
-        warranty_type: product.warranty_type,
-      },
+      specs: mergedSpecs,
       updated_at: new Date().toISOString(),
     }).eq('id', product.id);
 

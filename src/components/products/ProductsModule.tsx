@@ -13,7 +13,8 @@ import {
   AlertTriangle, 
   Download,
   Coins,
-  X
+  X,
+  Sparkles
 } from 'lucide-react';
 import { formatIqd, downloadCsv } from '@/lib/utils';
 import { getLocalizedField, getLocalizedCity, getLocalizedWarranty } from '@/lib/translator';
@@ -32,7 +33,8 @@ export function ProductsModule({ onOpenNewProduct, onSetEditingProduct }: Produc
     sellers, 
     categories, 
     deleteProduct, 
-    quickUpdateStockAndPrice 
+    quickUpdateStockAndPrice,
+    toggleProductSponsor 
   } = useAdmin();
 
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -43,6 +45,7 @@ export function ProductsModule({ onOpenNewProduct, onSetEditingProduct }: Produc
   const [quickEditingProduct, setQuickEditingProduct] = useState<Product | null>(null);
   const [quickPrice, setQuickPrice] = useState<number>(0);
   const [quickStock, setQuickStock] = useState<number>(0);
+  const [quickSponsor, setQuickSponsor] = useState<boolean>(false);
 
   // Missing signals audit count
   const auditFlaggedProducts = products.filter(p => p.transparency_score < 70);
@@ -52,6 +55,8 @@ export function ProductsModule({ onOpenNewProduct, onSetEditingProduct }: Produc
     let matchesStatus = true;
     if (statusFilter === 'missing_signals') {
       matchesStatus = prod.transparency_score < 70;
+    } else if (statusFilter === 'sponsored') {
+      matchesStatus = Boolean(prod.is_sponsored || prod.is_promoted);
     } else if (statusFilter !== 'all') {
       matchesStatus = prod.status === statusFilter;
     }
@@ -181,6 +186,7 @@ export function ProductsModule({ onOpenNewProduct, onSetEditingProduct }: Produc
             className="rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] px-3 py-2 text-xs font-medium text-[#171717] focus:border-[#F4B942] focus:outline-none"
           >
             <option value="all">{t.allProducts}</option>
+            <option value="sponsored">⭐ {t.filterSponsored} ({products.filter(p => p.is_sponsored || p.is_promoted).length})</option>
             <option value="missing_signals">⚠️ {t.auditMissingSignals} ({auditFlaggedProducts.length})</option>
             <option value="active">{t.statusActive}</option>
             <option value="draft">{t.statusDraft}</option>
@@ -248,10 +254,18 @@ export function ProductsModule({ onOpenNewProduct, onSetEditingProduct }: Produc
                             alt={product.name_en || product.name_ku}
                             className="h-12 w-12 shrink-0 rounded-xl object-cover border border-[#EAE7DF]"
                           />
-                          <div className="max-w-xs">
-                            <h4 className="font-bold text-sm text-[#171717] line-clamp-1">
-                              {getLocalizedField(product, 'name', language)}
-                            </h4>
+                          <div className="max-w-xs space-y-1">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <h4 className="font-bold text-sm text-[#171717] line-clamp-1">
+                                {getLocalizedField(product, 'name', language)}
+                              </h4>
+                              {(product.is_sponsored || product.is_promoted) && (
+                                <span className="inline-flex items-center gap-1 rounded-md bg-[#FFF5DD] px-2 py-0.5 text-[10px] font-black text-[#8C5E00] border border-[#F4B942] shadow-2xs">
+                                  <Sparkles className="h-2.5 w-2.5 fill-[#F4B942] text-[#8C5E00]" />
+                                  <span>{t.sponsoredBadge}</span>
+                                </span>
+                              )}
+                            </div>
                             <p className="text-[11px] text-[#737373] line-clamp-1">
                               {product.name_ku || product.name_en}
                             </p>
@@ -333,12 +347,26 @@ export function ProductsModule({ onOpenNewProduct, onSetEditingProduct }: Produc
                       {/* Actions */}
                       <td className="px-4 py-3.5 text-center whitespace-nowrap">
                         <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
+                          {/* Toggle Sponsor 1-Click Action */}
+                          <button
+                            onClick={() => toggleProductSponsor(product.id)}
+                            className={`rounded-lg border p-1.5 transition-all ${
+                              product.is_sponsored || product.is_promoted
+                                ? 'border-[#F4B942] bg-[#FFF5DD] text-[#8C5E00] hover:bg-[#F4B942]/20 shadow-2xs'
+                                : 'border-[#EAE7DF] text-[#737373] hover:border-[#F4B942] hover:bg-[#FAF9F6] hover:text-[#8C5E00]'
+                            }`}
+                            title={product.is_sponsored || product.is_promoted ? t.removeSponsored : t.makeSponsored}
+                          >
+                            <Sparkles className={`h-4 w-4 ${product.is_sponsored || product.is_promoted ? 'fill-[#F4B942] text-[#8C5E00]' : ''}`} />
+                          </button>
+
                           {/* Quick Edit */}
                           <button
                             onClick={() => {
                               setQuickEditingProduct(product);
                               setQuickPrice(product.price_iqd);
                               setQuickStock(product.stock_quantity);
+                              setQuickSponsor(Boolean(product.is_sponsored || product.is_promoted));
                             }}
                             className="rounded-lg border border-[#EAE7DF] p-1.5 text-[#737373] hover:border-[#F4B942] hover:bg-[#F4B942]/10 hover:text-[#171717] transition-colors"
                             title={t.quickEdit}
@@ -421,6 +449,30 @@ export function ProductsModule({ onOpenNewProduct, onSetEditingProduct }: Produc
                 />
               </div>
 
+              {/* Sponsor Status Toggle in Quick Edit */}
+              <div className="flex items-center justify-between rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] p-2.5">
+                <div className="flex items-center gap-2">
+                  <Sparkles className={`h-4 w-4 ${quickSponsor ? 'text-[#F4B942] fill-[#F4B942]' : 'text-neutral-400'}`} />
+                  <div>
+                    <span className="font-bold text-[#171717]">{t.isSponsored}</span>
+                    <p className="text-[10px] text-[#737373]">{t.sponsoredBadge}</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setQuickSponsor(!quickSponsor)}
+                  className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
+                    quickSponsor ? 'bg-[#F4B942]' : 'bg-neutral-300'
+                  }`}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                      quickSponsor ? 'translate-x-4' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
+
               <div className="flex justify-end gap-2 border-t border-[#EAE7DF] pt-3">
                 <button
                   type="button"
@@ -432,6 +484,9 @@ export function ProductsModule({ onOpenNewProduct, onSetEditingProduct }: Produc
                 <button
                   type="button"
                   onClick={() => {
+                    if (quickSponsor !== Boolean(quickEditingProduct.is_sponsored || quickEditingProduct.is_promoted)) {
+                      toggleProductSponsor(quickEditingProduct.id);
+                    }
                     quickUpdateStockAndPrice(quickEditingProduct.id, quickPrice, quickStock);
                     setQuickEditingProduct(null);
                   }}
