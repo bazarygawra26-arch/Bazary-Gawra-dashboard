@@ -135,22 +135,8 @@ export function DashboardOverview({ onOpenNewProduct, onOpenNewSeller }: Dashboa
               </div>
             </div>
 
-            <div className="mt-4 space-y-2.5">
-              <div className="rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] p-2.5 text-xs">
-                <p className="font-bold text-[#171717]">&quot;چایەدەنی کارەبایی بە ٢ ساڵ گرەنتی&quot;</p>
-                <div className="mt-1 flex items-center justify-between text-[10px] text-[#737373]">
-                  <span>سلێمانی، شەقامی مەولەوی</span>
-                  <span className="font-bold text-emerald-700">٩٦٪ هاوتا بووە</span>
-                </div>
-              </div>
-
-              <div className="rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] p-2.5 text-xs">
-                <p className="font-bold text-[#171717]">&quot;ئایفۆن ١٥ پرۆ ماکس ئەسڵی&quot;</p>
-                <div className="mt-1 flex items-center justify-between text-[10px] text-[#737373]">
-                  <span>هەولێر، نیشتیمان</span>
-                  <span className="font-bold text-emerald-700">کڕدراوە (سەرکەوتوو)</span>
-                </div>
-              </div>
+            <div className="mt-4 rounded-xl border border-dashed border-[#EAE7DF] bg-[#FAF9F6] p-3 text-xs text-[#737373]">
+              هیچ داتای ژیندار بۆ پرسیارەکان و سکانی وێنەیی لە داتابەیسدا نەدۆزرایەوە.
             </div>
           </div>
 

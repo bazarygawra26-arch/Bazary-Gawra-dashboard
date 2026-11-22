@@ -2,15 +2,16 @@
 
 import React from 'react';
 import { useAdmin } from '@/lib/store';
-import { Package, Store, Sparkles, ShieldCheck, TrendingUp } from 'lucide-react';
+import { Package, Store, Clock3, ShieldCheck } from 'lucide-react';
 
 export function ExecutiveKpis() {
-  const { t, products, sellers, aiQueries, aiScans } = useAdmin();
+  const { t, products, sellers } = useAdmin();
 
   // Computations
   const activeProducts = products.filter(p => p.status === 'active');
+  const pendingProducts = products.filter(p => p.status === 'draft');
   const verifiedSellers = sellers.filter(s => s.verification_status === 'verified');
-  const totalAiInteractions = aiQueries.length + aiScans.length;
+  const pendingSellers = sellers.filter(s => s.verification_status === 'pending');
 
   const avgTransparency = Math.round(
     products.reduce((acc, p) => acc + p.transparency_score, 0) / (products.length || 1)
@@ -21,41 +22,33 @@ export function ExecutiveKpis() {
       title: t.kpiTotalProducts,
       value: activeProducts.length.toLocaleString(),
       subtitle: t.kpiActiveProductsSubtitle,
-      trend: '+14.2%',
-      trendUp: true,
       icon: <Package className="h-5 w-5 text-[#F4B942]" />,
       bgColor: 'bg-[#F4B942]/10',
       borderColor: 'border-[#F4B942]/30',
-      badge: 'سۆپابەیسی ڕاستەوخۆ',
+      badge: `${pendingProducts.length} چاوەڕوان`,
     },
     {
       title: t.kpiVerifiedMerchants,
       value: `${verifiedSellers.length} / ${sellers.length}`,
       subtitle: `${Math.round((verifiedSellers.length / (sellers.length || 1)) * 100)}٪ فرۆشگای پەسەندکراو`,
-      trend: '+8.5%',
-      trendUp: true,
       icon: <Store className="h-5 w-5 text-[#657A52]" />,
       bgColor: 'bg-[#657A52]/10',
       borderColor: 'border-[#657A52]/30',
-      badge: 'پشکنینی بازاڕ',
+      badge: `${pendingSellers.length} داواکاری`,
     },
     {
-      title: t.kpiAiQueries,
-      value: totalAiInteractions.toLocaleString(),
-      subtitle: `${aiQueries.length} گەڕانی مەبەست · ${aiScans.length} سکانی وێنەیی`,
-      trend: '+28.4%',
-      trendUp: true,
-      icon: <Sparkles className="h-5 w-5 text-indigo-600" />,
-      bgColor: 'bg-indigo-50',
-      borderColor: 'border-indigo-200',
-      badge: 'مۆتۆری زیرەک',
+      title: 'داواکاری پەسەندکردنی دوکان',
+      value: pendingSellers.length.toLocaleString(),
+      subtitle: 'لە داتابەیسی زنده',
+      icon: <Clock3 className="h-5 w-5 text-amber-600" />,
+      bgColor: 'bg-amber-50',
+      borderColor: 'border-amber-200',
+      badge: 'پێویستی بە پشکنین',
     },
     {
       title: t.kpiTransparencyScore,
       value: `${avgTransparency}%`,
       subtitle: t.kpiTransparencySubtitle,
-      trend: avgTransparency >= 80 ? '+5.0%' : '-2.1%',
-      trendUp: avgTransparency >= 80,
       icon: <ShieldCheck className="h-5 w-5 text-emerald-600" />,
       bgColor: 'bg-emerald-50',
       borderColor: 'border-emerald-200',
@@ -89,13 +82,6 @@ export function ExecutiveKpis() {
             </div>
           </div>
 
-          <div className="mt-4 flex items-center justify-between border-t border-[#EAE7DF] pt-3 text-[11px]">
-            <span className="text-[#737373]">{t.kpiVsLastMonth}</span>
-            <div className={`flex items-center gap-0.5 font-bold ${kpi.trendUp ? 'text-emerald-600' : 'text-amber-600'}`}>
-              <TrendingUp className="h-3.5 w-3.5" />
-              <span>{kpi.trend}</span>
-            </div>
-          </div>
         </div>
       ))}
     </div>

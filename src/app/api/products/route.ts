@@ -1,14 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
+
+async function getAuthorizedAdmin(req: NextRequest) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const authorization = req.headers.get('authorization');
+  const token = authorization?.startsWith('Bearer ') ? authorization.slice(7).trim() : '';
+
+  if (!url || !anonKey || !token) return null;
+
+  const client = createClient(url, anonKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+    global: { headers: { Authorization: `Bearer ${token}` } },
+  });
+  const { data: authData, error: authError } = await client.auth.getUser(token);
+  if (authError || !authData.user) return null;
+
+  const { data: profile } = await client
+    .from('profiles')
+    .select('role')
+    .eq('id', authData.user.id)
+    .maybeSingle();
+  const role = String(profile?.role || '').toLowerCase();
+  if (!['admin', 'super_admin', 'superadmin'].includes(role)) return null;
+
+  return client;
+}
 
 export async function POST(req: NextRequest) {
   try {
+    const adminClient = await getAuthorizedAdmin(req);
+    if (!adminClient) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     const body = await req.json();
     const { productData } = body;
-
-    if (!supabaseAdmin) {
-      return NextResponse.json({ success: true, message: 'Local storage fallback' });
-    }
 
     const addPrimaryImage = productData.primary_image || (Array.isArray(productData.images) && productData.images[0]) || '';
     const addImagesList = Array.isArray(productData.images) && productData.images.length > 0
@@ -16,7 +42,7 @@ export async function POST(req: NextRequest) {
       : (addPrimaryImage ? [addPrimaryImage] : []);
     const isSponsoredProduct = Boolean(productData.is_sponsored ?? productData.is_promoted);
 
-    const { data: insertedProd, error: insertError } = await supabaseAdmin.from('products').insert({
+    const { data: insertedProd, error: insertError } = await adminClient.from('products').insert({
       seller_id: productData.seller_id,
       category_id: productData.category_id,
       price: productData.price_iqd,
@@ -46,7 +72,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (insertedProd?.id) {
-      const { error: transErr } = await supabaseAdmin.from('product_translations').upsert([
+      const { error: transErr } = await adminClient.from('product_translations').upsert([
         { product_id: insertedProd.id, lang: 'ku', name: productData.name_ku, description: productData.description_ku || '' },
         { product_id: insertedProd.id, lang: 'en', name: productData.name_en, description: productData.description_en || '' },
         { product_id: insertedProd.id, lang: 'ar', name: productData.name_ar, description: productData.description_ar || '' },
@@ -58,24 +84,34 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true, id: insertedProd?.id });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('API /api/products POST error:', err);
-    return NextResponse.json({ error: err.message || 'Internal error' }, { status: 500 });
+    return NextResponse.json({ error: err instanceof Error ? err.message : 'Internal error' }, { status: 500 });
   }
 }
 
 export async function PUT(req: NextRequest) {
   try {
+    const adminClient = await getAuthorizedAdmin(req);
+    if (!adminClient) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     const body = await req.json();
 
-    if (!supabaseAdmin) {
-      return NextResponse.json({ success: true, message: 'Local storage fallback' });
-    }
-
     if (body.quickUpdate) {
-      const { productId, priceIqd } = body;
-      await supabaseAdmin.from('products').update({
+      const { productId, priceIqd, stock } = body;
+      const { data: existingData } = await adminClient
+        .from('products')
+        .select('specs')
+        .eq('id', productId)
+        .single();
+      const nextSpecs = {
+        ...(existingData?.specs || {}),
+        stock_quantity: Number(stock) || 0,
+      };
+      await adminClient.from('products').update({
         price: priceIqd,
+        specs: nextSpecs,
         updated_at: new Date().toISOString(),
       }).eq('id', productId);
       return NextResponse.json({ success: true });
@@ -83,13 +119,13 @@ export async function PUT(req: NextRequest) {
 
     if (body.toggleSponsor) {
       const { productId, isSponsored } = body;
-      const { data: existingData } = await supabaseAdmin.from('products').select('specs').eq('id', productId).single();
+      const { data: existingData } = await adminClient.from('products').select('specs').eq('id', productId).single();
       const nextSpecs = {
         ...(existingData?.specs || {}),
         is_sponsored: Boolean(isSponsored),
         is_promoted: Boolean(isSponsored),
       };
-      const { error: toggleErr } = await supabaseAdmin.from('products').update({
+      const { error: toggleErr } = await adminClient.from('products').update({
         specs: nextSpecs,
         updated_at: new Date().toISOString(),
       }).eq('id', productId);
@@ -109,7 +145,7 @@ export async function PUT(req: NextRequest) {
     const isSpon = Boolean(product.is_sponsored ?? product.is_promoted);
 
     // Merge with existing specs to preserve other custom metadata
-    const { data: existingProd } = await supabaseAdmin.from('products').select('specs').eq('id', product.id).single();
+    const { data: existingProd } = await adminClient.from('products').select('specs').eq('id', product.id).single();
     const mergedSpecs = {
       ...(existingProd?.specs || {}),
       images: prodImagesList,
@@ -119,7 +155,7 @@ export async function PUT(req: NextRequest) {
       is_promoted: isSpon,
     };
 
-    const { error: updateError } = await supabaseAdmin.from('products').update({
+    const { error: updateError } = await adminClient.from('products').update({
       price: product.price_iqd,
       category_id: product.category_id || undefined,
       seller_id: product.seller_id || undefined,
@@ -141,8 +177,8 @@ export async function PUT(req: NextRequest) {
       console.warn('API /api/products update error:', updateError);
     }
 
-    // Upsert product_translations using service role key (bypasses RLS)
-    const { error: transError } = await supabaseAdmin.from('product_translations').upsert([
+    // Upsert translations using the authenticated administrator client.
+    const { error: transError } = await adminClient.from('product_translations').upsert([
       { product_id: product.id, lang: 'ku', name: product.name_ku, description: product.description_ku || '' },
       { product_id: product.id, lang: 'en', name: product.name_en, description: product.description_en || '' },
       { product_id: product.id, lang: 'ar', name: product.name_ar, description: product.description_ar || '' },
@@ -153,25 +189,29 @@ export async function PUT(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('API /api/products PUT error:', err);
-    return NextResponse.json({ error: err.message || 'Internal error' }, { status: 500 });
+    return NextResponse.json({ error: err instanceof Error ? err.message : 'Internal error' }, { status: 500 });
   }
 }
 
 export async function DELETE(req: NextRequest) {
   try {
+    const adminClient = await getAuthorizedAdmin(req);
+    if (!adminClient) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
 
-    if (!id || !supabaseAdmin) {
+    if (!id) {
       return NextResponse.json({ success: true });
     }
 
-    await supabaseAdmin.from('products').delete().eq('id', id);
+    await adminClient.from('products').delete().eq('id', id);
     return NextResponse.json({ success: true });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('API /api/products DELETE error:', err);
-    return NextResponse.json({ error: err.message || 'Internal error' }, { status: 500 });
+    return NextResponse.json({ error: err instanceof Error ? err.message : 'Internal error' }, { status: 500 });
   }
 }

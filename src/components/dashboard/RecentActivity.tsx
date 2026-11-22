@@ -2,15 +2,8 @@
 
 import React from 'react';
 import { useAdmin, AdminView } from '@/lib/store';
-import { 
-  Activity, 
-  Store, 
-  Package, 
-  Search, 
-  Camera, 
-  Clock
-} from 'lucide-react';
-import { getLocalizedCity, getLocalizedWarranty, getLocalizedField } from '@/lib/translator';
+import { Activity, Store, Package, Clock } from 'lucide-react';
+import { getLocalizedCity, getLocalizedField } from '@/lib/translator';
 
 interface ActivityItem {
   id: string;
@@ -18,6 +11,7 @@ interface ActivityItem {
   title: string;
   meta: string;
   time: string;
+  timestamp: number;
   icon: React.ReactNode;
   badge: string;
   badgeColor: string;
@@ -25,54 +19,49 @@ interface ActivityItem {
 }
 
 export function RecentActivity() {
-  const { t, language, sellers, products, aiQueries, aiScans, setCurrentView } = useAdmin();
+  const { t, language, sellers, products, setCurrentView } = useAdmin();
 
-  const activities: ActivityItem[] = [
-    {
-      id: 'act-1',
-      type: 'ai_search',
-      title: aiQueries[0]?.query_text || 'گەڕانی دەنگی بۆ چایەدەنی لە سلێمانی',
-      meta: `${aiQueries[0]?.user_city || 'سلێمانی'} · ${aiQueries[0]?.matched_products_count || 6} کاڵا دۆزرایەوە`,
-      time: `12 ${t.minsAgo}`,
-      icon: <Search className="h-4 w-4 text-indigo-600" />,
-      badge: 'گەڕانی کڕیار بە AI',
-      badgeColor: 'bg-indigo-50 text-indigo-700',
-      actionView: 'ai-insights',
-    },
-    {
-      id: 'act-2',
-      type: 'scan',
-      title: `${aiScans[0]?.matched_product_name || 'سکانی وێنەیی کاڵا'} (${Math.round((aiScans[0]?.match_confidence || 0.95) * 100)}٪ هاوتاکراو)`,
-      meta: `هاوتاکرا لەگەڵ ${aiScans[0]?.matched_seller_name || 'دووکانی کاک ئەحمەد'}`,
-      time: `25 ${t.minsAgo}`,
-      icon: <Camera className="h-4 w-4 text-[#F4B942]" />,
-      badge: 'سکانی کامێرا',
-      badgeColor: 'bg-amber-50 text-amber-700',
-      actionView: 'ai-insights',
-    },
-    {
-      id: 'act-3',
+  const formatTimestamp = (timestamp: string) =>
+    new Intl.DateTimeFormat(language === 'en' ? 'en' : language === 'ar' ? 'ar' : 'ckb', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    }).format(new Date(timestamp));
+
+  const recentSellers = [...sellers]
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .slice(0, 3)
+    .map((seller): ActivityItem => ({
+      id: `seller-${seller.id}`,
       type: 'seller',
-      title: `${getLocalizedField(sellers[sellers.length - 1], 'name', language) || 'فرۆشگای کارۆ'} خۆی تۆمارکرد لە ${getLocalizedCity(sellers[sellers.length - 1]?.city, language)}`,
-      meta: `${sellers[sellers.length - 1]?.bazaar_name || 'شەقامی مەولەوی'} · چاوەڕوانی پەسەندکردن`,
-      time: `1 ${t.hoursAgo}`,
+      title: getLocalizedField(seller, 'name', language) || 'دوکان',
+      meta: `${getLocalizedCity(seller.city, language)} · ${seller.verification_status}`,
+      time: formatTimestamp(seller.created_at),
+      timestamp: new Date(seller.created_at).getTime(),
       icon: <Store className="h-4 w-4 text-[#657A52]" />,
-      badge: 'تۆمارکردنی فرۆشیار',
+      badge: 'تۆمارکردنی دوکان',
       badgeColor: 'bg-[#657A52]/10 text-[#657A52]',
       actionView: 'sellers',
-    },
-    {
-      id: 'act-4',
+    }));
+
+  const recentProducts = [...products]
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .slice(0, 3)
+    .map((product): ActivityItem => ({
+      id: `product-${product.id}`,
       type: 'product',
-      title: products[0] ? getLocalizedField(products[0], 'name', language) : 'نوێکردنەوەی کاڵا',
-      meta: `${getLocalizedWarranty(products[0]?.warranty_period, products[0]?.warranty_type, language)} · نمرەی متمانە ${products[0]?.transparency_score || 95}٪`,
-      time: `2 ${t.hoursAgo}`,
+      title: getLocalizedField(product, 'name', language) || 'کاڵا',
+      meta: `دۆخ: ${product.status}`,
+      time: formatTimestamp(product.created_at),
+      timestamp: new Date(product.created_at).getTime(),
       icon: <Package className="h-4 w-4 text-emerald-600" />,
-      badge: 'نوێکردنەوەی کاڵا',
+      badge: 'کاڵای بازاڕ',
       badgeColor: 'bg-emerald-50 text-emerald-700',
       actionView: 'products',
-    },
-  ];
+    }));
+
+  const activities = [...recentSellers, ...recentProducts]
+    .sort((a, b) => b.timestamp - a.timestamp)
+    .slice(0, 6);
 
   return (
     <div className="rounded-2xl border border-[#EAE7DF] bg-white p-5 shadow-xs">

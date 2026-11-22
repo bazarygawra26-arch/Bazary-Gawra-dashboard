@@ -26,39 +26,7 @@ export function SettingsView() {
   } = useAdmin();
 
   const [copied, setCopied] = useState(false);
-  const [copiedRls, setCopiedRls] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
-
-  const disableRlsSqlScript = `-- ================================================================
--- DISABLE ROW LEVEL SECURITY (RLS) ON ALL TABLES
--- Removes policy 42501 and allows unrestricted insert/update/delete
--- ================================================================
-
-ALTER TABLE IF EXISTS public.product_translations DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.products DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.sellers DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.categories DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.ai_search_queries DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.ai_product_scans DISABLE ROW LEVEL SECURITY;
-
--- Storage: Ensure unrestricted public access & upload for product-images
-INSERT INTO storage.buckets (id, name, public)
-VALUES ('product-images', 'product-images', true)
-ON CONFLICT (id) DO UPDATE SET public = true;
-
-DO $$ BEGIN
-    DROP POLICY IF EXISTS "Allow public read product-images" ON storage.objects;
-    CREATE POLICY "Allow public read product-images" ON storage.objects FOR SELECT USING (bucket_id = 'product-images');
-
-    DROP POLICY IF EXISTS "Allow upload product-images" ON storage.objects;
-    CREATE POLICY "Allow upload product-images" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'product-images');
-
-    DROP POLICY IF EXISTS "Allow update product-images" ON storage.objects;
-    CREATE POLICY "Allow update product-images" ON storage.objects FOR UPDATE USING (bucket_id = 'product-images') WITH CHECK (bucket_id = 'product-images');
-EXCEPTION
-    WHEN duplicate_object THEN null;
-END $$;
-`;
 
   const sqlMigrationScript = `-- ============================================================
 -- BAZARY GAWRA (بازاڕی گەورە) - SUPABASE POSTGRESQL SCHEMA
@@ -175,29 +143,13 @@ ALTER TABLE public.product_translations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.ai_search_queries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.ai_product_scans ENABLE ROW LEVEL SECURITY;
 
--- 9. RLS POLICIES (Allow read & write operations)
-DO $$ BEGIN
-    -- Sellers
-    DROP POLICY IF EXISTS "Allow all on sellers" ON public.sellers;
-    CREATE POLICY "Allow all on sellers" ON public.sellers FOR ALL USING (true) WITH CHECK (true);
-
-    -- Products
-    DROP POLICY IF EXISTS "Allow all on products" ON public.products;
-    CREATE POLICY "Allow all on products" ON public.products FOR ALL USING (true) WITH CHECK (true);
-
-    -- Product Translations
-    DROP POLICY IF EXISTS "Allow all on product_translations" ON public.product_translations;
-    CREATE POLICY "Allow all on product_translations" ON public.product_translations FOR ALL USING (true) WITH CHECK (true);
-
-    -- AI Queries & Scans
-    DROP POLICY IF EXISTS "Allow all on ai_queries" ON public.ai_search_queries;
-    CREATE POLICY "Allow all on ai_queries" ON public.ai_search_queries FOR ALL USING (true) WITH CHECK (true);
-
-    DROP POLICY IF EXISTS "Allow all on ai_scans" ON public.ai_product_scans;
-    CREATE POLICY "Allow all on ai_scans" ON public.ai_product_scans FOR ALL USING (true) WITH CHECK (true);
-EXCEPTION
-    WHEN duplicate_object THEN null;
-END $$;
+-- 9. RLS POLICIES (public reads only; privileged writes require authenticated admin verification)
+DROP POLICY IF EXISTS "Public read sellers" ON public.sellers;
+CREATE POLICY "Public read sellers" ON public.sellers FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Public read products" ON public.products;
+CREATE POLICY "Public read products" ON public.products FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Public read product translations" ON public.product_translations;
+CREATE POLICY "Public read product translations" ON public.product_translations FOR SELECT USING (true);
 
 -- 10. STORAGE BUCKET FOR PRODUCT IMAGES
 INSERT INTO storage.buckets (id, name, public)
@@ -207,15 +159,6 @@ ON CONFLICT (id) DO UPDATE SET public = true;
 DO $$ BEGIN
     DROP POLICY IF EXISTS "Allow public read product-images" ON storage.objects;
     CREATE POLICY "Allow public read product-images" ON storage.objects FOR SELECT USING (bucket_id = 'product-images');
-
-    DROP POLICY IF EXISTS "Allow upload product-images" ON storage.objects;
-    CREATE POLICY "Allow upload product-images" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'product-images');
-
-    DROP POLICY IF EXISTS "Allow update product-images" ON storage.objects;
-    CREATE POLICY "Allow update product-images" ON storage.objects FOR UPDATE USING (bucket_id = 'product-images') WITH CHECK (bucket_id = 'product-images');
-
-    DROP POLICY IF EXISTS "Allow delete product-images" ON storage.objects;
-    CREATE POLICY "Allow delete product-images" ON storage.objects FOR DELETE USING (bucket_id = 'product-images');
 EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;
@@ -225,12 +168,6 @@ END $$;
     navigator.clipboard.writeText(sqlMigrationScript);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
-  };
-
-  const handleCopyDisableRls = () => {
-    navigator.clipboard.writeText(disableRlsSqlScript);
-    setCopiedRls(true);
-    setTimeout(() => setCopiedRls(false), 2500);
   };
 
   const handleRecheck = async () => {
@@ -326,32 +263,16 @@ END $$;
         </div>
       </div>
 
-      {/* Quick Fix 42501: Disable RLS Card */}
-      <div className="rounded-2xl border border-amber-300 bg-amber-50/70 p-5 shadow-xs">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-amber-200 pb-4">
-          <div className="flex items-center gap-2.5">
-            <ShieldCheck className="h-5 w-5 text-amber-700" />
-            <div>
-              <h3 className="text-sm font-extrabold text-amber-950">
-                ⚡ لابردنی ڕێگرییەکانی RLS (Fix 42501 Permission Error)
-              </h3>
-              <p className="text-[11px] text-amber-850">
-                لابردنی ڕاستەوخۆی سنووردارکردن لەسەر هەموو خشتەکان تا وێنە و کاڵا و وەرگێڕان بێ کێشە نوێببنەوە
-              </p>
-            </div>
+      <div className="rounded-2xl border border-[#EAE7DF] bg-white p-5">
+        <div className="flex items-start gap-3">
+          <ShieldCheck className="h-5 w-5 shrink-0 text-[#657A52]" />
+          <div>
+            <h3 className="text-sm font-extrabold text-[#171717]">Database Security Model</h3>
+            <p className="mt-1 text-xs leading-relaxed text-[#737373]">
+              RLS must remain enabled. Sensitive actions require an authenticated administrator role and server-validated authorization.
+              Disabling RLS is not a supported maintenance action.
+            </p>
           </div>
-
-          <button
-            onClick={handleCopyDisableRls}
-            className="flex items-center gap-1.5 rounded-xl bg-amber-800 px-4 py-2 text-xs font-bold text-white hover:bg-amber-900 shadow-sm transition-all"
-          >
-            <Copy className="h-4 w-4" />
-            <span>{copiedRls ? t.copiedToClipboard : 'کۆپیکردنی کۆدی لابردنی RLS'}</span>
-          </button>
-        </div>
-
-        <div className="mt-3.5 max-h-48 overflow-y-auto rounded-xl border border-amber-200 bg-[#171717] p-3.5 text-[11px] text-[#FAF9F6] font-mono leading-relaxed">
-          <pre>{disableRlsSqlScript}</pre>
         </div>
       </div>
 

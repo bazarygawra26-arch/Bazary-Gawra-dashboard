@@ -8,7 +8,14 @@ import {
   Package, 
   Sparkles, 
   MapPin, 
-  ShieldCheck
+  ShieldCheck,
+  Users,
+  ShoppingCart,
+  ClipboardList,
+  Bell,
+  Headphones,
+  ScrollText,
+  Building2
 } from 'lucide-react';
 
 export function Sidebar() {
@@ -24,6 +31,11 @@ export function Sidebar() {
       icon: <LayoutDashboard className="h-5 w-5" />,
     },
     {
+      id: 'users',
+      label: 'Users',
+      icon: <Users className="h-5 w-5" />,
+    },
+    {
       id: 'sellers',
       label: t.navSellers,
       icon: <Store className="h-5 w-5" />,
@@ -31,11 +43,51 @@ export function Sidebar() {
       badgeColor: 'bg-[#F4B942] text-[#171717]',
     },
     {
+      id: 'suppliers',
+      label: 'Suppliers',
+      icon: <Building2 className="h-5 w-5" />,
+    },
+    {
       id: 'products',
       label: t.navProducts,
       icon: <Package className="h-5 w-5" />,
       badge: missingSignalCount > 0 ? missingSignalCount : undefined,
       badgeColor: 'bg-amber-100 text-amber-800 border border-amber-300',
+    },
+    {
+      id: 'orders',
+      label: 'B2C Orders',
+      icon: <ShoppingCart className="h-5 w-5" />,
+    },
+    {
+      id: 'rfqs',
+      label: 'RFQs',
+      icon: <ClipboardList className="h-5 w-5" />,
+    },
+    {
+      id: 'quotations',
+      label: 'Quotations',
+      icon: <ClipboardList className="h-5 w-5" />,
+    },
+    {
+      id: 'purchase-orders',
+      label: 'B2B Orders',
+      icon: <ShoppingCart className="h-5 w-5" />,
+    },
+    {
+      id: 'notifications',
+      label: 'Notifications',
+      icon: <Bell className="h-5 w-5" />,
+    },
+    {
+      id: 'support',
+      label: 'Support',
+      icon: <Headphones className="h-5 w-5" />,
+    },
+    {
+      id: 'audit',
+      label: 'Audit Logs',
+      icon: <ScrollText className="h-5 w-5" />,
     },
     {
       id: 'ai-insights',

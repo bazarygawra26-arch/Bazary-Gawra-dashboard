@@ -8,7 +8,22 @@ import { supabase, isSupabaseConfigured, checkSupabaseHealth } from '@/lib/supab
 import { calculateTransparencyScore } from '@/lib/utils';
 import { ensureMultilingualProduct, ensureMultilingualSeller } from '@/lib/translator';
 
-export type AdminView = 'overview' | 'sellers' | 'products' | 'ai-insights' | 'taxonomy' | 'settings';
+export type AdminView =
+  | 'overview'
+  | 'users'
+  | 'sellers'
+  | 'suppliers'
+  | 'products'
+  | 'orders'
+  | 'rfqs'
+  | 'quotations'
+  | 'purchase-orders'
+  | 'notifications'
+  | 'support'
+  | 'audit'
+  | 'ai-insights'
+  | 'taxonomy'
+  | 'settings';
 
 interface AdminContextType {
   language: SupportedLanguage;
@@ -247,7 +262,12 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
             price_iqd: priceIqd,
             price_usd: priceUsd,
             category_id: p.category_id,
-            stock_quantity: 12,
+            stock_quantity: Number(
+              p.specs?.stock_quantity ??
+              p.stock_quantity ??
+              p.inventory_quantity ??
+              0
+            ),
             status: p.status === 'active' ? 'active' : 'draft',
             images: (Array.isArray(p.specs?.images) && p.specs.images.length > 0)
               ? p.specs.images
@@ -293,6 +313,28 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       isMounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (!isSupabaseLive || !supabase) return;
+
+    const liveSupabase = supabase;
+    const channel = liveSupabase
+      .channel('admin-catalog-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'sellers' }, () => {
+        void loadDataFromSupabase();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => {
+        void loadDataFromSupabase();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'categories' }, () => {
+        void loadDataFromSupabase();
+      })
+      .subscribe();
+
+    return () => {
+      void liveSupabase.removeChannel(channel);
+    };
+  }, [isSupabaseLive]);
 
   // Background Automatic Translation Engine:
   // Detects any products or sellers without full translations and dynamically enriches them in the background!
@@ -360,6 +402,16 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const getAdminAuthHeaders = async (contentType = true) => {
+    if (!supabase) return contentType ? { 'Content-Type': 'application/json' } : {};
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    return {
+      ...(contentType ? { 'Content-Type': 'application/json' } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+  };
+
   const saveSellers = (updated: Seller[]) => {
     setSellers(updated);
     try {
@@ -376,6 +428,28 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
 
   // Live Supabase Mutation: Seller Verification
   const updateSellerVerification = async (sellerId: string, status: VerificationStatus, notes?: string) => {
+    if (supabase) {
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      const response = await fetch('/api/admin/actions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          action: 'seller_verification',
+          sellerId,
+          status,
+          reason: notes,
+        }),
+      });
+      if (!response.ok) {
+        const result = await response.json() as { error?: string };
+        throw new Error(result.error || 'Seller verification update failed');
+      }
+    }
+
     const updated = sellers.map(s => {
       if (s.id === sellerId) {
         return {
@@ -389,21 +463,6 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       return s;
     });
     saveSellers(updated);
-
-    // Sync to Supabase
-    if (isSupabaseConfigured && supabase) {
-      try {
-        await supabase
-          .from('sellers')
-          .update({
-            verification_status: status,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', sellerId);
-      } catch (err) {
-        console.warn('Supabase seller verification update warning:', err);
-      }
-    }
   };
 
   const addCategory = async (catData: Omit<Category, 'id'>) => {
@@ -516,7 +575,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       try {
         await fetch('/api/products', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: await getAdminAuthHeaders(),
           body: JSON.stringify({ productData: enrichedData }),
         });
       } catch (err) {
@@ -547,7 +606,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       try {
         await fetch('/api/products', {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: await getAdminAuthHeaders(),
           body: JSON.stringify({ product: enrichedProduct }),
         });
       } catch (err) {
@@ -564,6 +623,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       try {
         await fetch(`/api/products?id=${productId}`, {
           method: 'DELETE',
+          headers: await getAdminAuthHeaders(false),
         });
       } catch (err) {
         console.warn('API product delete warning:', err);
@@ -583,8 +643,8 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       try {
         await fetch('/api/products', {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ quickUpdate: true, productId, priceIqd }),
+          headers: await getAdminAuthHeaders(),
+          body: JSON.stringify({ quickUpdate: true, productId, priceIqd, stock }),
         });
       } catch (err) {
         console.warn('API quick update warning:', err);
@@ -607,7 +667,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       try {
         await fetch('/api/products', {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: await getAdminAuthHeaders(),
           body: JSON.stringify({ toggleSponsor: true, productId, isSponsored: nextStatus }),
         });
       } catch (err) {
