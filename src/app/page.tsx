@@ -22,7 +22,34 @@ function AdminLogin({ onAuthenticated }: { onAuthenticated: (user: User) => void
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resetting, setResetting] = useState(false);
+
+  const handleResetPassword = async () => {
+    if (!supabase) {
+      setError('Supabase is not configured.');
+      return;
+    }
+    if (!email.trim()) {
+      setError('Enter your email address first.');
+      return;
+    }
+
+    setResetting(true);
+    setError('');
+    setNotice('');
+    const redirectTo = `${window.location.origin}/`;
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo,
+    });
+    if (resetError) {
+      setError(resetError.message);
+    } else {
+      setNotice('A password-reset email has been sent. Check your inbox.');
+    }
+    setResetting(false);
+  };
 
   const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -69,9 +96,18 @@ function AdminLogin({ onAuthenticated }: { onAuthenticated: (user: User) => void
         <input id="admin-password" type="password" required value={password} onChange={(event) => setPassword(event.target.value)}
           className="mt-1 w-full rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] px-3 py-2 text-sm focus:border-[#657A52] focus:outline-none" />
         {error && <p role="alert" className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700">{error}</p>}
+        {notice && <p role="status" className="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700">{notice}</p>}
         <button type="submit" disabled={loading}
           className="mt-5 w-full rounded-xl bg-[#657A52] px-4 py-2.5 text-xs font-bold text-white hover:bg-[#536543] disabled:opacity-60">
           {loading ? 'Signing in...' : 'Sign in'}
+        </button>
+        <button
+          type="button"
+          onClick={() => void handleResetPassword()}
+          disabled={resetting}
+          className="mt-3 w-full rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] px-4 py-2.5 text-xs font-bold text-[#657A52] hover:bg-white disabled:opacity-60"
+        >
+          {resetting ? 'Sending reset email...' : 'Reset password'}
         </button>
       </form>
     </main>
