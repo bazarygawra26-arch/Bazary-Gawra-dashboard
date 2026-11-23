@@ -3,6 +3,7 @@
 import React, { useState, useRef } from 'react';
 import { useAdmin } from '@/lib/store';
 import { uploadImageFile, CURATED_PRODUCT_PRESETS } from '@/lib/storage';
+import { adminPanelTranslations } from '@/lib/adminPanelTranslations';
 import { 
   UploadCloud, 
   Image as ImageIcon, 
@@ -33,6 +34,7 @@ export function ImageUploadDropzone({
   maxFiles = 6,
 }: ImageUploadDropzoneProps) {
   const { t, language } = useAdmin();
+  const copy = adminPanelTranslations[language];
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [isDragging, setIsDragging] = useState(false);
@@ -165,10 +167,10 @@ export function ImageUploadDropzone({
         <div>
           <div className="flex items-center justify-between pb-1.5">
             <span className="text-[11px] font-bold text-[#737373]">
-              {language === 'ku' ? `وێنە بارکراوەکان (${images.length}/${maxFiles})` : language === 'ar' ? `الصور المرفوعة (${images.length}/${maxFiles})` : `Uploaded Photos (${images.length}/${maxFiles})`}
+              {copy.uploadedPhotos} ({images.length}/{maxFiles})
             </span>
             <span className="text-[10px] text-[#737373]">
-              {language === 'ku' ? 'کلیک لە ئەستێرەکە بکە بۆ وێنەی سەرەکی' : language === 'ar' ? 'انقر على النجمة لتعيين الصورة الرئيسية' : 'Click star to set primary'}
+              {copy.clickStarPrimary}
             </span>
           </div>
 
@@ -237,7 +239,7 @@ export function ImageUploadDropzone({
               >
                 <Plus className="h-5 w-5" />
                 <span className="mt-1 text-[10px] font-bold">
-                  {language === 'ku' ? 'زیادکردن' : language === 'ar' ? 'إضافة' : 'Add'}
+                  {copy.addButton}
                 </span>
               </button>
             )}
@@ -270,7 +272,7 @@ export function ImageUploadDropzone({
       {showPresets && (
         <div className="rounded-xl border border-[#EAE7DF] bg-white p-3 shadow-xs">
           <p className="text-[10px] font-bold text-[#737373] mb-2">
-            {language === 'ku' ? 'هەڵبژاردنی وێنەی ئامادەکراو بۆ تاقیکردنەوە:' : 'Select curated preset photos for test:'}
+            {copy.selectPresetForTest}
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
             {CURATED_PRODUCT_PRESETS.map((preset) => (
@@ -290,7 +292,7 @@ export function ImageUploadDropzone({
                     {language === 'ku' ? preset.label_ku : language === 'ar' ? preset.label_ar : preset.label_en}
                   </p>
                   <p className="text-[9px] text-[#737373]">
-                    {preset.images.length} {language === 'ku' ? 'وێنە' : 'photos'}
+                    {preset.images.length} {copy.photos}
                   </p>
                 </div>
               </button>
@@ -313,7 +315,7 @@ export function ImageUploadDropzone({
             type="submit"
             className="rounded-xl bg-[#171717] px-3 py-2 text-xs font-bold text-white hover:bg-[#333]"
           >
-            {language === 'ku' ? 'زیادکردن' : language === 'ar' ? 'إضافة' : 'Add'}
+            {copy.addButton}
           </button>
         </form>
       )}

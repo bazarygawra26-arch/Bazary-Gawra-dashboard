@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useAdmin } from '@/lib/store';
+import { adminPanelTranslations } from '@/lib/adminPanelTranslations';
 import { 
   MapPin, 
   Layers, 
@@ -18,17 +19,18 @@ import {
 } from 'lucide-react';
 
 const ICON_OPTIONS = [
-  { id: 'Layers', label: 'گشتی (Layers)' },
-  { id: 'Apple', label: 'خۆراک و میوە (Food/Apple)' },
-  { id: 'UtensilsCrossed', label: 'چێشتخانە (Kitchen)' },
-  { id: 'Tv', label: 'ئامێری ناوماڵ (Home Appliances)' },
-  { id: 'Smartphone', label: 'مۆبایل و تەکنەلۆژیا (Tech)' },
-  { id: 'Sparkles', label: 'جوانی و کەلەپوور (Beauty/Crafts)' },
-  { id: 'BookOpen', label: 'کتێب و ڕۆشنبیری (Books)' },
-];
+  { id: 'Layers', translationKey: 'iconGeneral' },
+  { id: 'Apple', translationKey: 'iconFood' },
+  { id: 'UtensilsCrossed', translationKey: 'iconKitchen' },
+  { id: 'Tv', translationKey: 'iconAppliances' },
+  { id: 'Smartphone', translationKey: 'iconTechnology' },
+  { id: 'Sparkles', translationKey: 'iconBeauty' },
+  { id: 'BookOpen', translationKey: 'iconBooks' },
+] as const;
 
 export function TaxonomyView() {
   const { t, language, cities, categories, sellers, products, addCategory } = useAdmin();
+  const copy = adminPanelTranslations[language];
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -97,8 +99,8 @@ export function TaxonomyView() {
         <div className="flex items-center gap-2 border-b border-[#EAE7DF] pb-3">
           <MapPin className="h-5 w-5 text-[#657A52]" />
           <div>
-            <h2 className="text-sm font-bold text-[#171717]">پارێزگاکانی کوردستان و بازاڕە مێژووییەکان</h2>
-            <p className="text-[11px] text-[#737373]">ناوەندە چالاکە ناوخۆییەکان و بازاڕە پەسەندکراوەکان</p>
+            <h2 className="text-sm font-bold text-[#171717]">{copy.citiesAndBazaarsTitle}</h2>
+            <p className="text-[11px] text-[#737373]">{copy.citiesAndBazaarsSubtitle}</p>
           </div>
         </div>
 
@@ -120,13 +122,13 @@ export function TaxonomyView() {
                     <p className="text-[10px] text-[#737373]">{city.name_en}</p>
                   </div>
                   <span className="rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
-                    {verifiedCitySellers.length} پەسەندکراو
+                    {verifiedCitySellers.length} {copy.verifiedCount}
                   </span>
                 </div>
 
                 <div>
                   <span className="text-[10px] font-bold tracking-wider text-[#737373]">
-                    بازاڕە سەرەکییەکان:
+                    {copy.mainBazaarsLabel}
                   </span>
                   <div className="mt-1.5 flex flex-wrap gap-1">
                     {city.bazaars.map((bazaar, idx) => (
@@ -141,8 +143,8 @@ export function TaxonomyView() {
                 </div>
 
                 <div className="flex items-center justify-between border-t border-[#EAE7DF] pt-2 text-[11px] text-[#737373]">
-                  <span>کۆی فرۆشیاران:</span>
-                  <span className="font-bold text-[#171717]">{citySellers.length} فرۆشگا</span>
+                  <span>{copy.totalSellers}</span>
+                  <span className="font-bold text-[#171717]">{citySellers.length} {copy.storeCount}</span>
                 </div>
               </div>
             );
@@ -157,10 +159,10 @@ export function TaxonomyView() {
             <Layers className="h-5 w-5 text-[#F4B942]" />
             <div>
               <h2 className="text-sm font-bold text-[#171717]">
-                {language === 'ku' ? 'پۆلەکانی بازاڕی گەورە (بە سێ زمان)' : language === 'ar' ? 'فئات بازاري گەورە (بثلاث لغات)' : 'Marketplace Categories (Trilingual)'}
+                {copy.marketplaceCategoriesTitle}
               </h2>
               <p className="text-[11px] text-[#737373]">
-                {language === 'ku' ? 'پۆلێنکردنی فەرمی بە زمانی کوردی، ئینگلیزی و عەرەبی لە داتابەیس' : 'Standard 3-language category taxonomy synchronized with Supabase'}
+                {copy.marketplaceCategoriesSubtitle}
               </p>
             </div>
           </div>
@@ -171,7 +173,7 @@ export function TaxonomyView() {
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#F4B942] hover:bg-[#E2A732] text-neutral-950 text-xs font-bold shadow-2xs transition-all cursor-pointer"
           >
             <Plus className="h-4 w-4 stroke-[2.5]" />
-            <span>{language === 'ku' ? 'زیادکردنی پۆل' : language === 'ar' ? 'إضافة فئة' : 'Add Category'}</span>
+            <span>{copy.addCategory}</span>
           </button>
         </div>
 
@@ -193,22 +195,22 @@ export function TaxonomyView() {
                       {language === 'ku' ? cat.name_ku : language === 'ar' ? cat.name_ar : cat.name_en}
                     </h3>
                     <span className="text-[10px] font-bold text-[#657A52] shrink-0">
-                      {catProducts.length} کاڵا
+                      {catProducts.length} {copy.productCountLabel}
                     </span>
                   </div>
 
                   {/* Trilingual Subtitles */}
                   <div className="mt-1 space-y-0.5 text-[10px] text-[#737373]">
                     <div className="flex items-center gap-1">
-                      <span className="font-semibold text-neutral-500">کوردی:</span>
+                      <span className="font-semibold text-neutral-500">{copy.categoryKurdishLabel}</span>
                       <span className="truncate text-neutral-800">{cat.name_ku}</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <span className="font-semibold text-neutral-500">EN:</span>
+                      <span className="font-semibold text-neutral-500">{copy.categoryEnglishLabel}</span>
                       <span className="truncate text-neutral-800">{cat.name_en}</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <span className="font-semibold text-neutral-500">عربي:</span>
+                      <span className="font-semibold text-neutral-500">{copy.categoryArabicLabel}</span>
                       <span className="truncate text-neutral-800">{cat.name_ar}</span>
                     </div>
                   </div>
@@ -230,10 +232,10 @@ export function TaxonomyView() {
                 </div>
                 <div>
                   <h3 className="text-sm font-extrabold text-[#171717]">
-                    {language === 'ku' ? 'زیادکردنی پۆلی نوێ (بە ٣ زمان)' : 'Add Trilingual Category'}
+                    {copy.newCategoryTitle}
                   </h3>
                   <p className="text-[11px] text-[#737373]">
-                    {language === 'ku' ? 'ناوی پۆلەکە بە کوردی، ئینگلیزی و عەرەبی داخڵ بکە' : 'Enter category name in Kurdish, English and Arabic'}
+                    {copy.newCategorySubtitle}
                   </p>
                 </div>
               </div>
@@ -249,14 +251,14 @@ export function TaxonomyView() {
             <form onSubmit={handleCreateCategory} className="space-y-3.5 text-xs">
               <div>
                 <label className="block font-bold text-neutral-800 mb-1">
-                  ناوی پۆل بە کوردی (Kurdish Name) *
+                  {copy.categoryKurdishLabel} *
                 </label>
                 <input
                   type="text"
                   required
                   value={nameKu}
                   onChange={(e) => setNameKu(e.target.value)}
-                  placeholder="نموونە: ئامێری تەندروستی"
+                  placeholder={copy.exampleCategoryKurdish}
                   className="w-full px-3 py-2 rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] focus:bg-white focus:outline-none focus:border-[#F4B942]"
                   dir="rtl"
                 />
@@ -264,14 +266,14 @@ export function TaxonomyView() {
 
               <div>
                 <label className="block font-bold text-neutral-800 mb-1">
-                  English Category Name *
+                  {copy.categoryEnglishLabel} *
                 </label>
                 <input
                   type="text"
                   required
                   value={nameEn}
                   onChange={(e) => setNameEn(e.target.value)}
-                  placeholder="Example: Health & Wellness"
+                  placeholder={copy.exampleCategoryEnglish}
                   className="w-full px-3 py-2 rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] focus:bg-white focus:outline-none focus:border-[#F4B942]"
                   dir="ltr"
                 />
@@ -279,13 +281,13 @@ export function TaxonomyView() {
 
               <div>
                 <label className="block font-bold text-neutral-800 mb-1">
-                  اسم الفئة بالعربية (Arabic Name)
+                  {copy.categoryArabicLabel}
                 </label>
                 <input
                   type="text"
                   value={nameAr}
                   onChange={(e) => setNameAr(e.target.value)}
-                  placeholder="مثال: الصحة والعافية"
+                  placeholder={copy.exampleCategoryArabic}
                   className="w-full px-3 py-2 rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] focus:bg-white focus:outline-none focus:border-[#F4B942]"
                   dir="rtl"
                 />
@@ -294,7 +296,7 @@ export function TaxonomyView() {
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="block font-bold text-neutral-800 mb-1">
-                    Slug / ناسێنەر
+                    {copy.slugLabel}
                   </label>
                   <input
                     type="text"
@@ -308,7 +310,7 @@ export function TaxonomyView() {
 
                 <div>
                   <label className="block font-bold text-neutral-800 mb-1">
-                    هێما (Icon)
+                    {copy.iconLabel}
                   </label>
                   <select
                     value={icon}
@@ -317,7 +319,7 @@ export function TaxonomyView() {
                   >
                     {ICON_OPTIONS.map((opt) => (
                       <option key={opt.id} value={opt.id}>
-                        {opt.label}
+                        {copy[opt.translationKey]}
                       </option>
                     ))}
                   </select>
@@ -330,7 +332,7 @@ export function TaxonomyView() {
                   onClick={() => setIsAddModalOpen(false)}
                   className="px-4 py-2 rounded-xl border border-[#EAE7DF] hover:bg-neutral-50 text-neutral-700 font-bold"
                 >
-                  پەشیمانبوونەوە
+                  {t.cancel}
                 </button>
                 <button
                   type="submit"
@@ -338,7 +340,7 @@ export function TaxonomyView() {
                   className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#F4B942] hover:bg-[#E2A732] text-neutral-950 font-black shadow-xs disabled:opacity-50"
                 >
                   <Check className="h-4 w-4" />
-                  <span>{isSubmitting ? 'خەریکی پاشەکەوتکردنە...' : 'پاشەکەوتکردن'}</span>
+                  <span>{isSubmitting ? copy.saving : t.saveChanges}</span>
                 </button>
               </div>
             </form>

@@ -4,9 +4,12 @@ import React from 'react';
 import { useAdmin } from '@/lib/store';
 import { MapPin } from 'lucide-react';
 import { KurdishCity } from '@/types/database';
+import { adminPanelTranslations } from '@/lib/adminPanelTranslations';
+import { getLocalizedCity } from '@/lib/translator';
 
 export function CityBreakdown() {
-  const { t, sellers, products, setCurrentView } = useAdmin();
+  const { t, language, sellers, products, setCurrentView } = useAdmin();
+  const copy = adminPanelTranslations[language];
 
   const citiesList: { id: KurdishCity; nameKu: string; nameAr: string; nameEn: string; color: string }[] = [
     { id: 'Sulaymaniyah', nameKu: 'سلێمانی', nameAr: 'السليمانية', nameEn: 'Sulaymaniyah', color: 'bg-[#657A52]' },
@@ -26,6 +29,7 @@ export function CityBreakdown() {
 
     return {
       ...city,
+      localizedName: getLocalizedCity(city.id, language),
       sellersCount: citySellers.length,
       productsCount: cityProducts.length,
       percentage,
@@ -59,10 +63,10 @@ export function CityBreakdown() {
             <div key={city.id} className="space-y-1.5">
               <div className="flex items-center justify-between text-xs">
                 <span className="font-bold text-[#171717]">
-                  {city.nameKu}
+                  {city.localizedName}
                 </span>
                 <span className="font-semibold text-[#737373]">
-                  {city.sellersCount} فرۆشیار · {city.productsCount} کاڵا
+                  {city.sellersCount} {copy.sellerCount} · {city.productsCount} {copy.productCount}
                 </span>
               </div>
               <div className="h-2 w-full overflow-hidden rounded-full bg-[#FAF9F6] border border-[#EAE7DF]">
@@ -78,11 +82,16 @@ export function CityBreakdown() {
 
       <div className="mt-5 rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] p-3 text-start">
         <div className="flex items-center justify-between">
-          <span className="text-[11px] font-bold text-[#171717]">بازاڕە سەرەکییەکان</span>
-          <span className="text-[10px] font-bold text-[#657A52]">سلێمانی و هەولێر لە پێشەوەن</span>
+          <span className="text-[11px] font-bold text-[#171717]">{copy.mainBazaars}</span>
+          <span className="text-[10px] font-bold text-[#657A52]">{copy.leadingSellerCities}</span>
         </div>
         <p className="mt-1 text-[11px] text-[#737373] leading-relaxed">
-          شەقامی مەولەوی، قەیسەری هەولێر، نیشتیمان و دهۆک ٨٢٪ی سەرجەم کاڵاکان پێکدەهێنن.
+          {cityData
+            .filter(city => city.sellersCount > 0)
+            .sort((a, b) => b.sellersCount - a.sellersCount)
+            .slice(0, 2)
+            .map(city => `${city.localizedName}: ${city.sellersCount}`)
+            .join(' · ') || copy.noSellerRecords}
         </p>
       </div>
     </div>

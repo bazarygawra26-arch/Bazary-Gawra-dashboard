@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { formatIqd, downloadCsv } from '@/lib/utils';
 import { getLocalizedField, getLocalizedCity, getLocalizedWarranty } from '@/lib/translator';
+import { adminPanelTranslations } from '@/lib/adminPanelTranslations';
 
 interface ProductsModuleProps {
   onOpenNewProduct: () => void;
@@ -182,7 +183,7 @@ export function ProductsModule({ onOpenNewProduct, onSetEditingProduct }: Produc
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            aria-label={t.filterByCategory}
+            aria-label={t.filterByStatus}
             className="rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] px-3 py-2 text-xs font-medium text-[#171717] focus:border-[#F4B942] focus:outline-none"
           >
             <option value="all">{t.allProducts}</option>
@@ -230,7 +231,7 @@ export function ProductsModule({ onOpenNewProduct, onSetEditingProduct }: Produc
               {filteredProducts.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-12 text-center text-[#737373]">
-                    هیچ کاڵایەک نەدۆزرایەوە بەپێی ئەم فلتەرە.
+                    {adminPanelTranslations[language].noProductsFound}
                   </td>
                 </tr>
               ) : (
@@ -386,7 +387,7 @@ export function ProductsModule({ onOpenNewProduct, onSetEditingProduct }: Produc
                           {/* Delete */}
                           <button
                             onClick={() => {
-                              if (confirm('ئایا دڵنیایت لە سڕینەوەی ئەم کاڵایە؟')) {
+                              if (confirm(adminPanelTranslations[language].confirmDeleteProduct)) {
                                 deleteProduct(product.id);
                               }
                             }}

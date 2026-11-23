@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Seller, Product, AiSearchQuery, AiProductScan, Category, CityInfo, VerificationStatus, KurdishCity } from '@/types/database';
 import { initialSellers, initialProducts, initialAiQueries, initialAiScans, initialCategories, initialCities } from '@/lib/mockData';
 import { SupportedLanguage, translations, TranslationDictionary } from '@/lib/i18n';
+import { ADMIN_LANGUAGE_STORAGE_KEY } from '@/lib/adminPanelTranslations';
 import { supabase, isSupabaseConfigured, checkSupabaseHealth } from '@/lib/supabase';
 import { calculateTransparencyScore } from '@/lib/utils';
 import { ensureMultilingualProduct, ensureMultilingualSeller } from '@/lib/translator';
@@ -68,7 +69,7 @@ const AdminContext = createContext<AdminContextType | null>(null);
 const STORAGE_KEYS = {
   SELLERS: 'bg_admin_sellers_v1',
   PRODUCTS: 'bg_admin_products_v1',
-  LANG: 'bg_admin_lang_v1',
+  LANG: ADMIN_LANGUAGE_STORAGE_KEY,
   AI_QUERIES: 'bg_admin_ai_queries_v1',
 };
 
@@ -77,13 +78,16 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     if (typeof window !== 'undefined') {
       try {
         const savedLang = localStorage.getItem(STORAGE_KEYS.LANG) as SupportedLanguage;
-        if (savedLang && (savedLang === 'ku' || savedLang === 'ar' || savedLang === 'en')) {
-          return savedLang;
-        }
+        if (savedLang === 'ku' || savedLang === 'ar' || savedLang === 'en') return savedLang;
       } catch {}
     }
     return 'ku';
   });
+
+  useEffect(() => {
+    document.documentElement.lang = language;
+    document.documentElement.dir = language === 'en' ? 'ltr' : 'rtl';
+  }, [language]);
 
   const [currentView, setCurrentView] = useState<AdminView>('overview');
   const [searchQuery, setSearchQuery] = useState('');

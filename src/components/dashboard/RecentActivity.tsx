@@ -4,6 +4,7 @@ import React from 'react';
 import { useAdmin, AdminView } from '@/lib/store';
 import { Activity, Store, Package, Clock } from 'lucide-react';
 import { getLocalizedCity, getLocalizedField } from '@/lib/translator';
+import { adminPanelTranslations, translateAdminStatus } from '@/lib/adminPanelTranslations';
 
 interface ActivityItem {
   id: string;
@@ -20,6 +21,7 @@ interface ActivityItem {
 
 export function RecentActivity() {
   const { t, language, sellers, products, setCurrentView } = useAdmin();
+  const copy = adminPanelTranslations[language];
 
   const formatTimestamp = (timestamp: string) =>
     new Intl.DateTimeFormat(language === 'en' ? 'en' : language === 'ar' ? 'ar' : 'ckb', {
@@ -33,12 +35,12 @@ export function RecentActivity() {
     .map((seller): ActivityItem => ({
       id: `seller-${seller.id}`,
       type: 'seller',
-      title: getLocalizedField(seller, 'name', language) || 'دوکان',
-      meta: `${getLocalizedCity(seller.city, language)} · ${seller.verification_status}`,
+      title: getLocalizedField(seller, 'name', language) || copy.recentSellerFallback,
+      meta: `${getLocalizedCity(seller.city, language)} · ${translateAdminStatus(seller.verification_status, copy)}`,
       time: formatTimestamp(seller.created_at),
       timestamp: new Date(seller.created_at).getTime(),
       icon: <Store className="h-4 w-4 text-[#657A52]" />,
-      badge: 'تۆمارکردنی دوکان',
+      badge: copy.sellerRegisteredBadge,
       badgeColor: 'bg-[#657A52]/10 text-[#657A52]',
       actionView: 'sellers',
     }));
@@ -49,12 +51,12 @@ export function RecentActivity() {
     .map((product): ActivityItem => ({
       id: `product-${product.id}`,
       type: 'product',
-      title: getLocalizedField(product, 'name', language) || 'کاڵا',
-      meta: `دۆخ: ${product.status}`,
+      title: getLocalizedField(product, 'name', language) || copy.recentProductFallback,
+      meta: `${copy.statusPrefix}: ${translateAdminStatus(product.status, copy)}`,
       time: formatTimestamp(product.created_at),
       timestamp: new Date(product.created_at).getTime(),
       icon: <Package className="h-4 w-4 text-emerald-600" />,
-      badge: 'کاڵای بازاڕ',
+      badge: copy.marketplaceProductBadge,
       badgeColor: 'bg-emerald-50 text-emerald-700',
       actionView: 'products',
     }));

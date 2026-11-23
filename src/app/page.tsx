@@ -17,20 +17,27 @@ import { supabase } from '@/lib/supabase';
 import { LogOut } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 import { CentralManagementView } from '@/components/admin/CentralManagementView';
+import type { SupportedLanguage } from '@/lib/i18n';
+import { ADMIN_LANGUAGE_STORAGE_KEY, adminPanelTranslations } from '@/lib/adminPanelTranslations';
 
 function AdminLogin({
   onAuthenticated,
+  language,
+  onLanguageChange,
   recoveryMode,
   recoveryError,
   recoveryNotice,
   onRecoveryComplete,
 }: {
   onAuthenticated: (user: User) => void;
+  language: SupportedLanguage;
+  onLanguageChange: (language: SupportedLanguage) => void;
   recoveryMode: boolean;
   recoveryError: string;
   recoveryNotice: string;
   onRecoveryComplete: () => void;
 }) {
+  const copy = adminPanelTranslations[language];
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -38,6 +45,29 @@ function AdminLogin({
   const [notice, setNotice] = useState('');
   const [loading, setLoading] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const languagePicker = (
+    <div role="group" aria-label={copy.selectLanguage} className="mb-5 flex justify-end gap-1">
+      {([
+        ['ku', 'کوردی'],
+        ['ar', 'عربي'],
+        ['en', 'English'],
+      ] as const).map(([value, label]) => (
+        <button
+          key={value}
+          type="button"
+          aria-pressed={language === value}
+          onClick={() => onLanguageChange(value)}
+          className={`rounded-md border px-2.5 py-1 text-xs font-bold ${
+            language === value
+              ? 'border-[#657A52] bg-[#657A52] text-white'
+              : 'border-[#EAE7DF] text-[#737373] hover:bg-[#FAF9F6]'
+          }`}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  );
 
   useEffect(() => {
     if (recoveryMode && supabase) {
@@ -49,11 +79,11 @@ function AdminLogin({
 
   const handleResetPassword = async () => {
     if (!supabase) {
-      setError('Supabase is not configured.');
+      setError(copy.supabaseNotConfigured);
       return;
     }
     if (!email.trim()) {
-      setError('Enter your email address first.');
+      setError(copy.enterEmailFirst);
       return;
     }
 
@@ -67,7 +97,7 @@ function AdminLogin({
     if (resetError) {
       setError(resetError.message);
     } else {
-      setNotice('A password-reset email has been sent. Check your inbox.');
+      setNotice(copy.resetEmailSent);
     }
     setResetting(false);
   };
@@ -75,7 +105,7 @@ function AdminLogin({
   const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!supabase) {
-      setError('Supabase is not configured.');
+      setError(copy.supabaseNotConfigured);
       return;
     }
 
@@ -83,7 +113,7 @@ function AdminLogin({
     setError('');
     const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
     if (signInError || !data.user) {
-      setError(signInError?.message || 'Sign-in failed.');
+      setError(signInError?.message || copy.signInFailed);
       setLoading(false);
       return;
     }
@@ -96,25 +126,25 @@ function AdminLogin({
     const role = String(profile?.role || '').toLowerCase();
     if (profileError) {
       await supabase.auth.signOut();
-      setError(`Could not verify this account's administrator profile: ${profileError.message}. Apply the Super Admin account repair migration in Supabase.`);
+      setError(copy.profileVerificationFailed.replace('{error}', profileError.message));
       setLoading(false);
       return;
     }
     if (!profile) {
       await supabase.auth.signOut();
-      setError('Sign-in succeeded, but this account has no administrator profile. Apply the Super Admin account migration in Supabase.');
+      setError(copy.missingAdminProfile);
       setLoading(false);
       return;
     }
     if (!['admin', 'super_admin', 'superadmin'].includes(role)) {
       await supabase.auth.signOut();
-      setError('Sign-in succeeded, but this profile is not an administrator. Only an authorized Super Admin can grant administrator access.');
+      setError(copy.notAdministrator);
       setLoading(false);
       return;
     }
     if (profile.account_status && profile.account_status !== 'active') {
       await supabase.auth.signOut();
-      setError('This administrator profile is inactive. Ask an authorized Super Admin to reactivate it.');
+      setError(copy.inactiveAdministrator);
       setLoading(false);
       return;
     }
@@ -126,15 +156,15 @@ function AdminLogin({
   const handleUpdatePassword = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!supabase) {
-      setError('Supabase is not configured.');
+      setError(copy.supabaseNotConfigured);
       return;
     }
     if (password.length < 8) {
-      setError('Password must be at least 8 characters long.');
+      setError(copy.minimumPasswordLength);
       return;
     }
     if (password !== confirmPassword) {
-      setError('Passwords do not match.');
+      setError(copy.passwordsDoNotMatch);
       return;
     }
 
@@ -157,15 +187,16 @@ function AdminLogin({
 
   if (recoveryMode) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#FAF9F6] p-6">
+      <main lang={language} dir={language === 'en' ? 'ltr' : 'rtl'} className="flex min-h-screen items-center justify-center bg-[#FAF9F6] p-6">
         <form onSubmit={handleUpdatePassword} className="w-full max-w-sm rounded-2xl border border-[#EAE7DF] bg-white p-6 shadow-lg">
-          <h1 className="text-xl font-extrabold text-[#171717]">Choose a new password</h1>
-          <p className="mt-1 text-xs text-[#737373]">Set a new password for your administrator account.</p>
-          <label className="mt-5 block text-xs font-bold text-[#171717]" htmlFor="new-password">New password</label>
+          {languagePicker}
+          <h1 className="text-xl font-extrabold text-[#171717]">{copy.chooseNewPassword}</h1>
+          <p className="mt-1 text-xs text-[#737373]">{copy.passwordSetupSubtitle}</p>
+          <label className="mt-5 block text-xs font-bold text-[#171717]" htmlFor="new-password">{copy.newPasswordLabel}</label>
           <input id="new-password" type="password" autoComplete="new-password" minLength={8} required value={password}
             onChange={(event) => setPassword(event.target.value)}
             className="mt-1 w-full rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] px-3 py-2 text-sm focus:border-[#657A52] focus:outline-none" />
-          <label className="mt-4 block text-xs font-bold text-[#171717]" htmlFor="confirm-password">Confirm new password</label>
+          <label className="mt-4 block text-xs font-bold text-[#171717]" htmlFor="confirm-password">{copy.confirmPasswordLabel}</label>
           <input id="confirm-password" type="password" autoComplete="new-password" minLength={8} required value={confirmPassword}
             onChange={(event) => setConfirmPassword(event.target.value)}
             className="mt-1 w-full rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] px-3 py-2 text-sm focus:border-[#657A52] focus:outline-none" />
@@ -176,12 +207,12 @@ function AdminLogin({
           )}
           <button type="submit" disabled={loading || Boolean(recoveryError)}
             className="mt-5 w-full rounded-xl bg-[#657A52] px-4 py-2.5 text-xs font-bold text-white hover:bg-[#536543] disabled:opacity-60">
-            {loading ? 'Updating password...' : 'Save new password'}
+            {loading ? copy.updatingPassword : copy.saveNewPassword}
           </button>
           {recoveryError && (
             <button type="button" onClick={() => window.location.reload()}
               className="mt-3 w-full rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] px-4 py-2.5 text-xs font-bold text-[#657A52] hover:bg-white">
-              Return to sign in and request a new link
+              {copy.returnToSignIn}
             </button>
           )}
         </form>
@@ -190,14 +221,15 @@ function AdminLogin({
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#FAF9F6] p-6">
+    <main lang={language} dir={language === 'en' ? 'ltr' : 'rtl'} className="flex min-h-screen items-center justify-center bg-[#FAF9F6] p-6">
       <form onSubmit={handleLogin} className="w-full max-w-sm rounded-2xl border border-[#EAE7DF] bg-white p-6 shadow-lg">
-        <h1 className="text-xl font-extrabold text-[#171717]">Bazary Gawra Admin</h1>
-        <p className="mt-1 text-xs text-[#737373]">Sign in with an authorized administrator account.</p>
-        <label className="mt-5 block text-xs font-bold text-[#171717]" htmlFor="admin-email">Email</label>
+        {languagePicker}
+        <h1 className="text-xl font-extrabold text-[#171717]">{copy.loginTitle}</h1>
+        <p className="mt-1 text-xs text-[#737373]">{copy.loginSubtitle}</p>
+        <label className="mt-5 block text-xs font-bold text-[#171717]" htmlFor="admin-email">{copy.emailLabel}</label>
         <input id="admin-email" type="email" required value={email} onChange={(event) => setEmail(event.target.value)}
           className="mt-1 w-full rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] px-3 py-2 text-sm focus:border-[#657A52] focus:outline-none" />
-        <label className="mt-4 block text-xs font-bold text-[#171717]" htmlFor="admin-password">Password</label>
+        <label className="mt-4 block text-xs font-bold text-[#171717]" htmlFor="admin-password">{copy.passwordLabel}</label>
         <input id="admin-password" type="password" required value={password} onChange={(event) => setPassword(event.target.value)}
           className="mt-1 w-full rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] px-3 py-2 text-sm focus:border-[#657A52] focus:outline-none" />
         {error && <p role="alert" className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700">{error}</p>}
@@ -206,7 +238,7 @@ function AdminLogin({
         {recoveryError && <p role="alert" className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700">{recoveryError}</p>}
         <button type="submit" disabled={loading}
           className="mt-5 w-full rounded-xl bg-[#657A52] px-4 py-2.5 text-xs font-bold text-white hover:bg-[#536543] disabled:opacity-60">
-          {loading ? 'Signing in...' : 'Sign in'}
+          {loading ? copy.signingIn : copy.signIn}
         </button>
         <button
           type="button"
@@ -214,7 +246,7 @@ function AdminLogin({
           disabled={resetting}
           className="mt-3 w-full rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] px-4 py-2.5 text-xs font-bold text-[#657A52] hover:bg-white disabled:opacity-60"
         >
-          {resetting ? 'Sending reset email...' : 'Reset password'}
+          {resetting ? copy.sendingResetEmail : copy.resetPassword}
         </button>
       </form>
     </main>
@@ -222,7 +254,7 @@ function AdminLogin({
 }
 
 function AdminDashboardContent() {
-  const { currentView } = useAdmin();
+  const { currentView, language, dir } = useAdmin();
 
   // Global Modal States
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
@@ -262,7 +294,7 @@ function AdminDashboardContent() {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#FAF9F6]">
+    <div lang={language} dir={dir} className="flex min-h-screen bg-[#FAF9F6]">
       {/* Sidebar Navigation */}
       <Sidebar />
 
@@ -344,12 +376,36 @@ function AdminDashboardContent() {
 }
 
 export default function AdminPage() {
+  const [language, setLanguage] = useState<SupportedLanguage>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const savedLanguage = localStorage.getItem(ADMIN_LANGUAGE_STORAGE_KEY);
+        if (savedLanguage === 'ku' || savedLanguage === 'ar' || savedLanguage === 'en') {
+          return savedLanguage;
+        }
+      } catch {}
+    }
+    return 'ku';
+  });
+  const copy = adminPanelTranslations[language];
   const [user, setUser] = useState<User | null>(null);
   const [checking, setChecking] = useState(() => Boolean(supabase));
   const [recoveryMode, setRecoveryMode] = useState(false);
   const [recoveryError, setRecoveryError] = useState('');
   const [recoveryNotice, setRecoveryNotice] = useState('');
   const recoveryActiveRef = useRef(false);
+
+  const handleLanguageChange = (nextLanguage: SupportedLanguage) => {
+    setLanguage(nextLanguage);
+    try {
+      localStorage.setItem(ADMIN_LANGUAGE_STORAGE_KEY, nextLanguage);
+    } catch {}
+  };
+
+  useEffect(() => {
+    document.documentElement.lang = language;
+    document.documentElement.dir = language === 'en' ? 'ltr' : 'rtl';
+  }, [language]);
 
   useEffect(() => {
     const liveSupabase = supabase;
@@ -364,7 +420,7 @@ export default function AdminPage() {
     if (errorCode === 'otp_expired' || authError === 'access_denied') {
       void Promise.resolve().then(() => {
         if (!active) return;
-        setRecoveryError('This reset link has expired or was already used. Request a new reset email and open the newest link once.');
+        setRecoveryError(copy.resetLinkExpired);
         setChecking(false);
       });
       window.history.replaceState(null, '', window.location.pathname);
@@ -411,7 +467,7 @@ export default function AdminPage() {
       active = false;
       listener.subscription.unsubscribe();
     };
-  }, []);
+  }, [copy.resetLinkExpired, language]);
 
   useEffect(() => {
     if (!user || !supabase) return;
@@ -444,8 +500,8 @@ export default function AdminPage() {
 
   if (checking) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#FAF9F6] text-xs font-bold text-[#737373]">
-        Verifying administrator session...
+      <main lang={language} dir={language === 'en' ? 'ltr' : 'rtl'} className="flex min-h-screen items-center justify-center bg-[#FAF9F6] text-xs font-bold text-[#737373]">
+        {copy.verifyingSession}
       </main>
     );
   }
@@ -454,6 +510,8 @@ export default function AdminPage() {
     return (
       <AdminLogin
         onAuthenticated={setUser}
+        language={language}
+        onLanguageChange={handleLanguageChange}
         recoveryMode={recoveryMode}
         recoveryError={recoveryError}
         recoveryNotice={recoveryNotice}
@@ -461,7 +519,7 @@ export default function AdminPage() {
           recoveryActiveRef.current = false;
           setRecoveryMode(false);
           setRecoveryError('');
-          setRecoveryNotice('Password updated. Sign in with your new password.');
+          setRecoveryNotice(copy.passwordUpdatedNotice);
         }}
       />
     );
@@ -475,7 +533,7 @@ export default function AdminPage() {
         className="fixed bottom-4 right-4 z-[60] flex items-center gap-1.5 rounded-xl border border-[#EAE7DF] bg-white px-3 py-2 text-xs font-bold text-[#737373] shadow-md"
       >
         <LogOut className="h-3.5 w-3.5" />
-        Sign out
+        {copy.signOut}
       </button>
       <AdminDashboardContent />
     </AdminProvider>

@@ -3,9 +3,11 @@
 import React from 'react';
 import { useAdmin } from '@/lib/store';
 import { Package, Store, Clock3, ShieldCheck } from 'lucide-react';
+import { adminPanelTranslations } from '@/lib/adminPanelTranslations';
 
 export function ExecutiveKpis() {
-  const { t, products, sellers } = useAdmin();
+  const { t, language, products, sellers } = useAdmin();
+  const copy = adminPanelTranslations[language];
 
   // Computations
   const activeProducts = products.filter(p => p.status === 'active');
@@ -25,25 +27,25 @@ export function ExecutiveKpis() {
       icon: <Package className="h-5 w-5 text-[#F4B942]" />,
       bgColor: 'bg-[#F4B942]/10',
       borderColor: 'border-[#F4B942]/30',
-      badge: `${pendingProducts.length} چاوەڕوان`,
+      badge: `${pendingProducts.length} ${copy.pendingCount}`,
     },
     {
       title: t.kpiVerifiedMerchants,
       value: `${verifiedSellers.length} / ${sellers.length}`,
-      subtitle: `${Math.round((verifiedSellers.length / (sellers.length || 1)) * 100)}٪ فرۆشگای پەسەندکراو`,
+      subtitle: `${Math.round((verifiedSellers.length / (sellers.length || 1)) * 100)}% ${copy.verifiedCount} ${copy.storeCount}`,
       icon: <Store className="h-5 w-5 text-[#657A52]" />,
       bgColor: 'bg-[#657A52]/10',
       borderColor: 'border-[#657A52]/30',
-      badge: `${pendingSellers.length} داواکاری`,
+      badge: `${pendingSellers.length} ${copy.pendingApplications}`,
     },
     {
-      title: 'داواکاری پەسەندکردنی دوکان',
+      title: copy.pendingApprovalTitle,
       value: pendingSellers.length.toLocaleString(),
-      subtitle: 'لە داتابەیسی زنده',
+      subtitle: copy.liveDatabase,
       icon: <Clock3 className="h-5 w-5 text-amber-600" />,
       bgColor: 'bg-amber-50',
       borderColor: 'border-amber-200',
-      badge: 'پێویستی بە پشکنین',
+      badge: copy.needsReview,
     },
     {
       title: t.kpiTransparencyScore,
@@ -52,7 +54,7 @@ export function ExecutiveKpis() {
       icon: <ShieldCheck className="h-5 w-5 text-emerald-600" />,
       bgColor: 'bg-emerald-50',
       borderColor: 'border-emerald-200',
-      badge: avgTransparency >= 80 ? 'متمانەی بەرز' : 'پێویستی بە وردبینییە',
+      badge: avgTransparency >= 80 ? copy.highTrust : copy.reviewNeeded,
     },
   ];
 

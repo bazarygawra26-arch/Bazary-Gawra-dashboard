@@ -17,6 +17,7 @@ import {
 import { calculateTransparencyScore } from '@/lib/utils';
 import { ImageUploadDropzone } from '@/components/common/ImageUploadDropzone';
 import { autoTranslateProduct } from '@/lib/translator';
+import { adminPanelTranslations } from '@/lib/adminPanelTranslations';
 
 interface ProductEditorModalProps {
   product: Product | null;
@@ -34,7 +35,8 @@ function ProductEditorForm({
   onClose: () => void;
   defaultSellerId?: string;
 }) {
-  const { t, sellers, categories, addProduct, updateProduct } = useAdmin();
+  const { t, language, sellers, categories, addProduct, updateProduct } = useAdmin();
+  const copy = adminPanelTranslations[language];
 
   const [activeLangTab, setActiveLangTab] = useState<'ku' | 'en' | 'ar'>('ku');
   const [isTranslating, setIsTranslating] = useState(false);
@@ -257,9 +259,7 @@ function ProductEditorForm({
             <h3 className="text-base font-extrabold text-[#171717]">
               {product ? t.editorTitleEdit : t.editorTitleNew}
             </h3>
-            <p className="text-xs text-[#737373]">
-              تۆمارکردنی کاڵا بە سێ زمان لەگەڵ دیاریکردنی پێوەرەکانی متمانە
-            </p>
+            <p className="text-xs text-[#737373]">{copy.productDetailsThreeLanguages}</p>
           </div>
         </div>
 
@@ -270,18 +270,18 @@ function ProductEditorForm({
             onClick={handleAiAutoFill}
             disabled={isTranslating}
             className="flex items-center gap-1.5 rounded-xl bg-indigo-50 border border-indigo-200 px-3 py-1.5 text-xs font-bold text-indigo-700 hover:bg-indigo-100 transition-colors shadow-xs active:scale-95 disabled:opacity-50"
-            title="پڕکردنەوەی خۆکار بە زیرەکی دەستکرد"
+            title={copy.aiFill}
           >
             {isTranslating ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin text-indigo-600" />
             ) : (
               <Sparkles className="h-3.5 w-3.5 text-indigo-600" />
             )}
-            <span>پڕکردنەوە بە AI</span>
+            <span>{copy.aiFill}</span>
           </button>
 
           <div className="hidden sm:flex items-center gap-1.5 rounded-full border border-[#EAE7DF] bg-[#FAF9F6] px-3 py-1 text-xs">
-            <span className="text-[#737373]">نمرەی متمانە:</span>
+            <span className="text-[#737373]">{copy.trustScore}:</span>
             <span className={`font-extrabold ${liveScore >= 80 ? 'text-emerald-700' : 'text-amber-700'}`}>
               {liveScore}%
             </span>
@@ -301,7 +301,7 @@ function ProductEditorForm({
         <div className="rounded-xl border border-[#EAE7DF] bg-white p-4">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#EAE7DF] pb-2">
             <div className="flex items-center gap-2">
-              <span className="font-bold text-[#171717]">زانیاری کاڵا بە سێ زمان</span>
+              <span className="font-bold text-[#171717]">{copy.productDetailsThreeLanguages}</span>
               {/* Quick Auto-Translate to AR & EN Button */}
               {nameKu && (
                 <button
@@ -309,14 +309,14 @@ function ProductEditorForm({
                   onClick={handleAutoTranslate}
                   disabled={isTranslating}
                   className="flex items-center gap-1 rounded-lg border border-[#657A52]/30 bg-[#657A52]/10 px-2 py-0.5 text-[11px] font-bold text-[#657A52] hover:bg-[#657A52]/20 transition-colors disabled:opacity-50"
-                  title="وەرگێڕانی دەقی کوردی بۆ عەرەبی و ئینگلیزی بە خۆکاری"
+                  title={copy.autoTranslateHint}
                 >
                   {isTranslating ? (
                     <Loader2 className="h-3 w-3 animate-spin" />
                   ) : (
                     <Languages className="h-3 w-3" />
                   )}
-                  <span>وەرگێڕان بۆ EN و AR</span>
+                  <span>{copy.translateEnglishArabic}</span>
                 </button>
               )}
             </div>
@@ -358,7 +358,7 @@ function ProductEditorForm({
                 <div>
                   <div className="flex items-center justify-between">
                     <label className="font-bold text-[#171717]">{t.titleKurdishLabel} *</label>
-                    <span className="text-[10px] text-[#657A52] font-semibold">✨ وەرگێڕانی خۆکار بۆ ئینگلیزی و عەرەبی</span>
+                    <span className="text-[10px] text-[#657A52] font-semibold">✨ {copy.autoTranslateHint}</span>
                   </div>
                   <input
                     type="text"
@@ -504,16 +504,16 @@ function ProductEditorForm({
           </div>
 
           <div>
-            <label className="font-bold text-[#171717]">دۆخی کاڵا *</label>
+            <label className="font-bold text-[#171717]">{copy.statusLabel} *</label>
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value as ProductStatus)}
               className="mt-1 w-full rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] p-2.5 text-xs font-medium text-[#171717] focus:border-[#F4B942] focus:outline-none"
             >
-              <option value="active">چالاک بۆ کڕین</option>
-              <option value="draft">ڕەشنووس</option>
-              <option value="out_of_stock">نەماوە لە کۆگا</option>
-              <option value="archived">ئەرشیڤکراو</option>
+              <option value="active">{t.statusActive}</option>
+              <option value="draft">{t.statusDraft}</option>
+              <option value="out_of_stock">{t.statusOutOfStock}</option>
+              <option value="archived">{t.statusArchived}</option>
             </select>
           </div>
         </div>
@@ -599,17 +599,17 @@ function ProductEditorForm({
                   type="text"
                   value={warrantyPeriod}
                   onChange={(e) => setWarrantyPeriod(e.target.value)}
-                  placeholder="نموونە: ١٢ مانگ (١ ساڵ)"
+                  placeholder={copy.exampleWarrantyPeriod}
                   className="mt-1 w-full rounded-lg border border-[#EAE7DF] p-1.5 text-xs text-[#171717]"
                 />
               </div>
               <div>
-                <label className="text-[11px] text-[#737373]">مەرج و وردەکاری گرەنتی</label>
+                <label className="text-[11px] text-[#737373]">{copy.warrantyConditions}</label>
                 <input
                   type="text"
                   value={warrantyNotes}
                   onChange={(e) => setWarrantyNotes(e.target.value)}
-                  placeholder="نموونە: گرەنتی گۆڕینەوە لە دووکان"
+                  placeholder={copy.exampleWarrantyConditions}
                   className="mt-1 w-full rounded-lg border border-[#EAE7DF] p-1.5 text-xs text-[#171717]"
                 />
               </div>
@@ -645,7 +645,7 @@ function ProductEditorForm({
                 />
               </div>
               <div>
-                <label className="text-[11px] text-[#737373]">ماوەی گەیاندن (بە کاتژمێر)</label>
+                <label className="text-[11px] text-[#737373]">{copy.deliveryTimeHours}</label>
                 <input
                   type="number"
                   value={deliveryTimeHours}
@@ -686,12 +686,12 @@ function ProductEditorForm({
                 />
               </div>
               <div>
-                <label className="text-[11px] text-[#737373]">مەرجی تاقیکردنەوە و گەڕاندنەوە</label>
+                <label className="text-[11px] text-[#737373]">{copy.returnConditions}</label>
                 <input
                   type="text"
                   value={returnConditions}
                   onChange={(e) => setReturnConditions(e.target.value)}
-                  placeholder="نموونە: بە کارتۆن و پاکەتی خۆیەوە بێت"
+                  placeholder={copy.exampleReturnConditions}
                   className="mt-1 w-full rounded-lg border border-[#EAE7DF] p-1.5 text-xs text-[#171717]"
                 />
               </div>
@@ -731,7 +731,7 @@ function ProductEditorForm({
             {isTranslating ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                <span>وەرگێڕانی خۆکار و پاشەکەوتکردن...</span>
+                <span>{copy.translatingAndSaving}</span>
               </>
             ) : (
               <>

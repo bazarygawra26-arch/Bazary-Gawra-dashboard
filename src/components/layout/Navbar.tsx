@@ -10,6 +10,8 @@ import {
   Store,
   Package
 } from 'lucide-react';
+import { adminPanelTranslations } from '@/lib/adminPanelTranslations';
+import { getLocalizedCity } from '@/lib/translator';
 
 interface NavbarProps {
   onOpenNewProduct: () => void;
@@ -28,6 +30,7 @@ export function Navbar({ onOpenNewProduct, onOpenNewSeller }: NavbarProps) {
     products,
     setCurrentView
   } = useAdmin();
+  const copy = adminPanelTranslations[language];
 
   const [showNotifications, setShowNotifications] = useState(false);
   const [showQuickAddMenu, setShowQuickAddMenu] = useState(false);
@@ -114,9 +117,10 @@ export function Navbar({ onOpenNewProduct, onOpenNewSeller }: NavbarProps) {
         </div>
 
         {/* Language Selector */}
-        <div className="flex items-center rounded-lg border border-[#EAE7DF] bg-[#FAF9F6] p-0.5 text-xs">
+        <div role="group" aria-label={copy.selectLanguage} className="flex items-center rounded-lg border border-[#EAE7DF] bg-[#FAF9F6] p-0.5 text-xs">
           <button
             onClick={() => setLanguage('ku')}
+            aria-pressed={language === 'ku'}
             className={`rounded-md px-2.5 py-1 font-bold transition-colors ${language === 'ku' ? 'bg-[#FFFFFF] text-[#171717] shadow-xs' : 'text-[#737373] hover:text-[#171717]'
               }`}
           >
@@ -124,6 +128,7 @@ export function Navbar({ onOpenNewProduct, onOpenNewSeller }: NavbarProps) {
           </button>
           <button
             onClick={() => setLanguage('ar')}
+            aria-pressed={language === 'ar'}
             className={`rounded-md px-2.5 py-1 font-bold transition-colors ${language === 'ar' ? 'bg-[#FFFFFF] text-[#171717] shadow-xs' : 'text-[#737373] hover:text-[#171717]'
               }`}
           >
@@ -131,6 +136,7 @@ export function Navbar({ onOpenNewProduct, onOpenNewSeller }: NavbarProps) {
           </button>
           <button
             onClick={() => setLanguage('en')}
+            aria-pressed={language === 'en'}
             className={`rounded-md px-2.5 py-1 font-bold transition-colors ${language === 'en' ? 'bg-[#FFFFFF] text-[#171717] shadow-xs' : 'text-[#737373] hover:text-[#171717]'
               }`}
           >
@@ -157,7 +163,7 @@ export function Navbar({ onOpenNewProduct, onOpenNewSeller }: NavbarProps) {
               <div className="flex items-center justify-between border-b border-[#EAE7DF] pb-2">
                 <span className="font-bold text-xs text-[#171717]">{t.notifications}</span>
                 <span className="rounded-full bg-[#FAF9F6] px-2 py-0.5 text-[10px] text-[#737373]">
-                  {totalAlerts} نوێ
+                  {totalAlerts} {copy.alertNew}
                 </span>
               </div>
               <div className="mt-2 space-y-2 max-h-64 overflow-y-auto">
@@ -173,11 +179,11 @@ export function Navbar({ onOpenNewProduct, onOpenNewSeller }: NavbarProps) {
                     <div className="flex items-center gap-2">
                       <Store className="h-4 w-4 text-[#F4B942]" />
                       <span className="text-xs font-semibold text-[#171717]">
-                        {language === 'ku' ? seller.name_ku : seller.name_en}
+                        {language === 'ku' ? seller.name_ku : language === 'ar' ? seller.name_ar : seller.name_en}
                       </span>
                     </div>
                     <p className="mt-1 text-[11px] text-[#737373]">
-                      {t.statusPending} - {seller.city} ({seller.bazaar_name})
+                      {t.statusPending} - {getLocalizedCity(seller.city, language)} ({seller.bazaar_name})
                     </p>
                   </div>
                 ))}
@@ -195,7 +201,7 @@ export function Navbar({ onOpenNewProduct, onOpenNewSeller }: NavbarProps) {
                       <span className="text-xs font-semibold">{t.auditMissingSignals}</span>
                     </div>
                     <p className="mt-1 text-[11px] text-amber-700">
-                      {missingSignalProducts.length} کاڵا پێویستیان بە زانیاری گرەنتی یان گەیاندن هەیە.
+                      {missingSignalProducts.length} {copy.missingProductSignals}
                     </p>
                   </div>
                 )}
@@ -210,8 +216,8 @@ export function Navbar({ onOpenNewProduct, onOpenNewSeller }: NavbarProps) {
             BG
           </div>
           <div className="hidden xl:block text-start">
-            <p className="text-xs font-bold leading-tight text-[#171717]">بازاڕی گەورە</p>
-            <p className="text-[10px] text-[#737373]">سلێمانی - ناوەندی سەرەکی</p>
+            <p className="text-xs font-bold leading-tight text-[#171717]">{copy.adminName}</p>
+            <p className="text-[10px] text-[#737373]">{copy.adminLocation}</p>
           </div>
         </div>
       </div>

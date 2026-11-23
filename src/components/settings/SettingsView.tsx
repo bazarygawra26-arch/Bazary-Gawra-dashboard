@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useAdmin } from '@/lib/store';
+import { adminPanelTranslations } from '@/lib/adminPanelTranslations';
 import { 
   Database, 
   CheckCircle2, 
@@ -16,6 +17,7 @@ import {
 
 export function SettingsView() {
   const { 
+    language,
     t, 
     isSupabaseLive, 
     supabaseMessage, 
@@ -24,6 +26,7 @@ export function SettingsView() {
     products, 
     resetDemoData 
   } = useAdmin();
+  const copy = adminPanelTranslations[language];
 
   const [copied, setCopied] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
@@ -225,12 +228,12 @@ END $$;
                   {isSupabaseLive ? (
                     <>
                       <CheckCircle2 className="h-3 w-3 text-emerald-600" />
-                      Live Connected
+                      {copy.liveConnected}
                     </>
                   ) : (
                     <>
                       <AlertCircle className="h-3 w-3 text-amber-600" />
-                      Local Persistent Mode
+                      {copy.localPersistentMode}
                     </>
                   )}
                 </span>
@@ -247,15 +250,15 @@ END $$;
             className="flex items-center gap-1.5 rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] px-4 py-2 text-xs font-bold text-[#171717] hover:bg-white shadow-xs transition-colors shrink-0"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${isChecking ? 'animate-spin' : ''}`} />
-            <span>{isChecking ? 'Verifying...' : 'Check Health'}</span>
+            <span>{isChecking ? copy.verifying : copy.checkHealth}</span>
           </button>
         </div>
 
         {/* Credentials Info Helper */}
         <div className="mt-4 rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] p-3 text-xs">
-          <p className="text-[#171717] font-semibold">How to connect to your Supabase project:</p>
+          <p className="text-[#171717] font-semibold">{copy.connectSupabaseTitle}</p>
           <p className="mt-1 text-[#737373] leading-relaxed">
-            Create or edit <code className="rounded bg-white px-1 py-0.5 border border-[#EAE7DF]">.env.local</code> in the project directory and paste:
+            {copy.createEditEnv}
           </p>
           <pre className="mt-2 rounded-lg bg-[#171717] p-2.5 text-[11px] text-white overflow-x-auto font-mono">
             NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co&#10;NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
@@ -267,10 +270,9 @@ END $$;
         <div className="flex items-start gap-3">
           <ShieldCheck className="h-5 w-5 shrink-0 text-[#657A52]" />
           <div>
-            <h3 className="text-sm font-extrabold text-[#171717]">Database Security Model</h3>
+            <h3 className="text-sm font-extrabold text-[#171717]">{copy.securityModel}</h3>
             <p className="mt-1 text-xs leading-relaxed text-[#737373]">
-              RLS must remain enabled. Sensitive actions require an authenticated administrator role and server-validated authorization.
-              Disabling RLS is not a supported maintenance action.
+              {copy.securityModelDescription}
             </p>
           </div>
         </div>
@@ -283,10 +285,10 @@ END $$;
             <FileCode2 className="h-5 w-5 text-[#657A52]" />
             <div>
               <h3 className="text-sm font-extrabold text-[#171717]">
-                PostgreSQL Database Schema & Migration Script
+                {copy.schemaScriptTitle}
               </h3>
               <p className="text-[11px] text-[#737373]">
-                Copy & paste directly into Supabase SQL Editor to set up all tables and RLS security policies
+                {copy.schemaScriptDescription}
               </p>
             </div>
           </div>
@@ -307,8 +309,8 @@ END $$;
 
       {/* Operational Maintenance & Backups */}
       <div className="rounded-2xl border border-[#EAE7DF] bg-white p-5 shadow-xs">
-        <h3 className="text-sm font-extrabold text-[#171717]">Data Backup & Maintenance</h3>
-        <p className="text-xs text-[#737373]">Export full platform records or restore initial demo data</p>
+        <h3 className="text-sm font-extrabold text-[#171717]">{copy.backupTitle}</h3>
+        <p className="text-xs text-[#737373]">{copy.backupDescription}</p>
 
         <div className="mt-4 flex flex-wrap gap-3">
           <button
@@ -316,12 +318,12 @@ END $$;
             className="flex items-center gap-1.5 rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] px-4 py-2 text-xs font-bold text-[#171717] hover:bg-white transition-colors"
           >
             <Download className="h-4 w-4 text-[#657A52]" />
-            <span>Export Full JSON Backup</span>
+            <span>{copy.exportBackup}</span>
           </button>
 
           <button
             onClick={() => {
-              if (confirm('Reset catalog to Kurdish marketplace initial demo state?')) {
+              if (confirm(copy.confirmResetDemo)) {
                 resetDemoData();
                 alert(t.seedSuccess);
               }

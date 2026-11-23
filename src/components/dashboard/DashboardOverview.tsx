@@ -14,6 +14,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { downloadCsv } from '@/lib/utils';
+import { adminPanelTranslations } from '@/lib/adminPanelTranslations';
 
 interface DashboardOverviewProps {
   onOpenNewProduct: () => void;
@@ -21,7 +22,8 @@ interface DashboardOverviewProps {
 }
 
 export function DashboardOverview({ onOpenNewProduct, onOpenNewSeller }: DashboardOverviewProps) {
-  const { t, products, setCurrentView } = useAdmin();
+  const { t, language, products, setCurrentView } = useAdmin();
+  const copy = adminPanelTranslations[language];
 
   const missingSignals = products.filter(p => p.transparency_score < 70);
 
@@ -47,7 +49,7 @@ export function DashboardOverview({ onOpenNewProduct, onOpenNewSeller }: Dashboa
               {t.navOverview} — {t.appName}
             </h1>
             <span className="rounded-full bg-[#657A52]/10 px-2 py-0.5 text-[10px] font-bold text-[#657A52]">
-              هەرێمی کوردستان
+              {copy.dashboardRegion}
             </span>
           </div>
           <p className="mt-1 text-xs text-[#737373]">
@@ -100,12 +102,12 @@ export function DashboardOverview({ onOpenNewProduct, onOpenNewSeller }: Dashboa
                 {t.auditAlertTitle}
               </h4>
               <p className="text-[11px] text-amber-800">
-                {missingSignals.length} کاڵا پێویستیان بە دیاریکردنی جۆری گرەنتی یان تێچووی گەیاندن هەیە بۆ وەرگرتنی متمانە.
+                {copy.dashboardAuditBody.replace('{count}', String(missingSignals.length))}
               </p>
             </div>
           </div>
           <span className="text-xs font-bold text-amber-900 group-hover:underline">
-            وردبینی کردنی کاڵاکان ←
+            {copy.reviewProducts} ←
           </span>
         </div>
       )}
@@ -130,13 +132,13 @@ export function DashboardOverview({ onOpenNewProduct, onOpenNewSeller }: Dashboa
                 <Sparkles className="h-4 w-4" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-[#171717]">گەڕانە باوەکانی زیرەکی دەستکرد</h3>
-                <p className="text-[11px] text-[#737373]">پرسیار و گەڕانی کڕیاران بە کوردی سۆرانی</p>
+                <h3 className="text-sm font-bold text-[#171717]">{copy.dashboardAiTitle}</h3>
+                <p className="text-[11px] text-[#737373]">{copy.dashboardAiSubtitle}</p>
               </div>
             </div>
 
             <div className="mt-4 rounded-xl border border-dashed border-[#EAE7DF] bg-[#FAF9F6] p-3 text-xs text-[#737373]">
-              هیچ داتای ژیندار بۆ پرسیارەکان و سکانی وێنەیی لە داتابەیسدا نەدۆزرایەوە.
+              {copy.noLiveAiData}
             </div>
           </div>
 

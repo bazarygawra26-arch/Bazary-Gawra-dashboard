@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useAdmin } from '@/lib/store';
+import { adminPanelTranslations } from '@/lib/adminPanelTranslations';
 import { 
   Apple, 
   UtensilsCrossed, 
@@ -15,6 +16,7 @@ import {
 
 export function CategoryHealth() {
   const { t, language, products, categories, setCurrentView } = useAdmin();
+  const copy = adminPanelTranslations[language];
 
   const getIcon = (iconName: string) => {
     switch (iconName) {
@@ -82,7 +84,7 @@ export function CategoryHealth() {
                       {language === 'ku' ? cat.name_ku : language === 'ar' ? cat.name_ar : cat.name_en}
                     </h4>
                     <p className="text-[10px] text-[#737373] truncate">
-                      {cat.liveCount} کاڵا ({cat.totalStock} دانە)
+                      {cat.liveCount} {copy.productCountLabel} ({cat.totalStock} {t.stockUnits})
                     </p>
                   </div>
                 </div>

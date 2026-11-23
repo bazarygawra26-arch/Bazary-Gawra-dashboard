@@ -3,6 +3,8 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Bell, FileText, Headphones, PackageCheck, ShieldCheck, Users } from 'lucide-react';
+import { useAdmin } from '@/lib/store';
+import { adminPanelTranslations, translateAdminRole, translateAdminStatus } from '@/lib/adminPanelTranslations';
 
 type Section = 'users' | 'stores' | 'suppliers' | 'notifications' | 'orders' | 'rfqs' | 'quotations' | 'purchase-orders' | 'support' | 'audit';
 
@@ -39,8 +41,8 @@ type GenericItem = {
   currency?: string | null;
 };
 
-function ItemsList({ items }: { items?: GenericItem[] }) {
-  if (!items?.length) return <span className="text-[#A3A3A3]">No item details</span>;
+function ItemsList({ items, emptyLabel }: { items?: GenericItem[]; emptyLabel: string }) {
+  if (!items?.length) return <span className="text-[#A3A3A3]">{emptyLabel}</span>;
 
   return (
     <ul className="min-w-40 space-y-1">
@@ -64,54 +66,69 @@ const displayAmount = (value: unknown, currency: unknown) => {
   const amount = Number(value);
   return `${Number.isFinite(amount) ? amount.toLocaleString() : String(value)} ${displayValue(currency)}`;
 };
+const formatAdminDate = (value: unknown, language: 'ku' | 'ar' | 'en') => {
+  if (!value) return '—';
+  const date = new Date(String(value));
+  if (Number.isNaN(date.getTime())) return String(value);
+  const locale = language === 'ku' ? 'ckb-IQ' : language === 'ar' ? 'ar-IQ' : 'en-US';
+  return date.toLocaleString(locale);
+};
+
+const fillTemplate = (template: string, values: Record<string, string>) =>
+  template.replace(/\{(\w+)\}/g, (_match, key: string) => values[key] || '');
 
 function MarketplaceRecordsTable({
   section,
   rows,
+  language,
 }: {
   section: 'orders' | 'rfqs' | 'quotations' | 'purchase-orders';
   rows: GenericRow[];
+  language: 'ku' | 'ar' | 'en';
 }) {
+  const copy = adminPanelTranslations[language];
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const columns = section === 'orders'
     ? [
-      { key: 'id', label: 'Order ID' },
-      { key: 'customer_display', label: 'Customer' },
-      { key: 'seller_display', label: 'Seller' },
-      { key: 'total_amount', label: 'Total' },
-      { key: 'payment_status', label: 'Payment' },
-      { key: 'status', label: 'Order status' },
-      { key: 'created_at', label: 'Created' },
+      { key: 'id', label: copy.colOrderId },
+      { key: 'customer_display', label: copy.colCustomer },
+      { key: 'seller_display', label: copy.colSeller },
+      { key: 'total_amount', label: copy.colTotal },
+      { key: 'payment_status', label: copy.colPayment },
+      { key: 'status', label: copy.colOrderStatus },
+      { key: 'created_at', label: copy.colCreated },
     ]
     : section === 'rfqs'
       ? [
-        { key: 'id', label: 'RFQ ID' },
-        { key: 'buyer_display', label: 'Buyer' },
-        { key: 'supplier_display', label: 'Supplier' },
-        { key: 'items', label: 'Requested products / quantity' },
-        { key: 'status', label: 'RFQ status' },
-        { key: 'created_at', label: 'Submitted' },
+        { key: 'id', label: copy.colRfqId },
+        { key: 'buyer_display', label: copy.colBuyer },
+        { key: 'supplier_display', label: copy.colSupplier },
+        { key: 'items', label: copy.colRequestedItems },
+        { key: 'status', label: copy.colRfqStatus },
+        { key: 'created_at', label: copy.colSubmitted },
       ]
       : section === 'quotations'
         ? [
-          { key: 'id', label: 'Quotation ID' },
-          { key: 'rfq_id', label: 'Linked RFQ' },
-          { key: 'supplier_display', label: 'Supplier' },
-          { key: 'quantity', label: 'Quantity' },
-          { key: 'unit_price', label: 'Unit price' },
-          { key: 'valid_until', label: 'Valid until' },
-          { key: 'status', label: 'Quotation status' },
+          { key: 'id', label: copy.colQuotationId },
+          { key: 'rfq_id', label: copy.colLinkedRfq },
+          { key: 'supplier_display', label: copy.colSupplier },
+          { key: 'quantity', label: copy.colQuantity },
+          { key: 'unit_price', label: copy.colUnitPrice },
+          { key: 'valid_until', label: copy.colValidUntil },
+          { key: 'terms', label: copy.colTerms },
+          { key: 'status', label: copy.colQuotationStatus },
         ]
         : [
-          { key: 'id', label: 'Purchase order ID' },
-          { key: 'rfq_id', label: 'Linked RFQ' },
-          { key: 'quotation_id', label: 'Linked quotation' },
-          { key: 'buyer_display', label: 'Buyer' },
-          { key: 'supplier_display', label: 'Supplier' },
-          { key: 'items', label: 'Items / quantity' },
-          { key: 'total_amount', label: 'Total' },
-          { key: 'status', label: 'Order status' },
+          { key: 'id', label: copy.colPurchaseOrderId },
+          { key: 'rfq_id', label: copy.colLinkedRfq },
+          { key: 'quotation_id', label: copy.colLinkedQuotation },
+          { key: 'buyer_display', label: copy.colBuyer },
+          { key: 'supplier_display', label: copy.colSupplier },
+          { key: 'items', label: copy.colItems },
+          { key: 'total_amount', label: copy.colTotal },
+          { key: 'terms', label: copy.colTerms },
+          { key: 'status', label: copy.colPurchaseOrderStatus },
         ];
   const statuses = [...new Set(rows.map(row => String(row.status || '')).filter(Boolean))];
   const visibleRows = rows.filter(row => {
@@ -119,21 +136,20 @@ function MarketplaceRecordsTable({
     return matchesSearch && (statusFilter === 'all' || String(row.status || '') === statusFilter);
   });
   const cellContent = (row: GenericRow, key: string) => {
-    if (key === 'items') return <ItemsList items={row.items} />;
+    if (key === 'items') return <ItemsList items={row.items} emptyLabel={copy.noItemDetails} />;
     if (key === 'total_amount' || key === 'unit_price') return displayAmount(row[key], row.currency);
     if (key === 'id' || key === 'rfq_id' || key === 'quotation_id') {
       return <code className="break-all font-mono text-[10px]">{displayValue(row[key])}</code>;
     }
-    if (key === 'status') {
+    if (key === 'status' || key === 'payment_status') {
       return (
         <span className="rounded-full bg-amber-50 px-2 py-1 text-[10px] font-bold text-amber-800">
-          {displayValue(row[key])}
+          {translateAdminStatus(String(row[key] || ''), copy)}
         </span>
       );
     }
     if (key === 'created_at' || key === 'valid_until') {
-      const value = row[key];
-      return displayValue(value ? new Date(String(value)).toLocaleString() : value);
+      return formatAdminDate(row[key], language);
     }
     return displayValue(row[key]);
   };
@@ -144,21 +160,21 @@ function MarketplaceRecordsTable({
         <input
           value={search}
           onChange={event => setSearch(event.target.value)}
-          placeholder="Search IDs, people, products, or status"
+          placeholder={copy.searchRecords}
           className="min-w-0 flex-1 rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] px-3 py-2 text-xs"
         />
         <select
           value={statusFilter}
           onChange={event => setStatusFilter(event.target.value)}
-          aria-label="Filter records by status"
+          aria-label={copy.filterByStatus}
           className="rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] px-3 py-2 text-xs"
         >
-          <option value="all">All statuses</option>
-          {statuses.map(status => <option key={status} value={status}>{status}</option>)}
+          <option value="all">{copy.allStatuses}</option>
+          {statuses.map(status => <option key={status} value={status}>{translateAdminStatus(status, copy)}</option>)}
         </select>
       </div>
       {visibleRows.length === 0 ? (
-        <div className="p-8 text-center text-xs text-[#737373]">No matching live records found.</div>
+        <div className="p-8 text-center text-xs text-[#737373]">{copy.noMatchingRecords}</div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
@@ -186,6 +202,8 @@ function MarketplaceRecordsTable({
 }
 
 export function CentralManagementView({ section }: CentralManagementViewProps) {
+  const { language } = useAdmin();
+  const copy = adminPanelTranslations[language];
   const [rows, setRows] = useState<GenericRow[]>([]);
   const [profiles, setProfiles] = useState<ProfileRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -204,7 +222,7 @@ export function CentralManagementView({ section }: CentralManagementViewProps) {
       if (active) setError('');
       if (!supabase) {
         if (active) {
-          setError('Supabase is not configured.');
+          setError(copy.supabaseNotConfigured);
           setLoading(false);
         }
         return;
@@ -391,7 +409,7 @@ export function CentralManagementView({ section }: CentralManagementViewProps) {
       active = false;
       if (supabase && channel) void supabase.removeChannel(channel);
     };
-  }, [section]);
+  }, [section, copy.supabaseNotConfigured]);
 
   const callAction = async (body: Record<string, unknown>) => {
     if (!supabase) return;
@@ -416,10 +434,13 @@ export function CentralManagementView({ section }: CentralManagementViewProps) {
     const accountStatus = profile.account_status === 'suspended' ? 'active' : 'suspended';
     const reason = reasons[profile.id] || '';
     if (accountStatus === 'suspended' && !reason.trim()) {
-      setError('Enter a reason before suspending an account.');
+      setError(copy.enterSuspensionReason);
       return;
     }
-    if (!window.confirm(`${accountStatus === 'suspended' ? 'Suspend' : 'Reactivate'} ${profile.full_name || profile.id}?`)) return;
+    const confirmation = accountStatus === 'suspended'
+      ? fillTemplate(copy.confirmSuspend, { name: profile.full_name || profile.id })
+      : fillTemplate(copy.confirmReactivate, { name: profile.full_name || profile.id });
+    if (!window.confirm(confirmation)) return;
     try {
       await callAction({
         action: 'account_status',
@@ -431,7 +452,7 @@ export function CentralManagementView({ section }: CentralManagementViewProps) {
       setReasons(current => ({ ...current, [profile.id]: '' }));
       setError('');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Action failed');
+      setError(err instanceof Error ? err.message : copy.actionFailed);
     }
   };
 
@@ -440,27 +461,36 @@ export function CentralManagementView({ section }: CentralManagementViewProps) {
     const reason = reasons[profile.id] || '';
     if (role === profile.role) return;
     if (!reason.trim()) {
-      setError('Enter a reason before changing a role.');
+      setError(copy.enterRoleChangeReason);
       return;
     }
-    if (!window.confirm(`Change this account role from "${profile.role || 'customer'}" to "${role}"? The role field is single-valued.`)) return;
+    const confirmation = fillTemplate(copy.confirmRoleChange, {
+      oldRole: translateAdminRole(profile.role || 'customer', copy),
+      newRole: translateAdminRole(role, copy),
+    });
+    if (!window.confirm(confirmation)) return;
     try {
       await callAction({ action: 'profile_role_change', userId: profile.id, role, reason });
       setProfiles(current => current.map(item => item.id === profile.id ? { ...item, role } : item));
       setReasons(current => ({ ...current, [profile.id]: '' }));
       setError('');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Role change failed');
+      setError(err instanceof Error ? err.message : copy.roleChangeFailed);
     }
   };
 
   const reviewApplication = async (row: GenericRow, status: 'approved' | 'rejected' | 'changes_requested') => {
     const reason = reasons[row.id] || '';
     if (status !== 'approved' && !reason.trim()) {
-      setError('A reason is required to reject or request changes.');
+      setError(copy.reasonRequiredForDecision);
       return;
     }
-    if (!window.confirm(`${status === 'approved' ? 'Approve' : status === 'rejected' ? 'Reject' : 'Request changes for'} this application?`)) return;
+    const confirmation = status === 'approved'
+      ? copy.confirmApprove
+      : status === 'rejected'
+        ? copy.confirmReject
+        : copy.confirmRequestChanges;
+    if (!window.confirm(confirmation)) return;
     const actionBody = section === 'stores'
       ? { action: 'seller_application_review', sellerId: row.id, status, reason }
       : { action: 'supplier_application_review', applicationId: row.id, status, reason };
@@ -473,21 +503,21 @@ export function CentralManagementView({ section }: CentralManagementViewProps) {
       setReasons(current => ({ ...current, [row.id]: '' }));
       setError('');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Application decision failed');
+      setError(err instanceof Error ? err.message : copy.applicationDecisionFailed);
     }
   };
 
   const title: Record<Section, string> = {
-    users: 'User Management',
-    stores: 'Seller & Store Applications',
-    suppliers: 'Suppliers & Factory Businesses',
-    notifications: 'Notifications',
-    orders: 'B2C Orders',
-    rfqs: 'B2B RFQs',
-    quotations: 'Supplier Quotations',
-    'purchase-orders': 'B2B Purchase Orders',
-    support: 'Support & Dispute Oversight',
-    audit: 'Administrator Audit Log',
+    users: copy.titleUsers,
+    stores: copy.titleApplications,
+    suppliers: copy.titleSuppliers,
+    notifications: copy.titleNotifications,
+    orders: copy.titleOrders,
+    rfqs: copy.titleRfqs,
+    quotations: copy.titleQuotations,
+    'purchase-orders': copy.titlePurchaseOrders,
+    support: copy.titleSupport,
+    audit: copy.titleAudit,
   };
 
   const icon: Record<Section, React.ReactNode> = {
@@ -511,8 +541,8 @@ export function CentralManagementView({ section }: CentralManagementViewProps) {
           <h1 className="text-xl font-extrabold text-[#171717]">{title[section]}</h1>
           <p className="text-xs text-[#737373]">
             {section === 'suppliers'
-              ? 'Supplier and factory businesses use the shared supplier application records.'
-              : 'Live platform records and authorized administrative actions.'}
+              ? copy.suppliersSubtitle
+              : copy.pageSubtitle}
           </p>
         </div>
       </div>
@@ -524,38 +554,38 @@ export function CentralManagementView({ section }: CentralManagementViewProps) {
       )}
 
       {loading ? (
-        <div className="rounded-2xl border border-[#EAE7DF] bg-white p-6 text-xs text-[#737373]">Loading records...</div>
+        <div className="rounded-2xl border border-[#EAE7DF] bg-white p-6 text-xs text-[#737373]">{copy.loading}</div>
       ) : section === 'users' ? (
         <div className="overflow-hidden rounded-2xl border border-[#EAE7DF] bg-white">
           <div className="flex flex-col gap-2 border-b border-[#EAE7DF] p-3 sm:flex-row">
-            <input value={search} onChange={event => setSearch(event.target.value)} placeholder="Search name, ID, role, or business"
+            <input value={search} onChange={event => setSearch(event.target.value)} placeholder={copy.searchUsers}
               className="min-w-0 flex-1 rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] px-3 py-2 text-xs" />
-            <select value={statusFilter} onChange={event => setStatusFilter(event.target.value)} aria-label="Filter users by status"
+            <select value={statusFilter} onChange={event => setStatusFilter(event.target.value)} aria-label={copy.filterByStatus}
               className="rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] px-3 py-2 text-xs">
-              <option value="all">All account statuses</option>
-              <option value="active">Active</option>
-              <option value="suspended">Suspended</option>
+              <option value="all">{copy.allAccountStatuses}</option>
+              <option value="active">{copy.statusActive}</option>
+              <option value="suspended">{copy.statusSuspended}</option>
             </select>
-            <select value={roleFilter} onChange={event => setRoleFilter(event.target.value)} aria-label="Filter users by role"
+            <select value={roleFilter} onChange={event => setRoleFilter(event.target.value)} aria-label={copy.filterByRole}
               className="rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] px-3 py-2 text-xs">
-              <option value="all">All roles</option>
+              <option value="all">{copy.allRoles}</option>
               {['customer', 'seller', 'supplier', 'retailer', 'business_buyer', 'b2b_retailer', 'admin', 'super_admin', 'superadmin'].map(role => (
-                <option key={role} value={role}>{role}</option>
+                <option key={role} value={role}>{translateAdminRole(role, copy)}</option>
               ))}
             </select>
           </div>
           {profiles.length === 0 ? (
-            <div className="p-8 text-center text-xs text-[#737373]">No user profiles are visible to this administrator.</div>
+            <div className="p-8 text-center text-xs text-[#737373]">{copy.noVisibleProfiles}</div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead className="bg-[#FAF9F6] text-[#737373]">
                   <tr>
-                    <th className="px-4 py-3 text-start">User</th>
-                    <th className="px-4 py-3 text-start">Role</th>
-                    <th className="px-4 py-3 text-start">Status</th>
-                    <th className="px-4 py-3 text-start">Associated businesses</th>
-                    <th className="px-4 py-3 text-start">Action</th>
+                    <th className="px-4 py-3 text-start">{copy.colUser}</th>
+                    <th className="px-4 py-3 text-start">{copy.colRole}</th>
+                    <th className="px-4 py-3 text-start">{copy.colStatus}</th>
+                    <th className="px-4 py-3 text-start">{copy.colBusinesses}</th>
+                    <th className="px-4 py-3 text-start">{copy.colAction}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#EAE7DF]">
@@ -568,37 +598,39 @@ export function CentralManagementView({ section }: CentralManagementViewProps) {
                   }).map(profile => (
                     <tr key={profile.id}>
                       <td className="px-4 py-3">
-                        <p className="font-bold text-[#171717]">{profile.full_name || 'Unnamed profile'}</p>
+                        <p className="font-bold text-[#171717]">{profile.full_name || copy.unnamedProfile}</p>
                         <p className="text-[10px] text-[#737373]">{profile.id}</p>
                       </td>
-                      <td className="px-4 py-3">{profile.role || 'customer'}</td>
+                      <td className="px-4 py-3">{translateAdminRole(profile.role || 'customer', copy)}</td>
                       <td className="px-4 py-3">
                         <span className={`rounded-full px-2 py-1 text-[10px] font-bold ${(profile.account_status || 'active') === 'active' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
-                          {profile.account_status || 'active'}
+                          {translateAdminStatus(profile.account_status || 'active', copy)}
                         </span>
                       </td>
                       <td className="max-w-xs px-4 py-3 text-[11px] text-[#737373]">{profile.businesses || '—'}</td>
                       <td className="px-4 py-3">
                         <div className="min-w-48 space-y-2">
                           <input value={reasons[profile.id] || ''} onChange={event => setReasons(current => ({ ...current, [profile.id]: event.target.value }))}
-                            placeholder="Reason required" className="w-full rounded-lg border border-[#EAE7DF] px-2 py-1.5" />
+                            placeholder={copy.reasonRequired} className="w-full rounded-lg border border-[#EAE7DF] px-2 py-1.5" />
                           <div className="flex gap-1">
                             {canManageRoles && (
                               <>
                                 <select value={roleDrafts[profile.id] ?? profile.role ?? 'customer'} onChange={event => setRoleDrafts(current => ({ ...current, [profile.id]: event.target.value }))}
                                   className="min-w-28 rounded-lg border border-[#EAE7DF] bg-white px-2 py-1.5">
                                   {profile.role && !['customer', 'seller', 'supplier', 'retailer', 'business_buyer', 'b2b_retailer', 'admin'].includes(profile.role)
-                                    && <option value={profile.role}>{profile.role}</option>}
-                                  {['customer', 'seller', 'supplier', 'retailer', 'business_buyer', 'b2b_retailer', 'admin'].map(role => <option key={role} value={role}>{role}</option>)}
+                                    && <option value={profile.role}>{translateAdminRole(profile.role, copy)}</option>}
+                                  {['customer', 'seller', 'supplier', 'retailer', 'business_buyer', 'b2b_retailer', 'admin'].map(role => (
+                                    <option key={role} value={role}>{translateAdminRole(role, copy)}</option>
+                                  ))}
                                 </select>
-                                <button onClick={() => void changeRole(profile)} className="rounded-lg bg-[#657A52] px-2 py-1.5 font-bold text-white">Save role</button>
+                                <button onClick={() => void changeRole(profile)} className="rounded-lg bg-[#657A52] px-2 py-1.5 font-bold text-white">{copy.saveRole}</button>
                               </>
                             )}
                             <button onClick={() => void suspendUser(profile)} className="rounded-lg border border-[#EAE7DF] px-2 py-1.5 font-bold hover:bg-[#FAF9F6]">
-                              {profile.account_status === 'suspended' ? 'Reactivate' : 'Suspend'}
+                              {profile.account_status === 'suspended' ? copy.reactivate : copy.suspend}
                             </button>
                           </div>
-                          {!canManageRoles && <p className="text-[10px] text-[#737373]">Role changes require Super Admin permissions.</p>}
+                          {!canManageRoles && <p className="text-[10px] text-[#737373]">{copy.roleChangeRequiresSuperAdmin}</p>}
                         </div>
                       </td>
                     </tr>
@@ -611,30 +643,32 @@ export function CentralManagementView({ section }: CentralManagementViewProps) {
       ) : section === 'stores' || section === 'suppliers' ? (
         <div className="overflow-hidden rounded-2xl border border-[#EAE7DF] bg-white">
           <div className="flex flex-col gap-2 border-b border-[#EAE7DF] p-3 sm:flex-row">
-            <input value={search} onChange={event => setSearch(event.target.value)} placeholder="Search business, applicant, or ID"
+            <input value={search} onChange={event => setSearch(event.target.value)} placeholder={copy.searchApplications}
               className="min-w-0 flex-1 rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] px-3 py-2 text-xs" />
-            <select value={statusFilter} onChange={event => setStatusFilter(event.target.value)} aria-label="Filter applications by status"
+            <select value={statusFilter} onChange={event => setStatusFilter(event.target.value)} aria-label={copy.filterByStatus}
               className="rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] px-3 py-2 text-xs">
-              <option value="all">All application statuses</option>
-              {['pending', 'approved', 'rejected', 'changes_requested', 'suspended'].map(status => <option key={status} value={status}>{status}</option>)}
+              <option value="all">{copy.allApplicationStatuses}</option>
+              {['pending', 'approved', 'rejected', 'changes_requested', 'suspended'].map(status => (
+                <option key={status} value={status}>{translateAdminStatus(status, copy)}</option>
+              ))}
             </select>
           </div>
           {rows.length === 0 ? (
             <div className="p-8 text-center text-xs text-[#737373]">
               {section === 'suppliers'
-                ? 'No supplier or factory applications have been submitted yet.'
-                : 'No seller applications have been submitted yet.'}
+                  ? copy.noSupplierApplications
+                  : copy.noSellerApplications}
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead className="bg-[#FAF9F6] text-[#737373]">
                   <tr>
-                    <th className="px-4 py-3 text-start">Business</th>
-                    <th className="px-4 py-3 text-start">Applicant / Contact</th>
-                    <th className="px-4 py-3 text-start">Application status</th>
-                    <th className="px-4 py-3 text-start">Application history</th>
-                    <th className="px-4 py-3 text-start">Review action</th>
+                    <th className="px-4 py-3 text-start">{copy.colBusiness}</th>
+                    <th className="px-4 py-3 text-start">{copy.colApplicantContact}</th>
+                    <th className="px-4 py-3 text-start">{copy.colApplicationStatus}</th>
+                    <th className="px-4 py-3 text-start">{copy.colApplicationHistory}</th>
+                    <th className="px-4 py-3 text-start">{copy.colReviewAction}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#EAE7DF]">
@@ -650,7 +684,7 @@ export function CentralManagementView({ section }: CentralManagementViewProps) {
                     return (
                       <tr key={row.id}>
                         <td className="px-4 py-3">
-                          <p className="font-bold text-[#171717]">{String(businessName || 'Unnamed business')}</p>
+                          <p className="font-bold text-[#171717]">{String(businessName || copy.unnamedBusiness)}</p>
                           <p className="text-[10px] text-[#737373]">{String(row.address || row.description || '')}</p>
                           <p className="font-mono text-[10px] text-[#737373]">{row.id}</p>
                         </td>
@@ -659,28 +693,30 @@ export function CentralManagementView({ section }: CentralManagementViewProps) {
                           <p className="text-[10px] text-[#737373]">{String(row.phone || row.contact_name || '—')}</p>
                         </td>
                         <td className="px-4 py-3">
-                          <span className="rounded-full bg-amber-50 px-2 py-1 text-[10px] font-bold text-amber-800">{status}</span>
+                          <span className="rounded-full bg-amber-50 px-2 py-1 text-[10px] font-bold text-amber-800">
+                            {translateAdminStatus(status, copy)}
+                          </span>
                           {String(row.application_reason || row.decision_reason || '') && (
                             <p className="mt-1 max-w-xs text-[10px] text-[#737373]">{String(row.application_reason || row.decision_reason)}</p>
                           )}
                         </td>
                         <td className="px-4 py-3">
-                          <p>Submitted: {String(row.created_at || '—')}</p>
+                          <p>{copy.submitted} {formatAdminDate(row.created_at, language)}</p>
                           {row.reviewed_at || row.application_reviewed_at ? (
                             <p className="mt-1 text-[10px] text-[#737373]">
-                              Reviewed: {String(row.reviewed_at || row.application_reviewed_at)}
-                              {' by '}{String(row.reviewed_by || row.application_reviewed_by || 'administrator')}
+                              {copy.reviewed} {formatAdminDate(row.reviewed_at || row.application_reviewed_at, language)}
+                              {' '}{copy.reviewedBy} {String(row.reviewed_by || row.application_reviewed_by || copy.administrator)}
                             </p>
                           ) : null}
                         </td>
                         <td className="px-4 py-3">
                           <div className="min-w-48 space-y-2">
                             <input value={reasons[row.id] || ''} onChange={event => setReasons(current => ({ ...current, [row.id]: event.target.value }))}
-                              placeholder="Decision reason" className="w-full rounded-lg border border-[#EAE7DF] px-2 py-1.5" />
+                              placeholder={copy.decisionReason} className="w-full rounded-lg border border-[#EAE7DF] px-2 py-1.5" />
                             <div className="flex flex-wrap gap-1">
-                              <button onClick={() => void reviewApplication(row, 'approved')} className="rounded-lg bg-[#657A52] px-2 py-1.5 font-bold text-white">Approve</button>
-                              <button onClick={() => void reviewApplication(row, 'rejected')} className="rounded-lg border border-rose-200 px-2 py-1.5 font-bold text-rose-700">Reject</button>
-                              <button onClick={() => void reviewApplication(row, 'changes_requested')} className="rounded-lg border border-[#EAE7DF] px-2 py-1.5 font-bold">Request changes</button>
+                              <button onClick={() => void reviewApplication(row, 'approved')} className="rounded-lg bg-[#657A52] px-2 py-1.5 font-bold text-white">{copy.approve}</button>
+                              <button onClick={() => void reviewApplication(row, 'rejected')} className="rounded-lg border border-rose-200 px-2 py-1.5 font-bold text-rose-700">{copy.reject}</button>
+                              <button onClick={() => void reviewApplication(row, 'changes_requested')} className="rounded-lg border border-[#EAE7DF] px-2 py-1.5 font-bold">{copy.requestChanges}</button>
                             </div>
                           </div>
                         </td>
@@ -698,11 +734,11 @@ export function CentralManagementView({ section }: CentralManagementViewProps) {
             No live records yet. Orders, RFQs, quotations, and purchase orders will appear here after users create them in the client application.
           </div>
         ) : (
-          <MarketplaceRecordsTable section={section} rows={rows} />
+          <MarketplaceRecordsTable section={section} rows={rows} language={language} />
         )
       ) : rows.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-[#EAE7DF] bg-white p-8 text-center text-xs text-[#737373]">
-          No records are available yet. Apply the central-management Supabase migration to create this section’s tables.
+          {copy.noRecords}
         </div>
       ) : (
         <div className="overflow-hidden rounded-2xl border border-[#EAE7DF] bg-white">
@@ -710,17 +746,17 @@ export function CentralManagementView({ section }: CentralManagementViewProps) {
             <table className="w-full text-xs">
               <thead className="bg-[#FAF9F6] text-[#737373]">
                 <tr>
-                  <th className="px-4 py-3 text-start">Record</th>
-                  <th className="px-4 py-3 text-start">Status</th>
-                  <th className="px-4 py-3 text-start">Created</th>
+                  <th className="px-4 py-3 text-start">{copy.colRecord}</th>
+                  <th className="px-4 py-3 text-start">{copy.colStatus}</th>
+                  <th className="px-4 py-3 text-start">{copy.colCreated}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#EAE7DF]">
                 {rows.map(row => (
                   <tr key={row.id}>
                     <td className="px-4 py-3 font-mono">{row.id}</td>
-                    <td className="px-4 py-3">{String(row.status ?? row.category ?? '—')}</td>
-                    <td className="px-4 py-3">{String(row.created_at ?? '—')}</td>
+                    <td className="px-4 py-3">{translateAdminStatus(String(row.status ?? row.category ?? ''), copy) || '—'}</td>
+                    <td className="px-4 py-3">{formatAdminDate(row.created_at, language)}</td>
                   </tr>
                 ))}
               </tbody>

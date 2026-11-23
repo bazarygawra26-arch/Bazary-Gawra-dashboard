@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useAdmin, AdminView } from '@/lib/store';
+import { adminPanelTranslations } from '@/lib/adminPanelTranslations';
 import { 
   LayoutDashboard, 
   Store, 
@@ -18,10 +19,12 @@ import {
   Building2,
   ClipboardCheck,
   ChevronDown,
+  Settings,
 } from 'lucide-react';
 
 export function Sidebar() {
-  const { currentView, setCurrentView, t, sellers, products } = useAdmin();
+  const { currentView, setCurrentView, language, t, sellers, products } = useAdmin();
+  const copy = adminPanelTranslations[language];
 
   const pendingSellersCount = sellers.filter(s => s.verification_status === 'pending').length;
   const missingSignalCount = products.filter(p => p.transparency_score < 70).length;
@@ -29,32 +32,32 @@ export function Sidebar() {
   const navGroups: { id: string; label: string; items: { id: AdminView; label: string; icon: React.ReactNode; badge?: number; badgeColor?: string }[] }[] = [
     {
       id: 'dashboard',
-      label: 'Dashboard',
+      label: copy.groupDashboard,
       items: [{ id: 'overview', label: t.navOverview, icon: <LayoutDashboard className="h-5 w-5" /> }],
     },
     {
       id: 'businesses',
-      label: 'Accounts & businesses',
+      label: copy.groupAccounts,
       items: [
-        { id: 'users', label: 'Users', icon: <Users className="h-5 w-5" /> },
+        { id: 'users', label: copy.navUsers, icon: <Users className="h-5 w-5" /> },
         {
           id: 'sellers',
-          label: 'Seller directory',
+          label: copy.navSellerDirectory,
           icon: <Store className="h-5 w-5" />,
           badge: pendingSellersCount || undefined,
           badgeColor: 'bg-[#F4B942] text-[#171717]',
         },
         {
           id: 'stores',
-          label: 'Seller applications',
+          label: copy.navSellerApplications,
           icon: <ClipboardCheck className="h-5 w-5" />,
         },
-        { id: 'suppliers', label: 'Suppliers & factories', icon: <Building2 className="h-5 w-5" /> },
+        { id: 'suppliers', label: copy.navSuppliersFactories, icon: <Building2 className="h-5 w-5" /> },
       ],
     },
     {
       id: 'marketplace',
-      label: 'Marketplace',
+      label: copy.groupMarketplace,
       items: [
         {
           id: 'products',
@@ -68,22 +71,23 @@ export function Sidebar() {
     },
     {
       id: 'trade',
-      label: 'Orders & B2B',
+      label: copy.groupTrade,
       items: [
-        { id: 'orders', label: 'B2C orders', icon: <ShoppingCart className="h-5 w-5" /> },
-        { id: 'rfqs', label: 'RFQs', icon: <ClipboardList className="h-5 w-5" /> },
-        { id: 'quotations', label: 'Quotations', icon: <ClipboardList className="h-5 w-5" /> },
-        { id: 'purchase-orders', label: 'Purchase orders', icon: <ClipboardCheck className="h-5 w-5" /> },
+        { id: 'orders', label: copy.navB2cOrders, icon: <ShoppingCart className="h-5 w-5" /> },
+        { id: 'rfqs', label: copy.navRfqs, icon: <ClipboardList className="h-5 w-5" /> },
+        { id: 'quotations', label: copy.navQuotations, icon: <ClipboardList className="h-5 w-5" /> },
+        { id: 'purchase-orders', label: copy.navPurchaseOrders, icon: <ClipboardCheck className="h-5 w-5" /> },
       ],
     },
     {
       id: 'oversight',
-      label: 'Platform oversight',
+      label: copy.groupOversight,
       items: [
-        { id: 'notifications', label: 'Notifications', icon: <Bell className="h-5 w-5" /> },
-        { id: 'support', label: 'Support', icon: <Headphones className="h-5 w-5" /> },
-        { id: 'audit', label: 'Audit logs', icon: <ScrollText className="h-5 w-5" /> },
+        { id: 'notifications', label: copy.navNotifications, icon: <Bell className="h-5 w-5" /> },
+        { id: 'support', label: copy.navSupport, icon: <Headphones className="h-5 w-5" /> },
+        { id: 'audit', label: copy.navAudit, icon: <ScrollText className="h-5 w-5" /> },
         { id: 'ai-insights', label: t.navAiInsights, icon: <Sparkles className="h-5 w-5" /> },
+        { id: 'settings', label: copy.navSettings, icon: <Settings className="h-5 w-5" /> },
       ],
     },
   ];
@@ -115,7 +119,7 @@ export function Sidebar() {
         </div>
 
         {/* Navigation List */}
-        <nav aria-label="Admin navigation" className="mt-5 space-y-2">
+        <nav aria-label={copy.navigationLabel} className="mt-5 space-y-2">
           {navGroups.map((group) => {
             const items = group.items.filter(item => {
               if (usedViewIds.has(item.id)) return false;
@@ -169,16 +173,14 @@ export function Sidebar() {
       <div className="rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] p-3">
         <div className="flex items-center gap-2">
           <ShieldCheck className="h-4 w-4 shrink-0 text-[#657A52]" />
-          <span className="text-xs font-bold text-[#171717]">ئامرازی متمانەی کوردستان</span>
+          <span className="text-xs font-bold text-[#171717]">{copy.adminName}</span>
         </div>
-        <p className="mt-1 text-[11px] leading-relaxed text-[#737373]">
-          پشکنینی ڕوونی ئەنجامدراوی بازاڕەکانی سلێمانی، هەولێر، دهۆک و هەڵەبجە.
-        </p>
+        <p className="mt-1 text-[11px] leading-relaxed text-[#737373]">{copy.adminLocation}</p>
         <div className="mt-2.5 flex items-center justify-between border-t border-[#EAE7DF] pt-2 text-[10px] font-medium text-[#737373]">
           <span>v2.4.0</span>
           <span className="flex items-center gap-1 text-[#657A52] font-semibold">
             <span className="h-1.5 w-1.5 rounded-full bg-[#657A52]"></span>
-            چالاک
+            {copy.statusActive}
           </span>
         </div>
       </div>

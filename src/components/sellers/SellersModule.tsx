@@ -25,6 +25,7 @@ import {
 import { downloadCsv, formatIqd } from '@/lib/utils';
 import { ImageUploadDropzone } from '@/components/common/ImageUploadDropzone';
 import { getLocalizedField, autoTranslateSeller, getLocalizedCity, getLocalizedWarranty } from '@/lib/translator';
+import { adminPanelTranslations } from '@/lib/adminPanelTranslations';
 
 interface SellersModuleProps {
   onOpenNewSeller: () => void;
@@ -33,6 +34,7 @@ interface SellersModuleProps {
 
 export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: SellersModuleProps) {
   const { t, language, sellers, products, updateSellerVerification, updateSeller } = useAdmin();
+  const copy = adminPanelTranslations[language];
 
   // Filters
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -196,7 +198,7 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
           <table className="w-full text-start text-xs">
             <thead className="border-b border-[#EAE7DF] bg-[#FAF9F6] text-[#737373]">
               <tr>
-                <th className="px-4 py-3.5 font-bold text-start whitespace-nowrap min-w-[190px]">Seller ID</th>
+                <th className="px-4 py-3.5 font-bold text-start whitespace-nowrap min-w-[190px]">{copy.sellerId}</th>
                 <th className="px-4 py-3.5 font-bold text-start min-w-[200px]">{t.merchantName}</th>
                 <th className="px-4 py-3.5 font-bold text-start whitespace-nowrap min-w-[130px]">{t.merchantCityBazaar}</th>
                 <th className="px-4 py-3.5 font-bold text-start whitespace-nowrap min-w-[140px]">{t.merchantContact}</th>
@@ -209,7 +211,7 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
               {filteredSellers.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-12 text-center text-[#737373]">
-                    هیچ فرۆشیارێک نەدۆزرایەوە بەپێی ئەم فلتەرە.
+                    {copy.noSellersMatch}
                   </td>
                 </tr>
               ) : (
@@ -262,7 +264,7 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 border border-emerald-200 px-2 py-1 text-[11px] font-bold text-emerald-800 hover:bg-emerald-100 transition-colors"
-                            title="Chat on WhatsApp"
+                            title={t.directWhatsApp}
                           >
                             <MessageSquare className="h-3 w-3 text-emerald-600" />
                             <span>WhatsApp</span>
@@ -270,7 +272,7 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
                           <a
                             href={`tel:${seller.phone}`}
                             className="inline-flex items-center gap-1 rounded-lg bg-gray-50 border border-gray-200 px-2 py-1 text-[11px] font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
-                            title="Call Phone"
+                            title={t.callPhone}
                           >
                             <Phone className="h-3 w-3" />
                             <span>{seller.phone}</span>
@@ -285,7 +287,7 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
                           className="inline-flex items-center gap-1.5 rounded-lg border border-[#EAE7DF] bg-[#FAF9F6] px-2.5 py-1 text-xs font-bold text-[#171717] hover:border-[#657A52] hover:bg-white transition-colors"
                         >
                           <Package className="h-3.5 w-3.5 text-[#F4B942]" />
-                          <span>{sellerProducts.length} کاڵا</span>
+                          <span>{sellerProducts.length} {copy.productCountLabel}</span>
                         </button>
                       </td>
 
@@ -294,7 +296,7 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
                         <div className="space-y-1">
                           <div className="whitespace-nowrap">{getStatusBadge(seller.verification_status)}</div>
                           <div className="flex items-center gap-1.5 text-[10px] text-[#737373] whitespace-nowrap">
-                            <span>نمرەی متمانە:</span>
+                            <span>{copy.trustScore}:</span>
                             <span className="font-bold text-[#171717]">{seller.transparency_score}٪</span>
                           </div>
                         </div>
@@ -376,11 +378,11 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
                 <div className="relative overflow-hidden rounded-xl border border-[#EAE7DF] bg-[#FAF9F6]">
                   <img
                     src={verifyingSeller.facade_image_url}
-                    alt="Shop Front"
+                    alt={t.shopFacade}
                     className="h-56 w-full object-cover"
                   />
                   <div className="absolute bottom-2 rtl:right-2 ltr:left-2 rounded-lg bg-black/70 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur-xs">
-                    پشکنینی فیزیایی دووکان
+                    {copy.physicalInspection}
                   </div>
                 </div>
               </div>
@@ -421,7 +423,7 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
                   value={adminNotes}
                   onChange={(e) => setAdminNotes(e.target.value)}
                   rows={3}
-                  placeholder="تێبینیەکانی پشکنین، سەردانی مەیدانی، یان مۆڵەت بنووسە..."
+                  placeholder={copy.verificationNotesPlaceholder}
                   className="mt-1 w-full rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] p-3 text-xs text-[#171717] focus:border-[#657A52] focus:bg-white focus:outline-none"
                 />
               </div>
@@ -496,7 +498,7 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
             <div className="mt-4 flex-1">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs font-bold text-[#171717]">
-                  کاڵاکانی فرۆشگا ({products.filter(p => p.seller_id === selectedDrawerSeller.id).length} دانە)
+                  {copy.sellerProductsTitle} ({products.filter(p => p.seller_id === selectedDrawerSeller.id).length} {copy.productCountLabel})
                 </span>
                 {onOpenNewProductForSeller && (
                   <button
@@ -508,7 +510,7 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
                     className="flex items-center gap-1 text-xs font-bold text-[#657A52] hover:underline"
                   >
                     <Plus className="h-3.5 w-3.5" />
-                    <span>زیادکردنی کاڵا</span>
+                    <span>{t.addProduct}</span>
                   </button>
                 )}
               </div>
@@ -516,7 +518,7 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
               <div className="space-y-2.5">
                 {products.filter(p => p.seller_id === selectedDrawerSeller.id).length === 0 ? (
                   <p className="py-8 text-center text-xs text-[#737373]">
-                    ئەم فرۆشیارە هێشتا هیچ کاڵایەکی نییە.
+                    {copy.sellerNoProducts}
                   </p>
                 ) : (
                   products
@@ -539,14 +541,14 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
                             <span className="font-extrabold text-[#657A52]">
                               {formatIqd(product.price_iqd, language)}
                             </span>
-                            <span className="text-[#737373]">· {product.stock_quantity} لە کۆگا</span>
+                            <span className="text-[#737373]">· {product.stock_quantity} {copy.stockLabel}</span>
                           </div>
                           <div className="mt-1 flex items-center gap-1.5 text-[10px]">
                             <span className="rounded bg-emerald-50 px-1.5 py-0.2 font-semibold text-emerald-800">
                               {getLocalizedWarranty(product.warranty_period, product.warranty_type, language)}
                             </span>
                             <span className="text-[#737373]">
-                              نمرەی متمانە: {product.transparency_score}٪
+                              {copy.trustScore}: {product.transparency_score}%
                             </span>
                           </div>
                         </div>
@@ -564,7 +566,7 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 shadow-sm transition-all"
               >
                 <MessageSquare className="h-4 w-4" />
-                <span>پەیوەندی بە فرۆشیار لە واتسئاپ ({selectedDrawerSeller.whatsapp})</span>
+                <span>{copy.whatsappContactSeller} ({selectedDrawerSeller.whatsapp})</span>
               </a>
             </div>
           </div>
@@ -617,7 +619,7 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
             >
               <div>
                 <div className="flex items-center justify-between">
-                  <label className="font-bold text-[#171717]">ناوی دووکان / فرۆشگا بە کوردی *</label>
+                  <label className="font-bold text-[#171717]">{t.titleKurdishLabel} *</label>
                   {editingSeller.name_ku && (
                     <button
                       type="button"
@@ -638,7 +640,7 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
                       className="flex items-center gap-1 rounded-lg border border-[#657A52]/30 bg-[#657A52]/10 px-2 py-0.5 text-[11px] font-bold text-[#657A52] hover:bg-[#657A52]/20 transition-colors disabled:opacity-50"
                     >
                       {isTranslatingEdit ? <Loader2 className="h-3 w-3 animate-spin" /> : <Languages className="h-3 w-3" />}
-                      <span>وەرگێڕان بۆ ئینگلیزی و عەرەبی</span>
+                      <span>{copy.translateEnglishArabic}</span>
                     </button>
                   )}
                 </div>
@@ -654,7 +656,7 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="font-bold text-[#171717]">ناوی دووکان بە ئینگلیزی (Store Name) *</label>
+                  <label className="font-bold text-[#171717]">{t.titleEnglishLabel} *</label>
                   <input
                     type="text"
                     value={editingSeller.name_en}
@@ -664,7 +666,7 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
                   />
                 </div>
                 <div>
-                  <label className="font-bold text-[#171717]">ناوی دووکان بە عەرەبی (اسم المتجر) *</label>
+                  <label className="font-bold text-[#171717]">{t.titleArabicLabel} *</label>
                   <input
                     type="text"
                     dir="rtl"
@@ -678,7 +680,7 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="font-bold text-[#171717]">ناوی خاوەن کار</label>
+                  <label className="font-bold text-[#171717]">{t.ownerName}</label>
                   <input
                     type="text"
                     value={editingSeller.owner_name}
@@ -688,24 +690,24 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
                   />
                 </div>
                 <div>
-                  <label className="font-bold text-[#171717]">شار / پارێزگا</label>
+                  <label className="font-bold text-[#171717]">{t.filterByCity}</label>
                   <select
                     value={editingSeller.city}
                     onChange={(e) => setEditingSeller({ ...editingSeller, city: e.target.value as KurdishCity })}
                     className="mt-1 w-full rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] p-2.5 text-xs focus:border-[#657A52] focus:bg-white focus:outline-none"
                   >
-                    <option value="Sulaymaniyah">سلێمانی</option>
-                    <option value="Erbil">هەولێر</option>
-                    <option value="Duhok">دهۆک</option>
-                    <option value="Halabja">هەڵەبجە</option>
-                    <option value="Kirkuk">کەرکووک</option>
+                    <option value="Sulaymaniyah">{getLocalizedCity('Sulaymaniyah', language)}</option>
+                    <option value="Erbil">{getLocalizedCity('Erbil', language)}</option>
+                    <option value="Duhok">{getLocalizedCity('Duhok', language)}</option>
+                    <option value="Halabja">{getLocalizedCity('Halabja', language)}</option>
+                    <option value="Kirkuk">{getLocalizedCity('Kirkuk', language)}</option>
                   </select>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="font-bold text-[#171717]">ژمارەی مۆبایل</label>
+                  <label className="font-bold text-[#171717]">{copy.phoneLabel}</label>
                   <input
                     type="text"
                     value={editingSeller.phone}
@@ -715,7 +717,7 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
                   />
                 </div>
                 <div>
-                  <label className="font-bold text-[#171717]">ژمارەی واتسئاپ</label>
+                  <label className="font-bold text-[#171717]">{copy.whatsappLabel}</label>
                   <input
                     type="text"
                     value={editingSeller.whatsapp}
@@ -727,7 +729,7 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
               </div>
 
               <div>
-                <label className="font-bold text-[#171717]">ناونیشانی بازاڕ و شوێنی دووکان</label>
+                <label className="font-bold text-[#171717]">{copy.bazaarAddressLabel}</label>
                 <input
                   type="text"
                   value={editingSeller.bazaar_name}
@@ -767,7 +769,7 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
                   {isTranslatingEdit ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>وەرگێڕانی خۆکار...</span>
+                      <span>{copy.translatingSaving}</span>
                     </>
                   ) : (
                     <span>{t.saveChanges}</span>
