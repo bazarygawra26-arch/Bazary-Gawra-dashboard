@@ -94,9 +94,27 @@ function AdminLogin({
       .eq('id', data.user.id)
       .maybeSingle();
     const role = String(profile?.role || '').toLowerCase();
-    if (profileError || !['admin', 'super_admin', 'superadmin'].includes(role) || (profile?.account_status && profile.account_status !== 'active')) {
+    if (profileError) {
       await supabase.auth.signOut();
-      setError('This account is not an active administrator.');
+      setError(`Could not verify this account's administrator profile: ${profileError.message}. Apply the Super Admin account repair migration in Supabase.`);
+      setLoading(false);
+      return;
+    }
+    if (!profile) {
+      await supabase.auth.signOut();
+      setError('Sign-in succeeded, but this account has no administrator profile. Apply the Super Admin account migration in Supabase.');
+      setLoading(false);
+      return;
+    }
+    if (!['admin', 'super_admin', 'superadmin'].includes(role)) {
+      await supabase.auth.signOut();
+      setError('Sign-in succeeded, but this profile is not an administrator. Only an authorized Super Admin can grant administrator access.');
+      setLoading(false);
+      return;
+    }
+    if (profile.account_status && profile.account_status !== 'active') {
+      await supabase.auth.signOut();
+      setError('This administrator profile is inactive. Ask an authorized Super Admin to reactivate it.');
       setLoading(false);
       return;
     }
