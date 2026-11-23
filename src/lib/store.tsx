@@ -185,8 +185,9 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       }
 
       // 2. Fetch Sellers
-      const { data: dbSellers } = await supabase.from('sellers').select('*');
-      if (dbSellers && dbSellers.length > 0) {
+      const { data: dbSellers, error: sellersError } = await supabase.from('sellers').select('*');
+      if (sellersError) throw sellersError;
+      if (dbSellers) {
         const mappedSellers: Seller[] = dbSellers.map((s: Record<string, any>) => ({
           id: s.id,
           name_ku: s.name_ku || s.name_en || 'دووکانی نەناسراو',

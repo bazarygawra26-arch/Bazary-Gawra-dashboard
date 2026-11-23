@@ -22,8 +22,168 @@ type ProfileRow = {
 
 type GenericRow = {
   id: string;
+  items?: GenericItem[];
+  customer_display?: string;
+  seller_display?: string;
+  buyer_display?: string;
+  supplier_display?: string;
   [key: string]: unknown;
 };
+
+type GenericItem = {
+  product_id?: string | null;
+  product_name?: string | null;
+  quantity?: number | null;
+  unit_price?: number | null;
+  expected_price?: number | null;
+  currency?: string | null;
+};
+
+function ItemsList({ items }: { items?: GenericItem[] }) {
+  if (!items?.length) return <span className="text-[#A3A3A3]">No item details</span>;
+
+  return (
+    <ul className="min-w-40 space-y-1">
+      {items.map((item, index) => {
+        const name = item.product_name || item.product_id || 'Item';
+        const price = item.unit_price ?? item.expected_price;
+        const priceLabel = price == null ? '' : ` · ${Number(price).toLocaleString()} ${item.currency || 'IQD'}`;
+        return (
+          <li key={`${name}-${index}`}>
+            {name} × {item.quantity ?? '—'}{priceLabel}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+const displayValue = (value: unknown) => value === null || value === undefined || value === '' ? '—' : String(value);
+const displayAmount = (value: unknown, currency: unknown) => {
+  if (value === null || value === undefined || value === '') return '—';
+  const amount = Number(value);
+  return `${Number.isFinite(amount) ? amount.toLocaleString() : String(value)} ${displayValue(currency)}`;
+};
+
+function MarketplaceRecordsTable({
+  section,
+  rows,
+}: {
+  section: 'orders' | 'rfqs' | 'quotations' | 'purchase-orders';
+  rows: GenericRow[];
+}) {
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const columns = section === 'orders'
+    ? [
+      { key: 'id', label: 'Order ID' },
+      { key: 'customer_display', label: 'Customer' },
+      { key: 'seller_display', label: 'Seller' },
+      { key: 'total_amount', label: 'Total' },
+      { key: 'payment_status', label: 'Payment' },
+      { key: 'status', label: 'Order status' },
+      { key: 'created_at', label: 'Created' },
+    ]
+    : section === 'rfqs'
+      ? [
+        { key: 'id', label: 'RFQ ID' },
+        { key: 'buyer_display', label: 'Buyer' },
+        { key: 'supplier_display', label: 'Supplier' },
+        { key: 'items', label: 'Requested products / quantity' },
+        { key: 'status', label: 'RFQ status' },
+        { key: 'created_at', label: 'Submitted' },
+      ]
+      : section === 'quotations'
+        ? [
+          { key: 'id', label: 'Quotation ID' },
+          { key: 'rfq_id', label: 'Linked RFQ' },
+          { key: 'supplier_display', label: 'Supplier' },
+          { key: 'quantity', label: 'Quantity' },
+          { key: 'unit_price', label: 'Unit price' },
+          { key: 'valid_until', label: 'Valid until' },
+          { key: 'status', label: 'Quotation status' },
+        ]
+        : [
+          { key: 'id', label: 'Purchase order ID' },
+          { key: 'rfq_id', label: 'Linked RFQ' },
+          { key: 'quotation_id', label: 'Linked quotation' },
+          { key: 'buyer_display', label: 'Buyer' },
+          { key: 'supplier_display', label: 'Supplier' },
+          { key: 'items', label: 'Items / quantity' },
+          { key: 'total_amount', label: 'Total' },
+          { key: 'status', label: 'Order status' },
+        ];
+  const statuses = [...new Set(rows.map(row => String(row.status || '')).filter(Boolean))];
+  const visibleRows = rows.filter(row => {
+    const matchesSearch = !search.trim() || JSON.stringify(row).toLowerCase().includes(search.trim().toLowerCase());
+    return matchesSearch && (statusFilter === 'all' || String(row.status || '') === statusFilter);
+  });
+  const cellContent = (row: GenericRow, key: string) => {
+    if (key === 'items') return <ItemsList items={row.items} />;
+    if (key === 'total_amount' || key === 'unit_price') return displayAmount(row[key], row.currency);
+    if (key === 'id' || key === 'rfq_id' || key === 'quotation_id') {
+      return <code className="break-all font-mono text-[10px]">{displayValue(row[key])}</code>;
+    }
+    if (key === 'status') {
+      return (
+        <span className="rounded-full bg-amber-50 px-2 py-1 text-[10px] font-bold text-amber-800">
+          {displayValue(row[key])}
+        </span>
+      );
+    }
+    if (key === 'created_at' || key === 'valid_until') {
+      const value = row[key];
+      return displayValue(value ? new Date(String(value)).toLocaleString() : value);
+    }
+    return displayValue(row[key]);
+  };
+
+  return (
+    <div className="overflow-hidden rounded-2xl border border-[#EAE7DF] bg-white">
+      <div className="flex flex-col gap-2 border-b border-[#EAE7DF] p-3 sm:flex-row">
+        <input
+          value={search}
+          onChange={event => setSearch(event.target.value)}
+          placeholder="Search IDs, people, products, or status"
+          className="min-w-0 flex-1 rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] px-3 py-2 text-xs"
+        />
+        <select
+          value={statusFilter}
+          onChange={event => setStatusFilter(event.target.value)}
+          aria-label="Filter records by status"
+          className="rounded-xl border border-[#EAE7DF] bg-[#FAF9F6] px-3 py-2 text-xs"
+        >
+          <option value="all">All statuses</option>
+          {statuses.map(status => <option key={status} value={status}>{status}</option>)}
+        </select>
+      </div>
+      {visibleRows.length === 0 ? (
+        <div className="p-8 text-center text-xs text-[#737373]">No matching live records found.</div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead className="bg-[#FAF9F6] text-[#737373]">
+              <tr>
+                {columns.map(column => <th key={column.key} className="px-4 py-3 text-start">{column.label}</th>)}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#EAE7DF]">
+              {visibleRows.map(row => (
+                <tr key={row.id} className="align-top">
+                  {columns.map(column => (
+                    <td key={column.key} className="max-w-xs px-4 py-3 text-[#171717]">
+                      {cellContent(row, column.key)}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function CentralManagementView({ section }: CentralManagementViewProps) {
   const [rows, setRows] = useState<GenericRow[]>([]);
@@ -41,6 +201,7 @@ export function CentralManagementView({ section }: CentralManagementViewProps) {
     let active = true;
 
     const load = async () => {
+      if (active) setError('');
       if (!supabase) {
         if (active) {
           setError('Supabase is not configured.');
@@ -108,8 +269,93 @@ export function CentralManagementView({ section }: CentralManagementViewProps) {
               .select('*')
               .order('created_at', { ascending: false })
               .limit(500);
-            if (queryError) setError(queryError.message);
-            setRows((data || []) as GenericRow[]);
+            if (queryError) {
+              setError(queryError.message);
+              setRows([]);
+            } else {
+              let records = (data || []) as GenericRow[];
+              const itemConfig = section === 'orders'
+                ? { table: 'order_items', foreignKey: 'order_id' }
+                : section === 'rfqs'
+                  ? { table: 'rfq_items', foreignKey: 'rfq_id' }
+                  : section === 'purchase-orders'
+                    ? { table: 'purchase_order_items', foreignKey: 'purchase_order_id' }
+                    : null;
+
+              if (itemConfig && records.length > 0) {
+                const { data: itemData, error: itemError } = await supabase
+                  .from(itemConfig.table)
+                  .select('*')
+                  .in(itemConfig.foreignKey, records.map(record => record.id));
+                if (itemError) {
+                  setError(current => [current, itemError.message].filter(Boolean).join(' '));
+                } else {
+                  const itemsByRecord = new Map<string, GenericItem[]>();
+                  for (const item of (itemData || []) as GenericRow[]) {
+                    const recordId = String(item[itemConfig.foreignKey] || '');
+                    const recordItems = itemsByRecord.get(recordId) || [];
+                    recordItems.push(item as GenericItem);
+                    itemsByRecord.set(recordId, recordItems);
+                  }
+                  records = records.map(record => ({
+                    ...record,
+                    items: itemsByRecord.get(record.id) || [],
+                  }));
+                }
+              }
+
+              if (['orders', 'rfqs', 'quotations', 'purchase-orders'].includes(section)) {
+                const partyIds = [...new Set(records.flatMap(record =>
+                  ['customer_id', 'seller_id', 'retailer_id', 'supplier_id']
+                    .map(key => record[key])
+                    .filter((id): id is string => typeof id === 'string' && id.length > 0)
+                ))];
+                const partyLabels = new Map<string, string>();
+                if (partyIds.length > 0) {
+                  const [profileResult, sellerResult, supplierResult] = await Promise.all([
+                    supabase.from('profiles').select('id, full_name').in('id', partyIds),
+                    supabase.from('sellers').select('id, owner_id, name_en').limit(500),
+                    supabase.from('supplier_applications').select('id, applicant_id, business_name').limit(500),
+                  ]);
+                  if (profileResult.error || sellerResult.error || supplierResult.error) {
+                    const lookupErrors = [profileResult.error, sellerResult.error, supplierResult.error]
+                      .filter((lookupError): lookupError is NonNullable<typeof lookupError> => Boolean(lookupError))
+                      .map(lookupError => lookupError.message);
+                    setError(current => [current, ...lookupErrors].filter(Boolean).join(' '));
+                  }
+                  for (const profile of profileResult.data || []) {
+                    if (profile.full_name) partyLabels.set(profile.id, profile.full_name);
+                  }
+                  for (const seller of sellerResult.data || []) {
+                    if (seller.name_en) {
+                      partyLabels.set(seller.id, seller.name_en);
+                      if (seller.owner_id) partyLabels.set(seller.owner_id, seller.name_en);
+                    }
+                  }
+                  for (const supplier of supplierResult.data || []) {
+                    if (supplier.business_name) {
+                      partyLabels.set(supplier.id, supplier.business_name);
+                      if (supplier.applicant_id) partyLabels.set(supplier.applicant_id, supplier.business_name);
+                    }
+                  }
+                }
+
+                const partyLabel = (id: unknown) => {
+                  if (typeof id !== 'string' || !id) return '—';
+                  const name = partyLabels.get(id);
+                  return name ? `${name} (${id})` : id;
+                };
+                records = records.map(record => ({
+                  ...record,
+                  customer_display: partyLabel(record.customer_id),
+                  seller_display: partyLabel(record.seller_id),
+                  buyer_display: partyLabel(record.retailer_id),
+                  supplier_display: partyLabel(record.supplier_id),
+                }));
+              }
+
+              setRows(records);
+            }
           }
         }
       }
@@ -117,23 +363,23 @@ export function CentralManagementView({ section }: CentralManagementViewProps) {
     };
 
     void load();
-    const tableBySection: Record<string, string> = {
-      notifications: 'notifications',
-      orders: 'orders',
-      rfqs: 'rfqs',
-      quotations: 'quotations',
-      'purchase-orders': 'purchase_orders',
-      support: 'support_requests',
-      audit: 'admin_audit_logs',
-      users: 'profiles',
-      stores: 'sellers',
-      suppliers: 'supplier_applications',
+    const tablesBySection: Partial<Record<Section, string[]>> = {
+      notifications: ['notifications'],
+      orders: ['orders', 'order_items', 'order_status_history'],
+      rfqs: ['rfqs', 'rfq_items'],
+      quotations: ['quotations'],
+      'purchase-orders': ['purchase_orders', 'purchase_order_items'],
+      support: ['support_requests'],
+      audit: ['admin_audit_logs'],
+      users: ['profiles', 'sellers', 'supplier_applications'],
+      stores: ['sellers'],
+      suppliers: ['supplier_applications'],
     };
     const tables = section === 'users'
       ? ['profiles', 'sellers', 'supplier_applications']
       : section === 'stores'
         ? ['sellers']
-        : [tableBySection[section] || (section === 'suppliers' ? 'supplier_applications' : '')].filter(Boolean);
+        : tablesBySection[section] || [];
     const channel = supabase
       ? tables.reduce(
         (current, table) => current.on('postgres_changes', { event: '*', schema: 'public', table }, () => { void load(); }),
@@ -234,7 +480,7 @@ export function CentralManagementView({ section }: CentralManagementViewProps) {
   const title: Record<Section, string> = {
     users: 'User Management',
     stores: 'Seller & Store Applications',
-    suppliers: 'Suppliers & Business Accounts',
+    suppliers: 'Suppliers & Factory Businesses',
     notifications: 'Notifications',
     orders: 'B2C Orders',
     rfqs: 'B2B RFQs',
@@ -263,7 +509,11 @@ export function CentralManagementView({ section }: CentralManagementViewProps) {
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#657A52]/10 text-[#657A52]">{icon[section]}</div>
         <div>
           <h1 className="text-xl font-extrabold text-[#171717]">{title[section]}</h1>
-          <p className="text-xs text-[#737373]">Live platform records and authorized administrative actions.</p>
+          <p className="text-xs text-[#737373]">
+            {section === 'suppliers'
+              ? 'Supplier and factory businesses use the shared supplier application records.'
+              : 'Live platform records and authorized administrative actions.'}
+          </p>
         </div>
       </div>
 
@@ -370,7 +620,11 @@ export function CentralManagementView({ section }: CentralManagementViewProps) {
             </select>
           </div>
           {rows.length === 0 ? (
-            <div className="p-8 text-center text-xs text-[#737373]">No applications found. Supplier submissions require the updated client application and database migration.</div>
+            <div className="p-8 text-center text-xs text-[#737373]">
+              {section === 'suppliers'
+                ? 'No supplier or factory applications have been submitted yet.'
+                : 'No seller applications have been submitted yet.'}
+            </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
@@ -438,6 +692,14 @@ export function CentralManagementView({ section }: CentralManagementViewProps) {
             </div>
           )}
         </div>
+      ) : section === 'orders' || section === 'rfqs' || section === 'quotations' || section === 'purchase-orders' ? (
+        rows.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-[#EAE7DF] bg-white p-8 text-center text-xs text-[#737373]">
+            No live records yet. Orders, RFQs, quotations, and purchase orders will appear here after users create them in the client application.
+          </div>
+        ) : (
+          <MarketplaceRecordsTable section={section} rows={rows} />
+        )
       ) : rows.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-[#EAE7DF] bg-white p-8 text-center text-xs text-[#737373]">
           No records are available yet. Apply the central-management Supabase migration to create this section’s tables.

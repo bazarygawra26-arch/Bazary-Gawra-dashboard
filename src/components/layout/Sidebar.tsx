@@ -16,7 +16,8 @@ import {
   Headphones,
   ScrollText,
   Building2,
-  ClipboardCheck
+  ClipboardCheck,
+  ChevronDown,
 } from 'lucide-react';
 
 export function Sidebar() {
@@ -25,89 +26,68 @@ export function Sidebar() {
   const pendingSellersCount = sellers.filter(s => s.verification_status === 'pending').length;
   const missingSignalCount = products.filter(p => p.transparency_score < 70).length;
 
-  const navItems: { id: AdminView; label: string; icon: React.ReactNode; badge?: number; badgeColor?: string }[] = [
+  const navGroups: { id: string; label: string; items: { id: AdminView; label: string; icon: React.ReactNode; badge?: number; badgeColor?: string }[] }[] = [
     {
-      id: 'overview',
-      label: t.navOverview,
-      icon: <LayoutDashboard className="h-5 w-5" />,
+      id: 'dashboard',
+      label: 'Dashboard',
+      items: [{ id: 'overview', label: t.navOverview, icon: <LayoutDashboard className="h-5 w-5" /> }],
     },
     {
-      id: 'users',
-      label: 'Users',
-      icon: <Users className="h-5 w-5" />,
+      id: 'businesses',
+      label: 'Accounts & businesses',
+      items: [
+        { id: 'users', label: 'Users', icon: <Users className="h-5 w-5" /> },
+        {
+          id: 'sellers',
+          label: 'Seller directory',
+          icon: <Store className="h-5 w-5" />,
+          badge: pendingSellersCount || undefined,
+          badgeColor: 'bg-[#F4B942] text-[#171717]',
+        },
+        {
+          id: 'stores',
+          label: 'Seller applications',
+          icon: <ClipboardCheck className="h-5 w-5" />,
+        },
+        { id: 'suppliers', label: 'Suppliers & factories', icon: <Building2 className="h-5 w-5" /> },
+      ],
     },
     {
-      id: 'sellers',
-      label: t.navSellers,
-      icon: <Store className="h-5 w-5" />,
-      badge: pendingSellersCount > 0 ? pendingSellersCount : undefined,
-      badgeColor: 'bg-[#F4B942] text-[#171717]',
+      id: 'marketplace',
+      label: 'Marketplace',
+      items: [
+        {
+          id: 'products',
+          label: t.navProducts,
+          icon: <Package className="h-5 w-5" />,
+          badge: missingSignalCount || undefined,
+          badgeColor: 'bg-amber-100 text-amber-800 border border-amber-300',
+        },
+        { id: 'taxonomy', label: t.navTaxonomy, icon: <MapPin className="h-5 w-5" /> },
+      ],
     },
     {
-      id: 'stores',
-      label: 'Store applications',
-      icon: <ClipboardCheck className="h-5 w-5" />,
-      badge: pendingSellersCount > 0 ? pendingSellersCount : undefined,
-      badgeColor: 'bg-[#F4B942] text-[#171717]',
+      id: 'trade',
+      label: 'Orders & B2B',
+      items: [
+        { id: 'orders', label: 'B2C orders', icon: <ShoppingCart className="h-5 w-5" /> },
+        { id: 'rfqs', label: 'RFQs', icon: <ClipboardList className="h-5 w-5" /> },
+        { id: 'quotations', label: 'Quotations', icon: <ClipboardList className="h-5 w-5" /> },
+        { id: 'purchase-orders', label: 'Purchase orders', icon: <ClipboardCheck className="h-5 w-5" /> },
+      ],
     },
     {
-      id: 'suppliers',
-      label: 'Suppliers',
-      icon: <Building2 className="h-5 w-5" />,
-    },
-    {
-      id: 'products',
-      label: t.navProducts,
-      icon: <Package className="h-5 w-5" />,
-      badge: missingSignalCount > 0 ? missingSignalCount : undefined,
-      badgeColor: 'bg-amber-100 text-amber-800 border border-amber-300',
-    },
-    {
-      id: 'orders',
-      label: 'B2C Orders',
-      icon: <ShoppingCart className="h-5 w-5" />,
-    },
-    {
-      id: 'rfqs',
-      label: 'RFQs',
-      icon: <ClipboardList className="h-5 w-5" />,
-    },
-    {
-      id: 'quotations',
-      label: 'Quotations',
-      icon: <ClipboardList className="h-5 w-5" />,
-    },
-    {
-      id: 'purchase-orders',
-      label: 'B2B Orders',
-      icon: <ShoppingCart className="h-5 w-5" />,
-    },
-    {
-      id: 'notifications',
-      label: 'Notifications',
-      icon: <Bell className="h-5 w-5" />,
-    },
-    {
-      id: 'support',
-      label: 'Support',
-      icon: <Headphones className="h-5 w-5" />,
-    },
-    {
-      id: 'audit',
-      label: 'Audit Logs',
-      icon: <ScrollText className="h-5 w-5" />,
-    },
-    {
-      id: 'ai-insights',
-      label: t.navAiInsights,
-      icon: <Sparkles className="h-5 w-5" />,
-    },
-    {
-      id: 'taxonomy',
-      label: t.navTaxonomy,
-      icon: <MapPin className="h-5 w-5" />,
+      id: 'oversight',
+      label: 'Platform oversight',
+      items: [
+        { id: 'notifications', label: 'Notifications', icon: <Bell className="h-5 w-5" /> },
+        { id: 'support', label: 'Support', icon: <Headphones className="h-5 w-5" /> },
+        { id: 'audit', label: 'Audit logs', icon: <ScrollText className="h-5 w-5" /> },
+        { id: 'ai-insights', label: t.navAiInsights, icon: <Sparkles className="h-5 w-5" /> },
+      ],
     },
   ];
+  const usedViewIds = new Set<AdminView>();
 
   return (
     <aside className="sticky top-0 flex h-screen w-64 shrink-0 flex-col justify-between border-e border-[#EAE7DF] bg-[#FFFFFF] p-4 select-none">
@@ -135,34 +115,51 @@ export function Sidebar() {
         </div>
 
         {/* Navigation List */}
-        <nav className="mt-6 space-y-1">
-          {navItems.map((item) => {
-            const isActive = currentView === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => setCurrentView(item.id)}
-                className={`group flex w-full items-center justify-between rounded-xl px-3.5 py-2.5 text-xs font-semibold transition-all ${
-                  isActive
-                    ? 'bg-[#657A52] text-white shadow-sm shadow-[#657A52]/25 font-bold'
-                    : 'text-[#737373] hover:bg-[#FAF9F6] hover:text-[#171717]'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <span className={isActive ? 'text-white' : 'text-[#737373] group-hover:text-[#171717]'}>
-                    {item.icon}
-                  </span>
-                  <span>{item.label}</span>
-                </div>
+        <nav aria-label="Admin navigation" className="mt-5 space-y-2">
+          {navGroups.map((group) => {
+            const items = group.items.filter(item => {
+              if (usedViewIds.has(item.id)) return false;
+              usedViewIds.add(item.id);
+              return true;
+            });
+            const groupIsActive = items.some(item => item.id === currentView);
 
-                {item.badge !== undefined && (
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold ${item.badgeColor}`}
-                  >
-                    {item.badge}
-                  </span>
-                )}
-              </button>
+            return (
+              <details key={group.id} open={groupIsActive || undefined} className="group">
+                <summary className="flex cursor-pointer list-none items-center justify-between rounded-lg px-2 py-2 text-[10px] font-bold uppercase tracking-wide text-[#737373] hover:bg-[#FAF9F6] [&::-webkit-details-marker]:hidden">
+                  <span>{group.label}</span>
+                  <ChevronDown className="h-3.5 w-3.5 transition-transform group-open:rotate-180" />
+                </summary>
+                <div className="mt-1 space-y-1">
+                  {items.map((item) => {
+                    const isActive = currentView === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => setCurrentView(item.id)}
+                        aria-current={isActive ? 'page' : undefined}
+                        className={`group flex w-full items-center justify-between rounded-xl px-3.5 py-2.5 text-xs font-semibold transition-all ${
+                          isActive
+                            ? 'bg-[#657A52] text-white shadow-sm shadow-[#657A52]/25 font-bold'
+                            : 'text-[#737373] hover:bg-[#FAF9F6] hover:text-[#171717]'
+                        }`}
+                      >
+                        <span className="flex items-center gap-3">
+                          <span className={isActive ? 'text-white' : 'text-[#737373] group-hover:text-[#171717]'}>
+                            {item.icon}
+                          </span>
+                          <span>{item.label}</span>
+                        </span>
+                        {item.badge !== undefined && (
+                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold ${item.badgeColor}`}>
+                            {item.badge}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </details>
             );
           })}
         </nav>

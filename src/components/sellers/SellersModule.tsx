@@ -52,6 +52,7 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
     const matchesCity = cityFilter === 'all' || seller.city === cityFilter;
     const q = searchQuery.toLowerCase().trim();
     const matchesSearch = !q || 
+      seller.id.toLowerCase().includes(q) ||
       seller.name_ku.toLowerCase().includes(q) ||
       seller.name_en.toLowerCase().includes(q) ||
       seller.name_ar.toLowerCase().includes(q) ||
@@ -195,6 +196,7 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
           <table className="w-full text-start text-xs">
             <thead className="border-b border-[#EAE7DF] bg-[#FAF9F6] text-[#737373]">
               <tr>
+                <th className="px-4 py-3.5 font-bold text-start whitespace-nowrap min-w-[190px]">Seller ID</th>
                 <th className="px-4 py-3.5 font-bold text-start min-w-[200px]">{t.merchantName}</th>
                 <th className="px-4 py-3.5 font-bold text-start whitespace-nowrap min-w-[130px]">{t.merchantCityBazaar}</th>
                 <th className="px-4 py-3.5 font-bold text-start whitespace-nowrap min-w-[140px]">{t.merchantContact}</th>
@@ -206,7 +208,7 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
             <tbody className="divide-y divide-[#EAE7DF]">
               {filteredSellers.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-[#737373]">
+                  <td colSpan={7} className="py-12 text-center text-[#737373]">
                     هیچ فرۆشیارێک نەدۆزرایەوە بەپێی ئەم فلتەرە.
                   </td>
                 </tr>
@@ -216,6 +218,11 @@ export function SellersModule({ onOpenNewSeller, onOpenNewProductForSeller }: Se
 
                   return (
                     <tr key={seller.id} className="hover:bg-[#FAF9F6]/80 transition-colors">
+                      <td className="px-4 py-3.5 align-top">
+                        <code className="block max-w-[190px] break-all font-mono text-[10px] text-[#737373]" title={seller.id}>
+                          {seller.id || '—'}
+                        </code>
+                      </td>
                       {/* Name & Facade Avatar */}
                       <td className="px-4 py-3.5">
                         <div className="flex items-center gap-3">
