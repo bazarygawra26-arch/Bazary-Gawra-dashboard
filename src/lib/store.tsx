@@ -11,6 +11,7 @@ import { ensureMultilingualProduct, ensureMultilingualSeller } from '@/lib/trans
 export type AdminView =
   | 'overview'
   | 'users'
+  | 'stores'
   | 'sellers'
   | 'suppliers'
   | 'products'

@@ -22,10 +22,11 @@ async function authorizeAdmin(req: NextRequest): Promise<AdminContext | null> {
 
   const { data: profile } = await client
     .from('profiles')
-    .select('role')
+    .select('role, account_status')
     .eq('id', auth.user.id)
     .maybeSingle();
   const role = String(profile?.role || '').toLowerCase();
+  if (profile?.account_status && profile.account_status !== 'active') return null;
   if (role === 'super_admin' || role === 'superadmin') {
     return { client, userId: auth.user.id, role: 'super_admin' };
   }
@@ -42,10 +43,12 @@ export async function POST(req: NextRequest) {
   const body = await req.json() as {
     action?: string;
     sellerId?: string;
-    status?: 'verified' | 'pending' | 'unverified' | 'suspended';
+    status?: string;
     reason?: string;
     userId?: string;
     accountStatus?: 'active' | 'suspended';
+    role?: string;
+    applicationId?: string;
   };
 
   if (!body.action) {
@@ -56,26 +59,57 @@ export async function POST(req: NextRequest) {
     if (!body.sellerId || !body.status) {
       return NextResponse.json({ error: 'Seller and status are required' }, { status: 400 });
     }
-    const { data: before } = await admin.client.from('sellers').select('*').eq('id', body.sellerId).single();
-    const { error } = await admin.client
-      .from('sellers')
-      .update({
-        verification_status: body.status,
-        is_active: body.status !== 'suspended',
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', body.sellerId);
-    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
-
-    await admin.client.from('admin_audit_logs').insert({
-      admin_id: admin.userId,
-      action: `seller_${body.status}`,
-      affected_table: 'sellers',
-      affected_record_id: body.sellerId,
-      before_data: before,
-      after_data: { verification_status: body.status, is_active: body.status !== 'suspended' },
-      reason: body.reason || null,
+    if (!['verified', 'pending', 'unverified', 'suspended'].includes(body.status)) {
+      return NextResponse.json({ error: 'Unsupported verification status' }, { status: 400 });
+    }
+    const { error } = await admin.client.rpc('admin_update_seller_verification', {
+      p_seller_id: body.sellerId,
+      p_status: body.status,
+      p_reason: body.reason || null,
     });
+    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+    return NextResponse.json({ success: true });
+  }
+
+  if (body.action === 'seller_application_review') {
+    if (!body.sellerId || !body.status) {
+      return NextResponse.json({ error: 'Seller application and decision are required' }, { status: 400 });
+    }
+    const { error } = await admin.client.rpc('admin_review_seller_application', {
+      p_seller_id: body.sellerId,
+      p_status: body.status,
+      p_reason: body.reason || null,
+    });
+    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+    return NextResponse.json({ success: true });
+  }
+
+  if (body.action === 'supplier_application_review') {
+    if (!body.applicationId || !body.status) {
+      return NextResponse.json({ error: 'Supplier application and decision are required' }, { status: 400 });
+    }
+    const { error } = await admin.client.rpc('admin_review_supplier_application', {
+      p_application_id: body.applicationId,
+      p_status: body.status,
+      p_reason: body.reason || null,
+    });
+    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+    return NextResponse.json({ success: true });
+  }
+
+  if (body.action === 'profile_role_change') {
+    if (admin.role !== 'super_admin') {
+      return NextResponse.json({ error: 'Only a Super Admin may change user roles' }, { status: 403 });
+    }
+    if (!body.userId || !body.role || !body.reason) {
+      return NextResponse.json({ error: 'User, role, and reason are required' }, { status: 400 });
+    }
+    const { error } = await admin.client.rpc('admin_change_profile_role', {
+      p_user_id: body.userId,
+      p_role: body.role,
+      p_reason: body.reason,
+    });
+    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
     return NextResponse.json({ success: true });
   }
 
@@ -86,25 +120,12 @@ export async function POST(req: NextRequest) {
     if (body.userId === admin.userId) {
       return NextResponse.json({ error: 'Administrators cannot suspend their own account' }, { status: 403 });
     }
-    const { data: before } = await admin.client.from('profiles').select('*').eq('id', body.userId).single();
-    const update = {
-      account_status: body.accountStatus,
-      suspended_reason: body.accountStatus === 'suspended' ? (body.reason || null) : null,
-      suspended_at: body.accountStatus === 'suspended' ? new Date().toISOString() : null,
-      suspended_by: body.accountStatus === 'suspended' ? admin.userId : null,
-    };
-    const { error } = await admin.client.from('profiles').update(update).eq('id', body.userId);
-    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
-
-    await admin.client.from('admin_audit_logs').insert({
-      admin_id: admin.userId,
-      action: `account_${body.accountStatus}`,
-      affected_table: 'profiles',
-      affected_record_id: body.userId,
-      before_data: before,
-      after_data: update,
-      reason: body.reason || null,
+    const { error } = await admin.client.rpc('admin_set_account_status', {
+      p_user_id: body.userId,
+      p_status: body.accountStatus,
+      p_reason: body.reason || null,
     });
+    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
     return NextResponse.json({ success: true });
   }
 

@@ -18,11 +18,11 @@ async function getAuthorizedAdmin(req: NextRequest) {
 
   const { data: profile } = await client
     .from('profiles')
-    .select('role')
+    .select('role, account_status')
     .eq('id', authData.user.id)
     .maybeSingle();
   const role = String(profile?.role || '').toLowerCase();
-  if (!['admin', 'super_admin', 'superadmin'].includes(role)) return null;
+  if (!['admin', 'super_admin', 'superadmin'].includes(role) || (profile?.account_status && profile.account_status !== 'active')) return null;
 
   return client;
 }

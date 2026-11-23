@@ -15,7 +15,8 @@ import {
   Bell,
   Headphones,
   ScrollText,
-  Building2
+  Building2,
+  ClipboardCheck
 } from 'lucide-react';
 
 export function Sidebar() {
@@ -39,6 +40,13 @@ export function Sidebar() {
       id: 'sellers',
       label: t.navSellers,
       icon: <Store className="h-5 w-5" />,
+      badge: pendingSellersCount > 0 ? pendingSellersCount : undefined,
+      badgeColor: 'bg-[#F4B942] text-[#171717]',
+    },
+    {
+      id: 'stores',
+      label: 'Store applications',
+      icon: <ClipboardCheck className="h-5 w-5" />,
       badge: pendingSellersCount > 0 ? pendingSellersCount : undefined,
       badgeColor: 'bg-[#F4B942] text-[#171717]',
     },
