@@ -17,6 +17,7 @@ import { supabase } from '@/lib/supabase';
 import { LogOut } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 import { CentralManagementView } from '@/components/admin/CentralManagementView';
+import { TranslationManagementView } from '@/components/admin/TranslationManagementView';
 import type { SupportedLanguage } from '@/lib/i18n';
 import { ADMIN_LANGUAGE_STORAGE_KEY, adminPanelTranslations } from '@/lib/adminPanelTranslations';
 
@@ -332,9 +333,11 @@ function AdminDashboardContent() {
 
           {currentView === 'taxonomy' && <TaxonomyView />}
 
+          {currentView === 'translations' && <TranslationManagementView />}
+
           {currentView === 'settings' && <SettingsView />}
 
-          {['users', 'stores', 'suppliers', 'orders', 'rfqs', 'quotations', 'purchase-orders', 'notifications', 'support', 'audit'].includes(currentView) && (
+          {['users', 'stores', 'suppliers', 'orders', 'rfqs', 'quotations', 'purchase-orders', 'notifications', 'support', 'audit', 'subscriptions'].includes(currentView) && (
             <CentralManagementView
               section={
                 currentView as
@@ -348,6 +351,7 @@ function AdminDashboardContent() {
                   | 'notifications'
                   | 'support'
                   | 'audit'
+                  | 'subscriptions'
               }
             />
           )}

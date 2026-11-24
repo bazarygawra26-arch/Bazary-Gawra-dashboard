@@ -45,10 +45,10 @@ export function DashboardOverview({ onOpenNewProduct, onOpenNewSeller }: Dashboa
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-extrabold tracking-tight text-[#171717]">
+            <h1 className="text-xl font-extrabold tracking-tight text-[#202820]">
               {t.navOverview} — {t.appName}
             </h1>
-            <span className="rounded-full bg-[#657A52]/10 px-2 py-0.5 text-[10px] font-bold text-[#657A52]">
+            <span className="rounded-full bg-[#18794E]/10 px-2 py-0.5 text-[10px] font-bold text-[#18794E]">
               {copy.dashboardRegion}
             </span>
           </div>
@@ -60,7 +60,7 @@ export function DashboardOverview({ onOpenNewProduct, onOpenNewSeller }: Dashboa
         <div className="flex items-center gap-2.5">
           <button
             onClick={handleQuickExport}
-            className="flex items-center gap-1.5 rounded-xl border border-[#EAE7DF] bg-white px-3.5 py-2 text-xs font-bold text-[#171717] hover:bg-[#FAF9F6] shadow-xs transition-colors"
+            className="flex items-center gap-1.5 rounded-xl border border-[#EAE7DF] bg-white px-3.5 py-2 text-xs font-bold text-[#202820] hover:bg-[#FAF9F6] shadow-xs transition-colors"
           >
             <Download className="h-4 w-4 text-[#737373]" />
             <span>{t.exportCsv}</span>
@@ -68,7 +68,7 @@ export function DashboardOverview({ onOpenNewProduct, onOpenNewSeller }: Dashboa
 
           <button
             onClick={onOpenNewProduct}
-            className="flex items-center gap-1.5 rounded-xl bg-[#F4B942] px-4 py-2 text-xs font-bold text-[#171717] hover:bg-[#E2A72E] shadow-sm transition-all active:scale-95"
+            className="flex items-center gap-1.5 rounded-xl bg-[#F4B83F] px-4 py-2 text-xs font-bold text-[#202820] hover:bg-[#e0a634] shadow-sm transition-all active:scale-95"
           >
             <Plus className="h-4 w-4" />
             <span>{t.addProduct}</span>
@@ -76,7 +76,7 @@ export function DashboardOverview({ onOpenNewProduct, onOpenNewSeller }: Dashboa
 
           <button
             onClick={onOpenNewSeller}
-            className="flex items-center gap-1.5 rounded-xl bg-[#657A52] px-4 py-2 text-xs font-bold text-white hover:bg-[#536543] shadow-sm transition-all active:scale-95"
+            className="flex items-center gap-1.5 rounded-xl bg-[#18794E] px-4 py-2 text-xs font-bold text-white hover:bg-[#135f3d] shadow-sm transition-all active:scale-95"
           >
             <Store className="h-4 w-4" />
             <span>{t.addMerchant}</span>

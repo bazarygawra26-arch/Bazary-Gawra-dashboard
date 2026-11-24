@@ -1,8 +1,40 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Seller, Product, AiSearchQuery, AiProductScan, Category, CityInfo, VerificationStatus, KurdishCity } from '@/types/database';
-import { initialSellers, initialProducts, initialAiQueries, initialAiScans, initialCategories, initialCities } from '@/lib/mockData';
+import { 
+  Seller, 
+  Product, 
+  AiSearchQuery, 
+  AiProductScan, 
+  Category, 
+  CityInfo, 
+  VerificationStatus, 
+  KurdishCity,
+  Subscription,
+  SubscriptionPlan,
+  SubscriptionStatus,
+  Promotion,
+  Payment,
+  Order,
+  OrderStatus,
+  Rfq,
+  Quotation,
+  PurchaseOrder,
+  MarketplaceGlossaryTerm,
+  AdminAuditLog
+} from '@/types/database';
+import { 
+  initialSellers, 
+  initialProducts, 
+  initialAiQueries, 
+  initialAiScans, 
+  initialCategories, 
+  initialCities,
+  initialSubscriptions,
+  initialPromotions,
+  initialPayments,
+  initialGlossaryTerms
+} from '@/lib/mockData';
 import { SupportedLanguage, translations, TranslationDictionary } from '@/lib/i18n';
 import { ADMIN_LANGUAGE_STORAGE_KEY } from '@/lib/adminPanelTranslations';
 import { supabase, isSupabaseConfigured, checkSupabaseHealth } from '@/lib/supabase';
@@ -20,12 +52,30 @@ export type AdminView =
   | 'rfqs'
   | 'quotations'
   | 'purchase-orders'
+  | 'subscriptions'
+  | 'translations'
   | 'notifications'
   | 'support'
   | 'audit'
   | 'ai-insights'
   | 'taxonomy'
   | 'settings';
+
+export type AnalyticsTimeRange = 'today' | '7d' | '30d' | '90d' | 'all';
+
+export interface MonetizationMetrics {
+  b2cOrderGross: number;
+  b2bPoGross: number;
+  realizedSubscriptionRevenue: number;
+  realizedSponsoredRevenue: number;
+  refundsIssued: number;
+  netPlatformRevenue: number;
+  comparison?: {
+    netRevenueGrowth: number | null;
+    subscriptionGrowth: number | null;
+    ordersGrowth: number | null;
+  };
+}
 
 interface AdminContextType {
   language: SupportedLanguage;
@@ -42,6 +92,14 @@ interface AdminContextType {
 
   sellers: Seller[];
   products: Product[];
+  subscriptions: Subscription[];
+  promotions: Promotion[];
+  payments: Payment[];
+  orders: Order[];
+  rfqs: Rfq[];
+  quotations: Quotation[];
+  purchaseOrders: PurchaseOrder[];
+  glossaryTerms: MarketplaceGlossaryTerm[];
   aiQueries: AiSearchQuery[];
   aiScans: AiProductScan[];
   categories: Category[];
@@ -50,16 +108,31 @@ interface AdminContextType {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
 
+  // Time & breakdown filters for BI
+  timeFilter: AnalyticsTimeRange;
+  setTimeFilter: (range: AnalyticsTimeRange) => void;
+  governorateFilter: string;
+  setGovernorateFilter: (gov: string) => void;
+  monetization: MonetizationMetrics;
+
   updateSellerVerification: (sellerId: string, status: VerificationStatus, notes?: string) => Promise<void>;
   addSeller: (seller: Omit<Seller, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
   updateSeller: (seller: Seller) => Promise<void>;
   addCategory: (category: Omit<Category, 'id'>) => Promise<void>;
+  manageCategory: (categoryData: Partial<Category>) => Promise<void>;
 
   addProduct: (product: Omit<Product, 'id' | 'created_at' | 'updated_at' | 'transparency_score'>) => Promise<void>;
   updateProduct: (product: Product) => Promise<void>;
   deleteProduct: (productId: string) => Promise<void>;
   quickUpdateStockAndPrice: (productId: string, priceIqd: number, stock: number) => Promise<void>;
   toggleProductSponsor: (productId: string) => Promise<void>;
+
+  // Trade, Subscription & Monetization Actions
+  updateOrderStatus: (orderId: string, status: OrderStatus, reason?: string) => Promise<void>;
+  issueOrderRefund: (orderId: string, amount: number, reason: string) => Promise<void>;
+  manageSubscription: (sellerId: string, plan: SubscriptionPlan, status: SubscriptionStatus, reason?: string) => Promise<void>;
+  toggleProductPromotion: (productId: string, sellerId: string, durationDays: number, reason?: string) => Promise<void>;
+  manageGlossaryTerm: (term: Partial<MarketplaceGlossaryTerm>) => Promise<void>;
 
   resetDemoData: () => void;
 }
@@ -71,6 +144,10 @@ const STORAGE_KEYS = {
   PRODUCTS: 'bg_admin_products_v1',
   LANG: ADMIN_LANGUAGE_STORAGE_KEY,
   AI_QUERIES: 'bg_admin_ai_queries_v1',
+  SUBSCRIPTIONS: 'bg_admin_subscriptions_v1',
+  PAYMENTS: 'bg_admin_payments_v1',
+  PROMOTIONS: 'bg_admin_promotions_v1',
+  GLOSSARY: 'bg_admin_glossary_v1',
 };
 
 export function AdminProvider({ children }: { children: React.ReactNode }) {
@@ -91,7 +168,9 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
 
   const [currentView, setCurrentView] = useState<AdminView>('overview');
   const [searchQuery, setSearchQuery] = useState('');
-  
+  const [timeFilter, setTimeFilter] = useState<AnalyticsTimeRange>('30d');
+  const [governorateFilter, setGovernorateFilter] = useState<string>('all');
+
   const [sellers, setSellers] = useState<Seller[]>(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -112,6 +191,51 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     return initialProducts;
   });
 
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEYS.SUBSCRIPTIONS);
+        if (saved) return JSON.parse(saved);
+      } catch {}
+    }
+    return initialSubscriptions;
+  });
+
+  const [promotions, setPromotions] = useState<Promotion[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEYS.PROMOTIONS);
+        if (saved) return JSON.parse(saved);
+      } catch {}
+    }
+    return initialPromotions;
+  });
+
+  const [payments, setPayments] = useState<Payment[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEYS.PAYMENTS);
+        if (saved) return JSON.parse(saved);
+      } catch {}
+    }
+    return initialPayments;
+  });
+
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [rfqs, setRfqs] = useState<Rfq[]>([]);
+  const [quotations, setQuotations] = useState<Quotation[]>([]);
+  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
+
+  const [glossaryTerms, setGlossaryTerms] = useState<MarketplaceGlossaryTerm[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEYS.GLOSSARY);
+        if (saved) return JSON.parse(saved);
+      } catch {}
+    }
+    return initialGlossaryTerms;
+  });
+
   const [aiQueries, setAiQueries] = useState<AiSearchQuery[]>(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -128,6 +252,17 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
 
   const [isSupabaseLive, setIsSupabaseLive] = useState(false);
   const [supabaseMessage, setSupabaseMessage] = useState('Checking database status...');
+
+  // Helper for auth headers
+  const getAdminAuthHeaders = async (contentType = true) => {
+    if (!supabase) return contentType ? { 'Content-Type': 'application/json' } : {};
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    return {
+      ...(contentType ? { 'Content-Type': 'application/json' } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+  };
 
   // Fetch live data from Supabase
   const loadDataFromSupabase = async () => {
@@ -146,13 +281,13 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
           locationMap[l.id] = (l.name_en as KurdishCity) || 'Sulaymaniyah';
         });
 
-        const liveCities: CityInfo[] = locData.map((l: { id: string; name_en: string; name_ku: string; name_ar: string; slug: string }) => ({
+        const liveCities: CityInfo[] = locData.map((l: { id: string; name_en: string; name_ku: string; name_ar: string; slug: string; governorate?: string; bazaars?: string[] }) => ({
           id: l.slug || l.id,
           name_en: (l.name_en as KurdishCity) || 'Sulaymaniyah',
           name_ku: l.name_ku || l.name_en,
           name_ar: l.name_ar || l.name_en,
-          governorate: `${l.name_en} Governorate`,
-          bazaars: [`${l.name_en} Central Bazaar`, `${l.name_en} City Center`],
+          governorate: l.governorate || `${l.name_en} Governorate`,
+          bazaars: l.bazaars && l.bazaars.length > 0 ? l.bazaars : [`${l.name_en} Central Bazaar`, `${l.name_en} City Center`],
         }));
         setCities(liveCities);
       }
@@ -169,35 +304,28 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
           return 'Layers';
         };
 
-        // Filter out subcategories (c.parent_id) and redundant duplicates, exactly matching client side
-        const excludedSlugs = new Set(['clothing', 'food-honey', 'local-products', 'handmade']);
-        const topLevelCats = catData.filter((c: any) => 
-          !c.parent_id && 
-          c.is_active !== false && 
-          !excludedSlugs.has(c.slug)
-        );
-
-        const liveCategories: Category[] = topLevelCats.map((c: any) => ({
+        const liveCategories: Category[] = catData.map((c: any) => ({
           id: c.id,
           slug: c.slug || c.id,
           name_en: c.name_en || c.slug,
           name_ku: c.name_ku || c.name_en || c.slug,
           name_ar: c.name_ar || c.name_en || c.slug,
           icon: getIconForSlug(c.slug || c.id),
+          is_active: c.is_active !== false,
         }));
         setCategories(liveCategories);
       }
 
       // 2. Fetch Sellers
       const { data: dbSellers, error: sellersError } = await supabase.from('sellers').select('*');
-      if (sellersError) throw sellersError;
-      if (dbSellers) {
+      if (!sellersError && dbSellers) {
         const mappedSellers: Seller[] = dbSellers.map((s: Record<string, any>) => ({
           id: s.id,
           name_ku: s.name_ku || s.name_en || 'دووکانی نەناسراو',
           name_en: s.name_en || s.name_ku || 'Store',
           name_ar: s.name_ar || s.name_en || 'متجر',
           owner_name: s.owner_name || s.name_en || 'Merchant Partner',
+          owner_id: s.owner_id,
           phone: s.phone || '+964 770 000 0000',
           whatsapp: s.whatsapp || '9647700000000',
           city: (locationMap[s.location_id] || 'Sulaymaniyah') as KurdishCity,
@@ -206,8 +334,10 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
           facade_image_url: s.logo_url || 'https://images.unsplash.com/photo-1555421689-491a97ff2040?w=600&auto=format&fit=crop&q=80',
           logo_url: s.logo_url || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&auto=format&fit=crop&q=80',
           verification_status: (s.verification_status as VerificationStatus) || 'unverified',
+          application_status: s.application_status,
           transparency_score: s.verification_status === 'verified' ? 95 : 65,
           notes: s.description_en || 'Verified store from live database.',
+          is_active: s.is_active !== false,
           created_at: s.created_at || new Date().toISOString(),
           updated_at: s.updated_at || new Date().toISOString(),
         }));
@@ -222,7 +352,6 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       ]);
 
       if (dbProducts && dbProducts.length > 0) {
-        // Group translations by product_id
         const transMap: Record<string, Record<string, { name: string; description?: string }>> = {};
         if (dbTrans) {
           dbTrans.forEach((t: { product_id: string; lang: string; name: string; description?: string }) => {
@@ -298,12 +427,44 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         setProducts(mappedProducts);
         try { localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(mappedProducts)); } catch {}
       }
+
+      // 4. Fetch Subscriptions, Promotions, Payments
+      const [{ data: dbSubs }, { data: dbPromos }, { data: dbPays }, { data: dbOrders }] = await Promise.all([
+        supabase.from('subscriptions').select('*').limit(500),
+        supabase.from('promotions').select('*').limit(500),
+        supabase.from('payments').select('*').order('created_at', { ascending: false }).limit(500),
+        supabase.from('orders').select('*').order('created_at', { ascending: false }).limit(500),
+      ]);
+
+      if (dbSubs && dbSubs.length > 0) {
+        setSubscriptions(dbSubs as Subscription[]);
+        try { localStorage.setItem(STORAGE_KEYS.SUBSCRIPTIONS, JSON.stringify(dbSubs)); } catch {}
+      }
+      if (dbPromos && dbPromos.length > 0) {
+        setPromotions(dbPromos as Promotion[]);
+        try { localStorage.setItem(STORAGE_KEYS.PROMOTIONS, JSON.stringify(dbPromos)); } catch {}
+      }
+      if (dbPays && dbPays.length > 0) {
+        setPayments(dbPays as Payment[]);
+        try { localStorage.setItem(STORAGE_KEYS.PAYMENTS, JSON.stringify(dbPays)); } catch {}
+      }
+      if (dbOrders && dbOrders.length > 0) {
+        setOrders(dbOrders as Order[]);
+      }
+
+      // 5. Fetch Glossary
+      const { data: dbGlossary } = await supabase.from('marketplace_glossary').select('*').limit(500);
+      if (dbGlossary && dbGlossary.length > 0) {
+        setGlossaryTerms(dbGlossary as MarketplaceGlossaryTerm[]);
+        try { localStorage.setItem(STORAGE_KEYS.GLOSSARY, JSON.stringify(dbGlossary)); } catch {}
+      }
+
     } catch (err) {
       console.warn('Error loading live Supabase records:', err);
     }
   };
 
-  // Check Supabase health and load live data on mount
+  // Mount check and load
   useEffect(() => {
     let isMounted = true;
     checkSupabaseHealth().then(res => {
@@ -320,19 +481,32 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  // Supabase Realtime channel setup
   useEffect(() => {
     if (!isSupabaseLive || !supabase) return;
 
     const liveSupabase = supabase;
     const channel = liveSupabase
-      .channel('admin-catalog-realtime')
+      .channel('admin-central-realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'sellers' }, () => {
         void loadDataFromSupabase();
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => {
         void loadDataFromSupabase();
       })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'categories' }, () => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
+        void loadDataFromSupabase();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'subscriptions' }, () => {
+        void loadDataFromSupabase();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'payments' }, () => {
+        void loadDataFromSupabase();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'promotions' }, () => {
+        void loadDataFromSupabase();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'marketplace_glossary' }, () => {
         void loadDataFromSupabase();
       })
       .subscribe();
@@ -342,107 +516,85 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     };
   }, [isSupabaseLive]);
 
-  // Background Automatic Translation Engine:
-  // Detects any products or sellers without full translations and dynamically enriches them in the background!
-  useEffect(() => {
-    let isMounted = true;
-    const timer = setTimeout(async () => {
-      // 1. Scan products
-      const untranslatedProducts = products.filter(
-        p => !p.name_en || p.name_en === p.name_ku || !p.name_ar || p.name_ar === p.name_ku
-      );
+  // Compute Real Monetization & Revenue with strict rules:
+  // - Order value != platform revenue
+  // - Only count confirmed completed payments (!is_demo) as realized platform revenue
+  // - Exclude demo payments and pending transactions
+  // - Separate subscriptions, promotions, and refunds
+  const monetization = React.useMemo<MonetizationMetrics>(() => {
+    const now = Date.now();
+    const periodDays = timeFilter === 'today' ? 1 : timeFilter === '7d' ? 7 : timeFilter === '30d' ? 30 : timeFilter === '90d' ? 90 : 3650;
+    const cutoff = now - periodDays * 86400000;
+    const prevCutoff = cutoff - periodDays * 86400000;
 
-      if (untranslatedProducts.length > 0) {
-        const enrichedList = await Promise.all(
-          products.map(async p => {
-            if (!p.name_en || p.name_en === p.name_ku || !p.name_ar || p.name_ar === p.name_ku) {
-              return await ensureMultilingualProduct(p);
-            }
-            return p;
-          })
-        );
-        if (isMounted) {
-          saveProducts(enrichedList);
-        }
-      }
+    // Filter payments in current period
+    const currentPayments = payments.filter(p => {
+      const ts = new Date(p.created_at).getTime();
+      return ts >= cutoff && !p.is_demo && p.status === 'completed';
+    });
 
-      // 2. Scan sellers
-      const untranslatedSellers = sellers.filter(
-        s => !s.name_en || s.name_en === s.name_ku || !s.name_ar || s.name_ar === s.name_ku
-      );
+    const previousPayments = payments.filter(p => {
+      const ts = new Date(p.created_at).getTime();
+      return ts >= prevCutoff && ts < cutoff && !p.is_demo && p.status === 'completed';
+    });
 
-      if (untranslatedSellers.length > 0) {
-        const enrichedSellersList = await Promise.all(
-          sellers.map(async s => {
-            if (!s.name_en || s.name_en === s.name_ku || !s.name_ar || s.name_ar === s.name_ku) {
-              return await ensureMultilingualSeller(s);
-            }
-            return s;
-          })
-        );
-        if (isMounted) {
-          saveSellers(enrichedSellersList);
-        }
-      }
-    }, 2000);
+    // Realized Revenues
+    const realizedSubscriptionRevenue = currentPayments
+      .filter(p => p.reference_type === 'subscription')
+      .reduce((sum, p) => sum + Number(p.amount || 0), 0);
 
-    return () => {
-      isMounted = false;
-      clearTimeout(timer);
+    const realizedSponsoredRevenue = currentPayments
+      .filter(p => p.reference_type === 'promotion')
+      .reduce((sum, p) => sum + Number(p.amount || 0), 0);
+
+    const refundsIssued = payments
+      .filter(p => {
+        const ts = new Date(p.created_at).getTime();
+        return ts >= cutoff && (p.reference_type === 'refund' || p.status === 'refunded');
+      })
+      .reduce((sum, p) => sum + Number(p.amount || 0), 0);
+
+    const netPlatformRevenue = realizedSubscriptionRevenue + realizedSponsoredRevenue - refundsIssued;
+
+    // Gross order volumes in reporting window
+    const currentOrders = orders.filter(o => new Date(o.created_at).getTime() >= cutoff);
+    const b2cOrderGross = currentOrders.reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
+
+    const currentPOs = purchaseOrders.filter(po => new Date(po.created_at).getTime() >= cutoff);
+    const b2bPoGross = currentPOs.reduce((sum, po) => sum + Number(po.total_amount || 0), 0);
+
+    // Safe growth computation without fake trends
+    const prevSubRevenue = previousPayments
+      .filter(p => p.reference_type === 'subscription')
+      .reduce((sum, p) => sum + Number(p.amount || 0), 0);
+    const prevNetRevenue = previousPayments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+
+    const calculateGrowth = (curr: number, prev: number): number | null => {
+      if (prev === 0) return curr > 0 ? 100 : null;
+      return Math.round(((curr - prev) / prev) * 100);
     };
-  }, [products.length, sellers.length]);
 
-  const setLanguage = (lang: SupportedLanguage) => {
-    setLanguageState(lang);
-    try {
-      localStorage.setItem(STORAGE_KEYS.LANG, lang);
-    } catch {}
-  };
-
-  const recheckSupabase = async () => {
-    const res = await checkSupabaseHealth();
-    setIsSupabaseLive(res.connected);
-    setSupabaseMessage(res.message);
-    if (res.connected) {
-      await loadDataFromSupabase();
-    }
-  };
-
-  const getAdminAuthHeaders = async (contentType = true) => {
-    if (!supabase) return contentType ? { 'Content-Type': 'application/json' } : {};
-    const { data } = await supabase.auth.getSession();
-    const token = data.session?.access_token;
     return {
-      ...(contentType ? { 'Content-Type': 'application/json' } : {}),
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      b2cOrderGross,
+      b2bPoGross,
+      realizedSubscriptionRevenue,
+      realizedSponsoredRevenue,
+      refundsIssued,
+      netPlatformRevenue,
+      comparison: {
+        netRevenueGrowth: calculateGrowth(netPlatformRevenue, prevNetRevenue),
+        subscriptionGrowth: calculateGrowth(realizedSubscriptionRevenue, prevSubRevenue),
+        ordersGrowth: null,
+      },
     };
-  };
+  }, [payments, orders, purchaseOrders, timeFilter]);
 
-  const saveSellers = (updated: Seller[]) => {
-    setSellers(updated);
-    try {
-      localStorage.setItem(STORAGE_KEYS.SELLERS, JSON.stringify(updated));
-    } catch {}
-  };
-
-  const saveProducts = (updated: Product[]) => {
-    setProducts(updated);
-    try {
-      localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(updated));
-    } catch {}
-  };
-
-  // Live Supabase Mutation: Seller Verification
+  // Actions
   const updateSellerVerification = async (sellerId: string, status: VerificationStatus, notes?: string) => {
     if (supabase) {
-      const { data } = await supabase.auth.getSession();
-      const token = data.session?.access_token;
       const response = await fetch('/api/admin/actions', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+        headers: await getAdminAuthHeaders(),
         body: JSON.stringify({
           action: 'seller_verification',
           sellerId,
@@ -451,76 +603,37 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         }),
       });
       if (!response.ok) {
-        const result = await response.json() as { error?: string };
+        const result = (await response.json()) as { error?: string };
         throw new Error(result.error || 'Seller verification update failed');
       }
     }
 
-    const updated = sellers.map(s => {
-      if (s.id === sellerId) {
-        return {
-          ...s,
-          verification_status: status,
-          notes: notes !== undefined ? notes : s.notes,
-          transparency_score: status === 'verified' ? Math.max(s.transparency_score, 85) : s.transparency_score,
-          updated_at: new Date().toISOString(),
-        };
-      }
-      return s;
-    });
-    saveSellers(updated);
+    setSellers(prev =>
+      prev.map(s => (s.id === sellerId ? { ...s, verification_status: status, notes: notes ?? s.notes, updated_at: new Date().toISOString() } : s))
+    );
   };
 
-  const addCategory = async (catData: Omit<Category, 'id'>) => {
-    const tempId = `cat_${Date.now()}`;
-    const newCat: Category = {
-      ...catData,
-      id: tempId,
-    };
-    setCategories(prev => [...prev, newCat]);
-
-    if (isSupabaseConfigured && supabase) {
-      try {
-        const { data: inserted } = await supabase.from('categories').insert({
-          slug: catData.slug || catData.name_en.toLowerCase().replace(/\s+/g, '-'),
-          name_ku: catData.name_ku,
-          name_en: catData.name_en,
-          name_ar: catData.name_ar,
-          icon: catData.icon || 'Layers',
-          is_active: true,
-        }).select('id').single();
-
-        if (inserted?.id) {
-          setCategories(prev => prev.map(c => c.id === tempId ? { ...c, id: inserted.id } : c));
-        }
-      } catch (err) {
-        console.warn('Supabase category insert warning:', err);
-      }
-    }
-  };
   const addSeller = async (data: Omit<Seller, 'id' | 'created_at' | 'updated_at'>) => {
-    // AUTOMATIC TRANSLATION: Dynamically translate seller name and details into EN & AR
-    const enrichedData = await ensureMultilingualSeller(data);
-
+    const enriched = await ensureMultilingualSeller(data);
     const newSeller: Seller = {
-      ...enrichedData,
+      ...enriched,
       id: `sel_${Date.now()}`,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
-    saveSellers([newSeller, ...sellers]);
+    setSellers(prev => [newSeller, ...prev]);
 
     if (isSupabaseConfigured && supabase) {
       try {
         await supabase.from('sellers').insert({
-          name_ku: enrichedData.name_ku,
-          name_en: enrichedData.name_en,
-          name_ar: enrichedData.name_ar,
-          phone: enrichedData.phone,
-          whatsapp: enrichedData.whatsapp,
-          address: enrichedData.bazaar_name,
-          logo_url: enrichedData.facade_image_url,
-          verification_status: enrichedData.verification_status,
+          name_ku: enriched.name_ku,
+          name_en: enriched.name_en,
+          name_ar: enriched.name_ar,
+          phone: enriched.phone,
+          whatsapp: enriched.whatsapp,
+          address: enriched.bazaar_name,
+          logo_url: enriched.facade_image_url,
+          verification_status: enriched.verification_status,
           is_active: true,
         });
       } catch (err) {
@@ -530,22 +643,19 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateSeller = async (seller: Seller) => {
-    // AUTOMATIC TRANSLATION: Ensure all seller languages are translated automatically
-    const enrichedSeller = await ensureMultilingualSeller(seller);
-
-    const updated = sellers.map(s => (s.id === seller.id ? { ...enrichedSeller, updated_at: new Date().toISOString() } : s));
-    saveSellers(updated);
+    const enriched = await ensureMultilingualSeller(seller);
+    setSellers(prev => prev.map(s => (s.id === seller.id ? { ...enriched, updated_at: new Date().toISOString() } : s)));
 
     if (isSupabaseConfigured && supabase) {
       try {
         await supabase.from('sellers').update({
-          name_ku: enrichedSeller.name_ku,
-          name_en: enrichedSeller.name_en,
-          name_ar: enrichedSeller.name_ar,
-          phone: enrichedSeller.phone,
-          whatsapp: enrichedSeller.whatsapp,
-          address: enrichedSeller.bazaar_name,
-          verification_status: enrichedSeller.verification_status,
+          name_ku: enriched.name_ku,
+          name_en: enriched.name_en,
+          name_ar: enriched.name_ar,
+          phone: enriched.phone,
+          whatsapp: enriched.whatsapp,
+          address: enriched.bazaar_name,
+          verification_status: enriched.verification_status,
           updated_at: new Date().toISOString(),
         }).eq('id', seller.id);
       } catch (err) {
@@ -554,35 +664,72 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const addProduct = async (data: Omit<Product, 'id' | 'created_at' | 'updated_at' | 'transparency_score'>) => {
-    // AUTOMATIC TRANSLATION: Dynamically translate product title and description into EN & AR
-    const enrichedData = await ensureMultilingualProduct(data);
+  const addCategory = async (catData: Omit<Category, 'id'>) => {
+    await manageCategory(catData);
+  };
 
+  const manageCategory = async (categoryData: Partial<Category>) => {
+    const tempId = categoryData.id || `cat_${Date.now()}`;
+    const newCat: Category = {
+      id: tempId,
+      slug: categoryData.slug || (categoryData.name_en || 'category').toLowerCase().replace(/\s+/g, '-'),
+      name_en: categoryData.name_en || 'Category',
+      name_ku: categoryData.name_ku || categoryData.name_en || 'پۆل',
+      name_ar: categoryData.name_ar || categoryData.name_en || 'فئة',
+      icon: categoryData.icon || 'Layers',
+      is_active: categoryData.is_active ?? true,
+    };
+
+    setCategories(prev => {
+      const idx = prev.findIndex(c => c.id === tempId);
+      if (idx >= 0) {
+        const copy = [...prev];
+        copy[idx] = { ...copy[idx], ...newCat };
+        return copy;
+      }
+      return [...prev, newCat];
+    });
+
+    if (isSupabaseConfigured) {
+      try {
+        await fetch('/api/admin/actions', {
+          method: 'POST',
+          headers: await getAdminAuthHeaders(),
+          body: JSON.stringify({ action: 'category_manage', categoryData: newCat }),
+        });
+      } catch (err) {
+        console.warn('Category manage API error:', err);
+      }
+    }
+  };
+
+  const addProduct = async (data: Omit<Product, 'id' | 'created_at' | 'updated_at' | 'transparency_score'>) => {
+    const enriched = await ensureMultilingualProduct(data);
     const score = calculateTransparencyScore({
-      warranty_type: enrichedData.warranty_type,
-      warranty_period: enrichedData.warranty_period,
-      delivery_type: enrichedData.delivery_type,
-      delivery_cost_iqd: enrichedData.delivery_cost_iqd,
-      return_window_days: enrichedData.return_window_days,
-      return_policy_type: enrichedData.return_policy_type,
+      warranty_type: enriched.warranty_type,
+      warranty_period: enriched.warranty_period,
+      delivery_type: enriched.delivery_type,
+      delivery_cost_iqd: enriched.delivery_cost_iqd,
+      return_window_days: enriched.return_window_days,
+      return_policy_type: enriched.return_policy_type,
     });
 
     const newProd: Product = {
-      ...enrichedData,
+      ...enriched,
       id: `prod_${Date.now()}`,
       transparency_score: score,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
 
-    saveProducts([newProd, ...products]);
+    setProducts(prev => [newProd, ...prev]);
 
     if (isSupabaseConfigured) {
       try {
         await fetch('/api/products', {
           method: 'POST',
           headers: await getAdminAuthHeaders(),
-          body: JSON.stringify({ productData: enrichedData }),
+          body: JSON.stringify({ productData: enriched }),
         });
       } catch (err) {
         console.warn('API product insert warning:', err);
@@ -591,29 +738,24 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateProduct = async (product: Product) => {
-    // AUTOMATIC TRANSLATION: Ensure multilingual title and description are translated
-    const enrichedProduct = await ensureMultilingualProduct(product);
-
+    const enriched = await ensureMultilingualProduct(product);
     const score = calculateTransparencyScore({
-      warranty_type: enrichedProduct.warranty_type,
-      warranty_period: enrichedProduct.warranty_period,
-      delivery_type: enrichedProduct.delivery_type,
-      delivery_cost_iqd: enrichedProduct.delivery_cost_iqd,
-      return_window_days: enrichedProduct.return_window_days,
-      return_policy_type: enrichedProduct.return_policy_type,
+      warranty_type: enriched.warranty_type,
+      warranty_period: enriched.warranty_period,
+      delivery_type: enriched.delivery_type,
+      delivery_cost_iqd: enriched.delivery_cost_iqd,
+      return_window_days: enriched.return_window_days,
+      return_policy_type: enriched.return_policy_type,
     });
 
-    const updated = products.map(p =>
-      p.id === product.id ? { ...enrichedProduct, transparency_score: score, updated_at: new Date().toISOString() } : p
-    );
-    saveProducts(updated);
+    setProducts(prev => prev.map(p => (p.id === product.id ? { ...enriched, transparency_score: score, updated_at: new Date().toISOString() } : p)));
 
     if (isSupabaseConfigured) {
       try {
         await fetch('/api/products', {
           method: 'PUT',
           headers: await getAdminAuthHeaders(),
-          body: JSON.stringify({ product: enrichedProduct }),
+          body: JSON.stringify({ product: enriched }),
         });
       } catch (err) {
         console.warn('API product update warning:', err);
@@ -622,9 +764,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   };
 
   const deleteProduct = async (productId: string) => {
-    const updated = products.filter(p => p.id !== productId);
-    saveProducts(updated);
-
+    setProducts(prev => prev.filter(p => p.id !== productId));
     if (isSupabaseConfigured) {
       try {
         await fetch(`/api/products?id=${productId}`, {
@@ -638,12 +778,10 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   };
 
   const quickUpdateStockAndPrice = async (productId: string, priceIqd: number, stock: number) => {
-    const rate = 1500;
-    const priceUsd = Math.round(priceIqd / rate);
-    const updated = products.map(p =>
-      p.id === productId ? { ...p, price_iqd: priceIqd, price_usd: priceUsd, stock_quantity: stock, updated_at: new Date().toISOString() } : p
+    const priceUsd = Math.round(priceIqd / 1500);
+    setProducts(prev =>
+      prev.map(p => (p.id === productId ? { ...p, price_iqd: priceIqd, price_usd: priceUsd, stock_quantity: stock, updated_at: new Date().toISOString() } : p))
     );
-    saveProducts(updated);
 
     if (isSupabaseConfigured) {
       try {
@@ -662,12 +800,9 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     const target = products.find(p => p.id === productId);
     if (!target) return;
     const nextStatus = !Boolean(target.is_sponsored ?? target.is_promoted);
-    const updated = products.map(p =>
-      p.id === productId
-        ? { ...p, is_sponsored: nextStatus, is_promoted: nextStatus, updated_at: new Date().toISOString() }
-        : p
+    setProducts(prev =>
+      prev.map(p => (p.id === productId ? { ...p, is_sponsored: nextStatus, is_promoted: nextStatus, updated_at: new Date().toISOString() } : p))
     );
-    saveProducts(updated);
 
     if (isSupabaseConfigured) {
       try {
@@ -682,14 +817,177 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Trade & Order Management Actions
+  const updateOrderStatus = async (orderId: string, status: OrderStatus, reason?: string) => {
+    setOrders(prev => prev.map(o => (o.id === orderId ? { ...o, status, updated_at: new Date().toISOString() } : o)));
+
+    if (isSupabaseConfigured) {
+      try {
+        const res = await fetch('/api/admin/actions', {
+          method: 'POST',
+          headers: await getAdminAuthHeaders(),
+          body: JSON.stringify({ action: 'order_status', orderId, status, reason: reason || 'Status updated by admin' }),
+        });
+        if (!res.ok) {
+          const err = (await res.json()) as { error?: string };
+          throw new Error(err.error || 'Failed to update order status');
+        }
+      } catch (err) {
+        console.warn('Order status update error:', err);
+      }
+    }
+  };
+
+  const issueOrderRefund = async (orderId: string, amount: number, reason: string) => {
+    setOrders(prev => prev.map(o => (o.id === orderId ? { ...o, status: 'refunded', updated_at: new Date().toISOString() } : o)));
+
+    if (isSupabaseConfigured) {
+      try {
+        const res = await fetch('/api/admin/actions', {
+          method: 'POST',
+          headers: await getAdminAuthHeaders(),
+          body: JSON.stringify({ action: 'order_refund', orderId, refundAmount: amount, reason }),
+        });
+        if (!res.ok) {
+          const err = (await res.json()) as { error?: string };
+          throw new Error(err.error || 'Refund issuance failed');
+        }
+      } catch (err) {
+        console.warn('Refund API error:', err);
+      }
+    }
+  };
+
+  const manageSubscription = async (sellerId: string, plan: SubscriptionPlan, status: SubscriptionStatus, reason?: string) => {
+    const limit = plan === 'pro_merchant' ? 50 : 5;
+    const price = plan === 'pro_merchant' ? 10000 : 0;
+    const periodEnd = plan === 'pro_merchant' ? new Date(Date.now() + 30 * 86400000).toISOString() : null;
+
+    const newSub: Subscription = {
+      id: `sub_${Date.now()}`,
+      seller_id: sellerId,
+      plan,
+      status,
+      listing_limit: limit,
+      monthly_price_iqd: price,
+      current_period_start: new Date().toISOString(),
+      current_period_end: periodEnd,
+      auto_renew: true,
+      notes: reason,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    setSubscriptions(prev => [newSub, ...prev]);
+
+    if (isSupabaseConfigured) {
+      try {
+        const res = await fetch('/api/admin/actions', {
+          method: 'POST',
+          headers: await getAdminAuthHeaders(),
+          body: JSON.stringify({ action: 'subscription_manage', sellerId, plan, status, reason }),
+        });
+        if (!res.ok) {
+          const err = (await res.json()) as { error?: string };
+          throw new Error(err.error || 'Subscription update failed');
+        }
+      } catch (err) {
+        console.warn('Subscription manage error:', err);
+      }
+    }
+  };
+
+  const toggleProductPromotion = async (productId: string, sellerId: string, durationDays: number, reason?: string) => {
+    const endDate = new Date(Date.now() + durationDays * 86400000).toISOString();
+    const newPromo: Promotion = {
+      id: `promo_${Date.now()}`,
+      product_id: productId,
+      seller_id: sellerId,
+      type: 'sponsored_listing',
+      status: 'active',
+      price_iqd: 5000,
+      duration_days: durationDays,
+      start_date: new Date().toISOString(),
+      end_date: endDate,
+      created_at: new Date().toISOString(),
+    };
+
+    setPromotions(prev => [newPromo, ...prev]);
+    setProducts(prev => prev.map(p => (p.id === productId ? { ...p, is_sponsored: true, is_promoted: true } : p)));
+
+    if (isSupabaseConfigured) {
+      try {
+        await fetch('/api/admin/actions', {
+          method: 'POST',
+          headers: await getAdminAuthHeaders(),
+          body: JSON.stringify({ action: 'promotion_manage', productId, sellerId, durationDays, reason }),
+        });
+      } catch (err) {
+        console.warn('Promotion manage error:', err);
+      }
+    }
+  };
+
+  const manageGlossaryTerm = async (term: Partial<MarketplaceGlossaryTerm>) => {
+    const tempId = term.id || `glo_${Date.now()}`;
+    const newTerm: MarketplaceGlossaryTerm = {
+      id: tempId,
+      term_ku: term.term_ku || '',
+      term_ar: term.term_ar || '',
+      term_en: term.term_en || '',
+      category: term.category || 'General',
+      status: term.status || 'approved',
+      notes: term.notes,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    setGlossaryTerms(prev => {
+      const idx = prev.findIndex(g => g.id === tempId || g.term_ku === newTerm.term_ku);
+      if (idx >= 0) {
+        const copy = [...prev];
+        copy[idx] = { ...copy[idx], ...newTerm };
+        return copy;
+      }
+      return [newTerm, ...prev];
+    });
+
+    if (isSupabaseConfigured) {
+      try {
+        await fetch('/api/admin/actions', {
+          method: 'POST',
+          headers: await getAdminAuthHeaders(),
+          body: JSON.stringify({ action: 'glossary_manage', glossaryData: newTerm }),
+        });
+      } catch (err) {
+        console.warn('Glossary manage error:', err);
+      }
+    }
+  };
+
   const resetDemoData = () => {
-    saveSellers(initialSellers);
-    saveProducts(initialProducts);
+    setSellers(initialSellers);
+    setProducts(initialProducts);
     setAiQueries(initialAiQueries);
+    setSubscriptions(initialSubscriptions);
+    setPromotions(initialPromotions);
+    setPayments(initialPayments);
+    setGlossaryTerms(initialGlossaryTerms);
     try {
       localStorage.removeItem(STORAGE_KEYS.SELLERS);
       localStorage.removeItem(STORAGE_KEYS.PRODUCTS);
       localStorage.removeItem(STORAGE_KEYS.AI_QUERIES);
+      localStorage.removeItem(STORAGE_KEYS.SUBSCRIPTIONS);
+      localStorage.removeItem(STORAGE_KEYS.PROMOTIONS);
+      localStorage.removeItem(STORAGE_KEYS.PAYMENTS);
+      localStorage.removeItem(STORAGE_KEYS.GLOSSARY);
+    } catch {}
+  };
+
+  const setLanguage = (lang: SupportedLanguage) => {
+    setLanguageState(lang);
+    try {
+      localStorage.setItem(STORAGE_KEYS.LANG, lang);
     } catch {}
   };
 
@@ -710,21 +1008,40 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         recheckSupabase,
         sellers,
         products,
+        subscriptions,
+        promotions,
+        payments,
+        orders,
+        rfqs,
+        quotations,
+        purchaseOrders,
+        glossaryTerms,
         aiQueries,
         aiScans,
         categories,
         cities,
         searchQuery,
         setSearchQuery,
+        timeFilter,
+        setTimeFilter,
+        governorateFilter,
+        setGovernorateFilter,
+        monetization,
         updateSellerVerification,
-        addCategory,
         addSeller,
         updateSeller,
+        addCategory,
+        manageCategory,
         addProduct,
         updateProduct,
         deleteProduct,
         quickUpdateStockAndPrice,
         toggleProductSponsor,
+        updateOrderStatus,
+        issueOrderRefund,
+        manageSubscription,
+        toggleProductPromotion,
+        manageGlossaryTerm,
         resetDemoData,
       }}
     >
